@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bigquery } from '@/lib/bigquery';
+import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
 
 export async function GET(request: NextRequest) {
+  const configError = checkBigQueryConfig();
+  if (configError) return configError;
   try {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('startDate');
@@ -76,7 +79,5 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(rows);
   } catch (error) {
-    console.error('Error fetching product sales:', error);
-    return NextResponse.json({ error: 'Failed to fetch product sales' }, { status: 500 });
-  }
-}
+    return handleApiError(error);
+  }}

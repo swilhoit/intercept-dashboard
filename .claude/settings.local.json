@@ -4,7 +4,10 @@
       "Bash(git push:*)",
       "Bash(npm run build:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(for file in /Users/samwilhoit/Documents/sales-dashboard/src/app/api/sales/{daily,monthly,products,product-breakdown,category-products,summary}/route.ts)",
+      "Bash(do echo \"Processing: $file\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

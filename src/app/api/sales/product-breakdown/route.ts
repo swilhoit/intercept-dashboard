@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bigquery } from '@/lib/bigquery';
+import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
 
 export async function GET(request: NextRequest) {
+  const configError = checkBigQueryConfig();
+  if (configError) return configError;
   try {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('startDate');
@@ -201,7 +204,5 @@ export async function GET(request: NextRequest) {
       totalProducts: Object.keys(productSummary).length
     });
   } catch (error) {
-    console.error('Error fetching product breakdown:', error);
-    return NextResponse.json({ error: 'Failed to fetch product breakdown' }, { status: 500 });
-  }
-}
+    return handleApiError(error);
+  }}

@@ -1,14 +1,18 @@
 import { BigQuery } from '@google-cloud/bigquery';
 
-const credentials = {
-  client_email: process.env.GOOGLE_CLOUD_CLIENT_EMAIL!,
-  private_key: process.env.GOOGLE_CLOUD_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-};
+const privateKey = process.env.GOOGLE_CLOUD_PRIVATE_KEY || '';
+const clientEmail = process.env.GOOGLE_CLOUD_CLIENT_EMAIL || '';
+const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || '';
 
-export const bigquery = new BigQuery({
-  projectId: process.env.GOOGLE_CLOUD_PROJECT_ID!,
+const credentials = clientEmail && privateKey ? {
+  client_email: clientEmail,
+  private_key: privateKey.replace(/\\n/g, '\n'),
+} : undefined;
+
+export const bigquery = projectId && credentials ? new BigQuery({
+  projectId: projectId,
   credentials,
-});
+}) : null as any;
 
 export interface DailySales {
   date: string;
