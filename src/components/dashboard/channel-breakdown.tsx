@@ -66,7 +66,7 @@ export function ChannelBreakdown({ amazonRevenue, woocommerceRevenue }: ChannelB
               cy="50%"
               labelLine={false}
               label={({ name, value }) => {
-                const percentage = ((value / total) * 100).toFixed(1)
+                const percentage = (((value || 0) / total) * 100).toFixed(1)
                 return `${name}: ${percentage}%`
               }}
               outerRadius={80}

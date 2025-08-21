@@ -103,7 +103,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
 
   const categories = Object.values(data.categories || {})
   const mainCategories = categories.filter((cat: any) => cat.name !== 'Other')
-  const otherCategory = categories.find((cat: any) => cat.name === 'Other')
+  const otherCategory = categories.find((cat: any) => cat.name === 'Other') as any
 
   // Calculate total sales for percentage calculations
   const totalSales = categories.reduce((sum: number, cat: any) => sum + (cat.totalSales || 0), 0)

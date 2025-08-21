@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 
 interface ProductComparisonProps {
   data: any[]
-  dateRange?: { from: Date | undefined; to: Date | undefined }
+  dateRange?: { from: Date | undefined; to?: Date | undefined }
 }
 
 export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
