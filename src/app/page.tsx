@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react"
 import { DateRange } from "react-day-picker"
 import { subDays } from "date-fns"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { LogOut } from "lucide-react"
 import { DateRangePicker } from "@/components/dashboard/date-range-picker"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { SalesChart } from "@/components/dashboard/sales-chart"
@@ -29,6 +32,7 @@ export default function DashboardPage() {
     to: new Date(),
   })
   const [selectedChannel, setSelectedChannel] = useState<string>("all")
+  const router = useRouter()
   const [dailySales, setDailySales] = useState<any[]>([])
   const [summary, setSummary] = useState<any>({})
   const [products, setProducts] = useState<any[]>([])
@@ -104,6 +108,17 @@ export default function DashboardPage() {
                 <SelectItem value="WooCommerce">WooCommerce</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' })
+                router.push('/login')
+              }}
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
