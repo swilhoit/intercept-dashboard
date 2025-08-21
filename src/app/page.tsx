@@ -80,10 +80,20 @@ export default function DashboardPage() {
         breakdownRes.json(),
       ])
 
-      setDailySales(salesData)
-      setSummary(summaryData)
-      setProducts(productsData)
-      setProductBreakdown(breakdownData)
+      // Handle error responses
+      setDailySales(Array.isArray(salesData) ? salesData : [])
+      setSummary(summaryData.error ? { 
+        total_revenue: 0, 
+        total_orders: 0, 
+        days_with_sales: 0,
+        amazon_revenue: 0,
+        woocommerce_revenue: 0 
+      } : summaryData)
+      setProducts(Array.isArray(productsData) ? productsData : [])
+      setProductBreakdown(breakdownData.error ? { 
+        chartData: [], 
+        categories: {} 
+      } : breakdownData)
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
