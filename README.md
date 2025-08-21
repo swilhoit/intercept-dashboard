@@ -1,36 +1,143 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sales Intelligence Dashboard
+
+A modern, responsive business intelligence dashboard built with Next.js, TypeScript, shadcn/ui, and Google BigQuery. This dashboard provides real-time insights into your sales data across multiple channels (Amazon and WooCommerce).
+
+## Features
+
+- **Real-time Sales Metrics**: View total revenue, average daily sales, and performance indicators
+- **Interactive Charts**: Line charts, bar charts, and pie charts powered by Recharts
+- **Date Range Filtering**: Select custom date ranges to analyze specific periods
+- **Channel Analysis**: Compare performance between Amazon and WooCommerce
+- **Product Analytics**: Track top-performing products by revenue and quantity
+- **Responsive Design**: Fully responsive layout that works on desktop, tablet, and mobile
+- **Dark Mode Support**: Built-in dark mode with shadcn/ui theming
+
+## Tech Stack
+
+- **Frontend**: Next.js 15.5, React 18, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Charts**: Recharts
+- **Database**: Google BigQuery
+- **Date Handling**: date-fns, react-day-picker
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ and npm
+- Google Cloud Project with BigQuery enabled
+- Service Account credentials for BigQuery access
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd /Users/samwilhoit/Documents/sales-dashboard
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Configure environment variables:
+   - The `.env.local` file is already configured with your BigQuery credentials
+   - Make sure the service account has access to the BigQuery datasets
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Start the development server:
+```bash
+npm run dev
+```
 
-## Learn More
+5. Open your browser and navigate to:
+```
+http://localhost:3002
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Dashboard Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Overview Tab
+- **Stats Cards**: Display key metrics including total revenue, average daily sales, active days, and best performing day
+- **Sales Trend Chart**: Interactive line and bar charts showing daily sales trends
+- **Channel Breakdown**: Pie chart visualizing revenue distribution between channels
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Products Tab
+- **Product Table**: Displays top 20 products by revenue
+- **Channel Badges**: Visual indicators for each product's sales channel
+- **Revenue and Quantity Metrics**: Track both sales value and units sold
 
-## Deploy on Vercel
+### Analytics Tab
+- **Sales Metrics**: Detailed KPIs including average order value and peak sales days
+- **Channel Performance**: Progress bars showing revenue contribution by channel
+- **Detailed Analysis**: Comprehensive charts for deeper insights
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Endpoints
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The dashboard uses the following API routes:
+
+- `GET /api/sales/daily` - Fetch daily sales data with optional date range filtering
+- `GET /api/sales/summary` - Get aggregated sales summary statistics
+- `GET /api/sales/products` - Retrieve product-level sales data
+- `GET /api/sales/monthly` - Fetch monthly sales summaries
+
+## BigQuery Tables Used
+
+- `intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES` - Daily sales totals
+- `intercept-sales-2508061117.MASTER.MONTHLY_SALES_SUMMARY` - Monthly aggregates
+- `intercept-sales-2508061117.amazon.orders_jan_2025_present` - Amazon order details
+- `intercept-sales-2508061117.woocommerce.orders` - WooCommerce order details
+
+## Customization
+
+### Adding New Metrics
+1. Update the BigQuery queries in `/src/app/api/sales/`
+2. Add new components in `/src/components/dashboard/`
+3. Update the main dashboard page at `/src/app/page.tsx`
+
+### Styling
+- Modify theme colors in `/src/app/globals.css`
+- Customize component styles using Tailwind classes
+- Update chart colors in the component files
+
+## Production Deployment
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Start Production Server
+```bash
+npm start
+```
+
+### Deploy to Vercel
+```bash
+vercel
+```
+
+## Performance Optimization
+
+- API routes use parallel data fetching with `Promise.all()`
+- Client-side caching for frequently accessed data
+- Responsive loading states for better UX
+- Optimized BigQuery queries with proper indexing
+
+## Security
+
+- Environment variables stored in `.env.local` (not committed to git)
+- Service account credentials with minimal required permissions
+- API routes protected against SQL injection
+- HTTPS enforced in production
+
+## Support
+
+For issues or questions, please check the following:
+1. Ensure BigQuery credentials are properly configured
+2. Verify network connectivity to Google Cloud
+3. Check browser console for any client-side errors
+4. Review API response in Network tab for debugging
+
+## License
+
+Private dashboard for internal business use.

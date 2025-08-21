@@ -1,103 +1,294 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState, useEffect } from "react"
+import { DateRange } from "react-day-picker"
+import { subDays } from "date-fns"
+import { DateRangePicker } from "@/components/dashboard/date-range-picker"
+import { StatsCards } from "@/components/dashboard/stats-cards"
+import { SalesChart } from "@/components/dashboard/sales-chart"
+import { SalesChartWithToggle } from "@/components/dashboard/sales-chart-with-toggle"
+import { ProductTable } from "@/components/dashboard/product-table"
+import { ProductTableWithFilter } from "@/components/dashboard/product-table-with-filter"
+import { ChannelBreakdown } from "@/components/dashboard/channel-breakdown"
+import { ProductBreakdown } from "@/components/dashboard/product-breakdown"
+import { ProductComparison } from "@/components/dashboard/product-comparison"
+import { CategoryAnalysis } from "@/components/dashboard/category-analysis"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+export default function DashboardPage() {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 30),
+    to: new Date(),
+  })
+  const [selectedChannel, setSelectedChannel] = useState<string>("all")
+  const [dailySales, setDailySales] = useState<any[]>([])
+  const [summary, setSummary] = useState<any>({})
+  const [products, setProducts] = useState<any[]>([])
+  const [productBreakdown, setProductBreakdown] = useState<any>({ breakdown: [], summary: [], totalProducts: 0 })
+  const [groupBy, setGroupBy] = useState<string>("daily")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchData()
+  }, [dateRange, selectedChannel, groupBy, categoryFilter])
+
+  const fetchData = async () => {
+    setLoading(true)
+    
+    const params = new URLSearchParams()
+    if (dateRange?.from) {
+      params.append("startDate", dateRange.from.toISOString().split("T")[0])
+    }
+    if (dateRange?.to) {
+      params.append("endDate", dateRange.to.toISOString().split("T")[0])
+    }
+    if (selectedChannel !== "all") {
+      params.append("channel", selectedChannel)
+    }
+
+    try {
+      const breakdownParams = new URLSearchParams(params)
+      breakdownParams.append("groupBy", groupBy)
+      if (categoryFilter !== "all") {
+        breakdownParams.append("category", categoryFilter)
+      }
+      
+      const [salesRes, summaryRes, productsRes, breakdownRes] = await Promise.all([
+        fetch(`/api/sales/daily?${params}`),
+        fetch(`/api/sales/summary?${params}`),
+        fetch(`/api/sales/products?${params}`),
+        fetch(`/api/sales/product-breakdown?${breakdownParams}`),
+      ])
+
+      const [salesData, summaryData, productsData, breakdownData] = await Promise.all([
+        salesRes.json(),
+        summaryRes.json(),
+        productsRes.json(),
+        breakdownRes.json(),
+      ])
+
+      setDailySales(salesData)
+      setSummary(summaryData)
+      setProducts(productsData)
+      setProductBreakdown(breakdownData)
+    } catch (error) {
+      console.error("Error fetching data:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex min-h-screen flex-col">
+      <main className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <h2 className="text-3xl font-bold tracking-tight">Sales Dashboard</h2>
+          <div className="flex items-center space-x-2">
+            <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+            <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select channel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Channels</SelectItem>
+                <SelectItem value="Amazon">Amazon</SelectItem>
+                <SelectItem value="WooCommerce">WooCommerce</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="products">Products</TabsTrigger>
+            <TabsTrigger value="categories">Categories</TabsTrigger>
+            <TabsTrigger value="breakdown">Product Breakdown</TabsTrigger>
+            <TabsTrigger value="comparison">Comparison</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <StatsCards
+              totalRevenue={summary.total_revenue}
+              avgDailySales={summary.avg_daily_sales}
+              daysWithSales={summary.days_with_sales}
+              highestDay={summary.highest_day}
+            />
+            
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+              <div className="col-span-full lg:col-span-4">
+                <SalesChartWithToggle 
+                  dateRange={dateRange}
+                  channel={selectedChannel}
+                  title="Sales Trend"
+                  description="Track your sales performance over time"
+                />
+              </div>
+              <div className="col-span-full lg:col-span-3">
+                <ChannelBreakdown
+                  amazonRevenue={summary.amazon_revenue}
+                  woocommerceRevenue={summary.woocommerce_revenue}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="products" className="space-y-4">
+            <div className="grid gap-4 grid-cols-1">
+              <ProductTableWithFilter 
+                dateRange={dateRange}
+                title="Top Performing Products"
+                description="Products ranked by total revenue"
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="categories" className="space-y-4">
+            <CategoryAnalysis dateRange={dateRange} />
+          </TabsContent>
+
+          <TabsContent value="breakdown" className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">Detailed Product Breakdown</h3>
+                <p className="text-sm text-muted-foreground">
+                  Analyze product performance by unique identifiers across date ranges
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="Fireplace Doors">Fireplace Doors</SelectItem>
+                    <SelectItem value="Paint">Paint</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={groupBy} onValueChange={setGroupBy}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <ProductBreakdown data={productBreakdown} loading={loading} />
+          </TabsContent>
+
+          <TabsContent value="comparison" className="space-y-4">
+            <ProductComparison 
+              data={products} 
+              dateRange={dateRange}
+            />
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sales Metrics</CardTitle>
+                  <CardDescription>Key performance indicators</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Average Order Value</span>
+                      <span className="text-sm text-muted-foreground">
+                        ${((summary.total_revenue || 0) / Math.max(summary.days_with_sales || 1, 1) / 50).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Peak Sales Day</span>
+                      <span className="text-sm text-muted-foreground">
+                        ${(summary.highest_day || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Minimum Sales Day</span>
+                      <span className="text-sm text-muted-foreground">
+                        ${(summary.lowest_day || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Active Sales Days</span>
+                      <span className="text-sm text-muted-foreground">
+                        {summary.days_with_sales || 0} days
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Channel Performance</CardTitle>
+                  <CardDescription>Revenue by sales channel</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Amazon</span>
+                        <span className="text-sm text-muted-foreground">
+                          ${(summary.amazon_revenue || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div 
+                          className="bg-orange-500 h-2 rounded-full"
+                          style={{ 
+                            width: `${((summary.amazon_revenue || 0) / Math.max(summary.total_revenue || 1, 1)) * 100}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">WooCommerce</span>
+                        <span className="text-sm text-muted-foreground">
+                          ${(summary.woocommerce_revenue || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{ 
+                            width: `${((summary.woocommerce_revenue || 0) / Math.max(summary.total_revenue || 1, 1)) * 100}%` 
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <SalesChartWithToggle 
+              dateRange={dateRange}
+              channel={selectedChannel}
+              title="Detailed Sales Analysis"
+              description="Compare channel performance over time"
+            />
+          </TabsContent>
+        </Tabs>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
-  );
+  )
 }
