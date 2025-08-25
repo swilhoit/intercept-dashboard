@@ -14,6 +14,7 @@ import { DateRange } from "react-day-picker"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Package } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface CategoryAnalysisProps {
   dateRange?: DateRange
@@ -27,6 +28,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
   const [loading, setLoading] = useState(false)
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
   const [adsData, setAdsData] = useState<any>({ categories: {}, dates: [] })
+  const [adMetricView, setAdMetricView] = useState<'tacos' | 'spend'>('tacos')
 
   useEffect(() => {
     fetchData()
@@ -532,73 +534,40 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
             ))}
           </div>
 
-          {/* TACOS Trend Chart */}
+          {/* Combined Ad Metrics Chart with Toggle */}
           <div className="border-t pt-4">
-            <h4 className="text-sm font-medium mb-4">TACOS Trend (Total Advertising Cost of Sales %)</h4>
-            <ResponsiveContainer width="100%" height={300}>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-medium">
+                {adMetricView === 'tacos' ? 'TACOS Trend (Total Advertising Cost of Sales %)' : 'Ad Spend Trend'}
+              </h4>
+              <div className="flex gap-1">
+                <Button
+                  variant={adMetricView === 'tacos' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAdMetricView('tacos')}
+                >
+                  TACOS
+                </Button>
+                <Button
+                  variant={adMetricView === 'spend' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAdMetricView('spend')}
+                >
+                  Ad Spend
+                </Button>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={350}>
               <LineChart data={adsData.dates?.map((date: string) => {
                 const dataPoint: any = { date: formatDate(date) }
                 Object.values(adsData.categories || {}).forEach((cat: any) => {
                   const dayData = cat.data?.find((d: any) => d.date === date)
                   if (dayData) {
-                    dataPoint[`${cat.name}_tacos`] = dayData.tacos
-                    dataPoint[`${cat.name}_spend`] = dayData.adSpend
-                  }
-                })
-                return dataPoint
-              })}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="date" 
-                  className="text-xs"
-                  tick={{ fill: 'currentColor' }}
-                  angle={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? -45 : 0}
-                  textAnchor={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? "end" : "middle"}
-                  height={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? 80 : 40}
-                />
-                <YAxis 
-                  className="text-xs"
-                  tick={{ fill: 'currentColor' }}
-                  tickFormatter={(value) => `${value.toFixed(1)}%`}
-                />
-                <Tooltip 
-                  formatter={(value: any, name: string) => {
-                    if (name.includes('tacos')) {
-                      return [`${value.toFixed(2)}%`, name.replace('_tacos', ' TACOS')]
+                    if (adMetricView === 'tacos') {
+                      dataPoint[cat.name] = dayData.tacos
+                    } else {
+                      dataPoint[cat.name] = dayData.adSpend
                     }
-                    return [formatCurrency(value), name.replace('_spend', ' Spend')]
-                  }}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
-                  }}
-                />
-                <Legend formatter={(value) => value.replace('_tacos', ' TACOS').replace('_spend', ' Spend')} />
-                {Object.values(adsData.categories || {}).map((cat: any) => (
-                  <Line 
-                    key={`${cat.name}_tacos`}
-                    type="monotone" 
-                    dataKey={`${cat.name}_tacos`}
-                    stroke={getCategoryColor(cat.name)}
-                    strokeWidth={2}
-                    dot={aggregation !== "daily" || (adsData.dates?.length || 0) <= 30}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Ad Spend Trend Chart */}
-          <div className="border-t pt-4 mt-4">
-            <h4 className="text-sm font-medium mb-4">Ad Spend Trend</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={adsData.dates?.map((date: string) => {
-                const dataPoint: any = { date: formatDate(date) }
-                Object.values(adsData.categories || {}).forEach((cat: any) => {
-                  const dayData = cat.data?.find((d: any) => d.date === date)
-                  if (dayData) {
-                    dataPoint[cat.name] = dayData.adSpend
                   }
                 })
                 return dataPoint
@@ -615,10 +584,12 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                 <YAxis 
                   className="text-xs"
                   tick={{ fill: 'currentColor' }}
-                  tickFormatter={formatCurrency}
+                  tickFormatter={adMetricView === 'tacos' ? (value) => `${value.toFixed(1)}%` : formatCurrency}
                 />
                 <Tooltip 
-                  formatter={(value: any) => formatCurrency(value)}
+                  formatter={(value: any) => 
+                    adMetricView === 'tacos' ? `${value.toFixed(2)}%` : formatCurrency(value)
+                  }
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--background))',
                     border: '1px solid hsl(var(--border))',
