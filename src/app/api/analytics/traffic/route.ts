@@ -12,31 +12,19 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const selectedSite = searchParams.get('site') || 'all';
     
-    // Define site configurations - easily expandable for new sites
+    // Define site configurations - only the 2 main sites
     const sites = [
       { 
         name: 'Brick Anew',
         dataset: 'brick_anew_ga4',
-        hasEventsSummary: true,
+        hasEventsSummary: false, // events_summary is empty, use events tables
         propertyId: 'brick_anew'
       },
       { 
         name: 'Heatilator',
         dataset: 'heatilator_ga4',
-        hasEventsSummary: false,
+        hasEventsSummary: false, // events_summary is empty, use events tables
         propertyId: 'heatilator'
-      },
-      {
-        name: 'Analytics 291259221',
-        dataset: 'analytics_291259221',
-        hasEventsSummary: false,
-        propertyId: 'analytics_291259221'
-      },
-      {
-        name: 'Analytics 321103435',
-        dataset: 'analytics_321103435',
-        hasEventsSummary: false,
-        propertyId: 'analytics_321103435'
       }
     ];
     
