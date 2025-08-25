@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
               COUNTIF(event_name = 'purchase') as conversions,
               SUM(CASE WHEN event_name = 'purchase' THEN ecommerce.purchase_revenue ELSE 0 END) as revenue
             FROM \`intercept-sales-2508061117.${site.dataset}.events_*\`
-            WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)) 
+            WHERE _TABLE_SUFFIX BETWEEN '20250101' 
               AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
             GROUP BY event_date
           )
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
             `WHERE date >= '${startDate}' AND date <= '${endDate}'`);
         } else {
           query = query.replace(
-            'WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE(\'%Y%m%d\', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY))',
+            "WHERE _TABLE_SUFFIX BETWEEN '20250101'",
             `WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
           ).replace(
             'AND FORMAT_DATE(\'%Y%m%d\', CURRENT_DATE())',
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
             COUNTIF(event_name = 'purchase') as conversions,
             SUM(CASE WHEN event_name = 'purchase' THEN ecommerce.purchase_revenue ELSE 0 END) as revenue
           FROM \`intercept-sales-2508061117.${site.dataset}.events_*\`
-          WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)) 
+          WHERE _TABLE_SUFFIX BETWEEN '20250101' 
             AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
         `;
         
@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
             (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id') as session_id,
             event_name
           FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
-          WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+          WHERE _TABLE_SUFFIX BETWEEN '20250101' 
             AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
         )
         SELECT 
@@ -216,7 +216,7 @@ export async function GET(request: NextRequest) {
       
       if (startDate && endDate) {
         channelQuery = channelQuery.replace(
-          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          "'20250101'",
           `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
         ).replace(
           "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
@@ -225,7 +225,7 @@ export async function GET(request: NextRequest) {
       }
       
       channelQuery += `
-        GROUP BY channel
+        GROUP BY IFNULL(channel, 'Direct')
         ORDER BY sessions DESC
         LIMIT 10
       `;
@@ -245,14 +245,14 @@ export async function GET(request: NextRequest) {
           0 as bounce_rate,
           AVG((SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'engagement_time_msec')/1000) as avg_engagement_duration
         FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
-        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+        WHERE _TABLE_SUFFIX BETWEEN '20250101' 
           AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
           AND device.category IS NOT NULL
       `;
       
       if (startDate && endDate) {
         deviceQuery = deviceQuery.replace(
-          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          "'20250101'",
           `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
         ).replace(
           "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
@@ -280,14 +280,14 @@ export async function GET(request: NextRequest) {
           AVG((SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'engagement_time_msec')/1000) as avg_time_on_page,
           0 as bounce_rate
         FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
-        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+        WHERE _TABLE_SUFFIX BETWEEN '20250101' 
           AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
           AND event_name = 'page_view'
       `;
       
       if (startDate && endDate) {
         pagesQuery = pagesQuery.replace(
-          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          "'20250101'",
           `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
         ).replace(
           "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
@@ -296,7 +296,9 @@ export async function GET(request: NextRequest) {
       }
       
       pagesQuery += `
-        GROUP BY page, title
+        GROUP BY 
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location'),
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_title')
         ORDER BY views DESC
         LIMIT 20
       `;
@@ -318,14 +320,14 @@ export async function GET(request: NextRequest) {
           0 as bounce_rate,
           COUNTIF(event_name = 'purchase') as conversions
         FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
-        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+        WHERE _TABLE_SUFFIX BETWEEN '20250101' 
           AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
           AND traffic_source.source IS NOT NULL
       `;
       
       if (startDate && endDate) {
         sourcesQuery = sourcesQuery.replace(
-          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          "'20250101'",
           `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
         ).replace(
           "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
@@ -334,7 +336,7 @@ export async function GET(request: NextRequest) {
       }
       
       sourcesQuery += `
-        GROUP BY source, medium
+        GROUP BY traffic_source.source, traffic_source.medium
         ORDER BY sessions DESC
         LIMIT 20
       `;
@@ -354,14 +356,14 @@ export async function GET(request: NextRequest) {
           COUNTIF(event_name = 'purchase') as conversions,
           SUM(CASE WHEN event_name = 'purchase' THEN ecommerce.purchase_revenue ELSE 0 END) as revenue
         FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
-        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+        WHERE _TABLE_SUFFIX BETWEEN '20250101' 
           AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
           AND geo.country IS NOT NULL AND geo.country != ''
       `;
       
       if (startDate && endDate) {
         geoQuery = geoQuery.replace(
-          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          "'20250101'",
           `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
         ).replace(
           "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
@@ -370,7 +372,7 @@ export async function GET(request: NextRequest) {
       }
       
       geoQuery += `
-        GROUP BY country
+        GROUP BY geo.country
         ORDER BY sessions DESC
         LIMIT 10
       `;
