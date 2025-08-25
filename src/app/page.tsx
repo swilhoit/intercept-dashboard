@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [groupBy, setGroupBy] = useState<string>("daily")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
+  const [adSpendData, setAdSpendData] = useState<any>({ metrics: {}, trend: [] })
 
   useEffect(() => {
     fetchData()
@@ -66,18 +67,20 @@ export default function DashboardPage() {
         breakdownParams.append("category", categoryFilter)
       }
       
-      const [salesRes, summaryRes, productsRes, breakdownRes] = await Promise.all([
+      const [salesRes, summaryRes, productsRes, breakdownRes, adSpendRes] = await Promise.all([
         fetch(`/api/sales/daily?${params}`),
         fetch(`/api/sales/summary?${params}`),
         fetch(`/api/sales/products?${params}`),
         fetch(`/api/sales/product-breakdown?${breakdownParams}`),
+        fetch(`/api/ads/total-spend?${params}`),
       ])
 
-      const [salesData, summaryData, productsData, breakdownData] = await Promise.all([
+      const [salesData, summaryData, productsData, breakdownData, adSpendInfo] = await Promise.all([
         salesRes.json(),
         summaryRes.json(),
         productsRes.json(),
         breakdownRes.json(),
+        adSpendRes.json(),
       ])
 
       // Handle error responses
@@ -94,6 +97,10 @@ export default function DashboardPage() {
         chartData: [], 
         categories: {} 
       } : breakdownData)
+      setAdSpendData(adSpendInfo.error ? { 
+        metrics: {}, 
+        trend: [] 
+      } : adSpendInfo)
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
@@ -148,6 +155,10 @@ export default function DashboardPage() {
               avgDailySales={summary.avg_daily_sales}
               daysWithSales={summary.days_with_sales}
               highestDay={summary.highest_day}
+              totalAdSpend={adSpendData.metrics?.totalAdSpend || 0}
+              tacos={(adSpendData.metrics?.totalAdSpend && summary.total_revenue > 0) 
+                ? (adSpendData.metrics.totalAdSpend / summary.total_revenue * 100) 
+                : 0}
             />
             
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
