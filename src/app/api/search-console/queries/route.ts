@@ -24,6 +24,16 @@ export async function GET(request: NextRequest) {
         name: 'Heatilator',
         dataset: 'searchconsole_heatilator',
         domain: 'heatilator.com'
+      },
+      {
+        name: 'Fireplace Painting',
+        dataset: 'searchconsole_fireplacepainting',
+        domain: 'fireplacepainting.com'
+      },
+      {
+        name: 'Fireplaces.net',
+        dataset: 'searchconsole_fireplacesnet',
+        domain: 'fireplaces.net'
       }
     ];
     
@@ -51,7 +61,7 @@ export async function GET(request: NextRequest) {
               '${site.name}' as site_name,
               SUM(clicks) as clicks,
               SUM(impressions) as impressions,
-              ROUND(AVG(avg_position), 2) as avg_position,
+              ROUND(SAFE_DIVIDE(SUM(sum_top_position), SUM(impressions)), 2) as avg_position,
               ROUND(SAFE_DIVIDE(SUM(clicks), SUM(impressions)) * 100, 2) as ctr
             FROM \`intercept-sales-2508061117.${site.dataset}.searchdata_site_impression\`
             WHERE query IS NOT NULL 

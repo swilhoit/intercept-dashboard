@@ -24,6 +24,16 @@ export async function GET(request: NextRequest) {
         name: 'Heatilator',
         dataset: 'searchconsole_heatilator',
         domain: 'heatilator.com'
+      },
+      {
+        name: 'Fireplace Painting',
+        dataset: 'searchconsole_fireplacepainting',
+        domain: 'fireplacepainting.com'
+      },
+      {
+        name: 'Fireplaces.net',
+        dataset: 'searchconsole_fireplacesnet',
+        domain: 'fireplaces.net'
       }
     ];
     
@@ -46,18 +56,18 @@ export async function GET(request: NextRequest) {
         try {
           const query = `
             SELECT 
-              page,
+              url as page,
               '${site.domain}' as site,
               '${site.name}' as site_name,
               SUM(clicks) as clicks,
               SUM(impressions) as impressions,
-              ROUND(AVG(avg_position), 2) as avg_position,
+              ROUND(SAFE_DIVIDE(SUM(sum_position), SUM(impressions)), 2) as avg_position,
               ROUND(SAFE_DIVIDE(SUM(clicks), SUM(impressions)) * 100, 2) as ctr
-            FROM \`intercept-sales-2508061117.${site.dataset}.searchdata_site_impression\`
-            WHERE page IS NOT NULL 
-              AND page != '' 
+            FROM \`intercept-sales-2508061117.${site.dataset}.searchdata_url_impression\`
+            WHERE url IS NOT NULL 
+              AND url != '' 
               ${dateFilter}
-            GROUP BY page
+            GROUP BY url
             ORDER BY clicks DESC
             LIMIT ${limit}
           `;

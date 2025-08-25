@@ -167,7 +167,9 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
   const availableSites = [
     { value: "all", label: "All Sites" },
     { value: "brickanew.com", label: "Brick Anew" },
-    { value: "heatilator.com", label: "Heatilator" }
+    { value: "heatilator.com", label: "Heatilator" },
+    { value: "fireplacepainting.com", label: "Fireplace Painting" },
+    { value: "fireplaces.net", label: "Fireplaces.net" }
   ]
 
   if (loading) {

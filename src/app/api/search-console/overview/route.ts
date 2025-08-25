@@ -25,6 +25,18 @@ export async function GET(request: NextRequest) {
         dataset: 'searchconsole_heatilator',
         property: 'sc-domain:heatilator.com',
         domain: 'heatilator.com'
+      },
+      {
+        name: 'Fireplace Painting',
+        dataset: 'searchconsole_fireplacepainting',
+        property: 'sc-domain:fireplacepainting.com',
+        domain: 'fireplacepainting.com'
+      },
+      {
+        name: 'Fireplaces.net',
+        dataset: 'searchconsole_fireplacesnet',
+        property: 'sc-domain:fireplaces.net',
+        domain: 'fireplaces.net'
       }
     ];
     
@@ -51,10 +63,10 @@ export async function GET(request: NextRequest) {
               '${site.name}' as site_name,
               SUM(clicks) as total_clicks,
               SUM(impressions) as total_impressions,
-              ROUND(AVG(avg_position), 2) as avg_position,
+              ROUND(SAFE_DIVIDE(SUM(sum_top_position), SUM(impressions)), 2) as avg_position,
               ROUND(SAFE_DIVIDE(SUM(clicks), SUM(impressions)) * 100, 2) as ctr,
               COUNT(DISTINCT query) as total_queries,
-              COUNT(DISTINCT page) as total_pages
+              COUNT(DISTINCT site_url) as total_pages
             FROM \`intercept-sales-2508061117.${site.dataset}.searchdata_site_impression\`
             WHERE 1=1 ${dateFilter}
           `;
@@ -127,7 +139,7 @@ export async function GET(request: NextRequest) {
         '${site.name}' as site_name,
         SUM(clicks) as clicks,
         SUM(impressions) as impressions,
-        ROUND(AVG(avg_position), 2) as avg_position,
+        ROUND(SAFE_DIVIDE(SUM(sum_top_position), SUM(impressions)), 2) as avg_position,
         ROUND(SAFE_DIVIDE(SUM(clicks), SUM(impressions)) * 100, 2) as ctr
       FROM \`intercept-sales-2508061117.${site.dataset}.searchdata_site_impression\`
       WHERE 1=1 ${dateFilter}

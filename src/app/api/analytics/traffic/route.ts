@@ -199,29 +199,47 @@ export async function GET(request: NextRequest) {
     const primarySite = sites.find(s => s.hasEventsSummary) || sites[0];
     let channelRows = [], deviceRows = [], pagesRows = [], sourcesRows = [], geoRows = [];
     
-    // Always try to get channel, device, pages data when we have a site with events_summary
-    if (primarySite.hasEventsSummary) {
-      // Get channel breakdown
+    // Always try to get channel, device, pages data
+    // For now, use events tables directly since events_summary is empty
+    if (primarySite) {
+      // Get channel breakdown from events tables
       let channelQuery = `
+        WITH channel_data AS (
+          SELECT 
+            (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'session_default_channel_group') as channel,
+            user_pseudo_id,
+            (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id') as session_id,
+            event_name
+          FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
+          WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+            AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
+        )
         SELECT 
-          sessionDefaultChannelGroup as channel,
-          SUM(totalUsers) as users,
-          SUM(sessions) as sessions,
-          SUM(screenPageViews) as page_views,
-          AVG(bounceRate) as bounce_rate,
-          SUM(conversions) as conversions,
-          SUM(totalRevenue) as revenue
-        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_summary_2025\`
-        WHERE sessionDefaultChannelGroup IS NOT NULL
+          IFNULL(channel, 'Direct') as channel,
+          COUNT(DISTINCT user_pseudo_id) as users,
+          COUNT(DISTINCT CONCAT(user_pseudo_id, session_id)) as sessions,
+          COUNTIF(event_name = 'page_view') as page_views,
+          0 as bounce_rate,
+          COUNTIF(event_name = 'purchase') as conversions,
+          0 as revenue
+        FROM channel_data
+        WHERE channel IS NOT NULL OR event_name IS NOT NULL
       `;
       
       if (startDate && endDate) {
-        channelQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+        channelQuery = channelQuery.replace(
+          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
+        ).replace(
+          "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
+          `FORMAT_DATE('%Y%m%d', DATE('${endDate}'))`
+        );
       }
       
       channelQuery += `
-        GROUP BY sessionDefaultChannelGroup
+        GROUP BY channel
         ORDER BY sessions DESC
+        LIMIT 10
       `;
       
       [channelRows] = await bigquery.query(channelQuery).catch((err: any) => {
@@ -229,25 +247,33 @@ export async function GET(request: NextRequest) {
         return [[]];
       });
       
-      // Get device breakdown
+      // Get device breakdown from events tables
       let deviceQuery = `
         SELECT 
-          deviceCategory as device,
-          SUM(totalUsers) as users,
-          SUM(sessions) as sessions,
-          SUM(screenPageViews) as page_views,
-          AVG(bounceRate) as bounce_rate,
-          AVG(userEngagementDuration) as avg_engagement_duration
-        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_summary_2025\`
-        WHERE deviceCategory IS NOT NULL
+          device.category as device,
+          COUNT(DISTINCT user_pseudo_id) as users,
+          COUNT(DISTINCT CONCAT(user_pseudo_id, (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id'))) as sessions,
+          COUNTIF(event_name = 'page_view') as page_views,
+          0 as bounce_rate,
+          AVG((SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'engagement_time_msec')/1000) as avg_engagement_duration
+        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
+        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+          AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
+          AND device.category IS NOT NULL
       `;
       
       if (startDate && endDate) {
-        deviceQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+        deviceQuery = deviceQuery.replace(
+          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
+        ).replace(
+          "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
+          `FORMAT_DATE('%Y%m%d', DATE('${endDate}'))`
+        );
       }
       
       deviceQuery += `
-        GROUP BY deviceCategory
+        GROUP BY device.category
         ORDER BY sessions DESC
       `;
       
@@ -256,25 +282,33 @@ export async function GET(request: NextRequest) {
         return [[]];
       });
       
-      // Get top pages
+      // Get top pages from events tables
       let pagesQuery = `
         SELECT 
-          pagePath as page,
-          pageTitle as title,
-          SUM(screenPageViews) as views,
-          SUM(totalUsers) as users,
-          AVG(userEngagementDuration) as avg_time_on_page,
-          AVG(bounceRate) as bounce_rate
-        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_summary_2025\`
-        WHERE pagePath IS NOT NULL AND eventName = 'page_view'
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location') as page,
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_title') as title,
+          COUNT(*) as views,
+          COUNT(DISTINCT user_pseudo_id) as users,
+          AVG((SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'engagement_time_msec')/1000) as avg_time_on_page,
+          0 as bounce_rate
+        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
+        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+          AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
+          AND event_name = 'page_view'
       `;
       
       if (startDate && endDate) {
-        pagesQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+        pagesQuery = pagesQuery.replace(
+          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
+        ).replace(
+          "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
+          `FORMAT_DATE('%Y%m%d', DATE('${endDate}'))`
+        );
       }
       
       pagesQuery += `
-        GROUP BY pagePath, pageTitle
+        GROUP BY page, title
         ORDER BY views DESC
         LIMIT 20
       `;
@@ -284,23 +318,31 @@ export async function GET(request: NextRequest) {
         return [[]];
       });
       
-      // Get traffic sources
+      // Get traffic sources from events tables
       let sourcesQuery = `
         SELECT 
-          source,
-          medium,
-          SUM(totalUsers) as users,
-          SUM(newUsers) as new_users,
-          SUM(sessions) as sessions,
-          SUM(screenPageViews) as page_views,
-          AVG(bounceRate) as bounce_rate,
-          SUM(conversions) as conversions
-        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_summary_2025\`
-        WHERE source IS NOT NULL
+          traffic_source.source as source,
+          traffic_source.medium as medium,
+          COUNT(DISTINCT user_pseudo_id) as users,
+          COUNT(DISTINCT CASE WHEN (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_number') = 1 THEN user_pseudo_id END) as new_users,
+          COUNT(DISTINCT CONCAT(user_pseudo_id, (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id'))) as sessions,
+          COUNTIF(event_name = 'page_view') as page_views,
+          0 as bounce_rate,
+          COUNTIF(event_name = 'purchase') as conversions
+        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
+        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+          AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
+          AND traffic_source.source IS NOT NULL
       `;
       
       if (startDate && endDate) {
-        sourcesQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+        sourcesQuery = sourcesQuery.replace(
+          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
+        ).replace(
+          "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
+          `FORMAT_DATE('%Y%m%d', DATE('${endDate}'))`
+        );
       }
       
       sourcesQuery += `
@@ -314,21 +356,29 @@ export async function GET(request: NextRequest) {
         return [[]];
       });
       
-      // Get geographic data
+      // Get geographic data from events tables
       let geoQuery = `
         SELECT 
-          country,
-          SUM(totalUsers) as users,
-          SUM(sessions) as sessions,
-          SUM(screenPageViews) as page_views,
-          SUM(conversions) as conversions,
-          SUM(totalRevenue) as revenue
-        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_summary_2025\`
-        WHERE country IS NOT NULL AND country != '(not set)'
+          geo.country as country,
+          COUNT(DISTINCT user_pseudo_id) as users,
+          COUNT(DISTINCT CONCAT(user_pseudo_id, (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id'))) as sessions,
+          COUNTIF(event_name = 'page_view') as page_views,
+          COUNTIF(event_name = 'purchase') as conversions,
+          SUM(CASE WHEN event_name = 'purchase' THEN ecommerce.purchase_revenue ELSE 0 END) as revenue
+        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
+        WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)) 
+          AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
+          AND geo.country IS NOT NULL AND geo.country != ''
       `;
       
       if (startDate && endDate) {
-        geoQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+        geoQuery = geoQuery.replace(
+          "FORMAT_DATE('%Y%m%d', DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY))",
+          `FORMAT_DATE('%Y%m%d', DATE('${startDate}'))`
+        ).replace(
+          "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
+          `FORMAT_DATE('%Y%m%d', DATE('${endDate}'))`
+        );
       }
       
       geoQuery += `
