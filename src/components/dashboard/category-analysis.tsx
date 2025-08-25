@@ -450,13 +450,13 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
           <Card key={category.name}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span>{category.name} Performance</span>
+                <span>{category.name} Channel Performance</span>
                 <Badge style={{ backgroundColor: getCategoryColor(category.name), color: 'white' }}>
                   {category.name}
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Sales trend for {category.name.toLowerCase()} products
+                Channel sales trends for {category.name.toLowerCase()} products
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -482,7 +482,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                   <Tooltip 
                     formatter={(value: any, name: string) => [
                       formatCurrency(value),
-                      name === 'sales' ? 'Revenue' : name
+                      name
                     ]}
                     contentStyle={{ 
                       backgroundColor: 'hsl(var(--background))',
@@ -490,11 +490,20 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                       borderRadius: '6px'
                     }}
                   />
+                  <Legend />
                   <Line 
                     type="monotone" 
-                    dataKey="sales"
-                    name="Revenue"
-                    stroke={getCategoryColor(category.name)}
+                    dataKey="amazon_sales"
+                    name="Amazon"
+                    stroke="#FF9500"
+                    strokeWidth={2}
+                    dot={aggregation !== "daily" || category.data.length <= 20}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="woocommerce_sales"
+                    name="WooCommerce"
+                    stroke="#007AFF"
                     strokeWidth={2}
                     dot={aggregation !== "daily" || category.data.length <= 20}
                   />
