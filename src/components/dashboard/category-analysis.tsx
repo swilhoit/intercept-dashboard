@@ -25,6 +25,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
   const [products, setProducts] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [loading, setLoading] = useState(false)
+  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchData()
@@ -87,6 +88,16 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
       'Other': '#95A5A6'
     }
     return colors[category] || '#95A5A6'
+  }
+
+  const toggleCategory = (categoryName: string) => {
+    const newHidden = new Set(hiddenCategories)
+    if (newHidden.has(categoryName)) {
+      newHidden.delete(categoryName)
+    } else {
+      newHidden.add(categoryName)
+    }
+    setHiddenCategories(newHidden)
   }
 
   if (loading) {
@@ -269,7 +280,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Total Sales by Category</CardTitle>
-              <CardDescription>Aggregated sales across all product categories</CardDescription>
+              <CardDescription>Aggregated sales across all product categories (click legend to toggle)</CardDescription>
             </div>
             <Select value={aggregation} onValueChange={setAggregation}>
               <SelectTrigger className="w-[120px]">
@@ -311,18 +322,28 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                   borderRadius: '6px'
                 }}
               />
-              <Legend />
+              <Legend 
+                onClick={(e: any) => {
+                  if (e && e.value) {
+                    toggleCategory(e.value)
+                  }
+                }}
+                wrapperStyle={{ cursor: 'pointer' }}
+              />
               {mainCategories.map((category: any) => (
-                <Line 
-                  key={category.name}
-                  type="monotone" 
-                  dataKey={category.name}
-                  stroke={getCategoryColor(category.name)}
-                  strokeWidth={2}
-                  dot={aggregation !== "daily" || (data.aggregated?.length || 0) <= 30}
-                />
+                !hiddenCategories.has(category.name) && (
+                  <Line 
+                    key={category.name}
+                    type="monotone" 
+                    dataKey={category.name}
+                    stroke={getCategoryColor(category.name)}
+                    strokeWidth={2}
+                    dot={aggregation !== "daily" || (data.aggregated?.length || 0) <= 30}
+                    hide={hiddenCategories.has(category.name)}
+                  />
+                )
               ))}
-              {otherCategory && (
+              {otherCategory && !hiddenCategories.has('Other') && (
                 <Line 
                   type="monotone" 
                   dataKey="Other"
@@ -330,6 +351,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                   strokeWidth={1}
                   strokeDasharray="5 5"
                   dot={false}
+                  hide={hiddenCategories.has('Other')}
                 />
               )}
             </LineChart>
