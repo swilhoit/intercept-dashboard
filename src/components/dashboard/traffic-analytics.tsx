@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, BarChart, Bar } from "recharts"
 import { DateRange } from "react-day-picker"
-import { Users, Eye, MousePointer, Clock, Globe, Monitor, Smartphone, Tablet, TrendingUp, ArrowUp, ArrowDown } from "lucide-react"
+import { Users, Eye, MousePointer, Clock, Globe, Monitor, Smartphone, Tablet, TrendingUp, ArrowUp, ArrowDown, Building } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -24,20 +24,23 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
   const [data, setData] = useState<any>({
     summary: {},
     sites: [],
+    siteTrends: [],
+    aggregatedTrend: [],
     channels: [],
     devices: [],
     topPages: [],
     sources: [],
-    trend: [],
-    geography: []
+    geography: [],
+    availableSites: []
   })
   const [loading, setLoading] = useState(false)
   const [viewMode, setViewMode] = useState<'users' | 'sessions' | 'pageviews'>('sessions')
   const [selectedSite, setSelectedSite] = useState<string>('all')
+  const [trendView, setTrendView] = useState<'aggregated' | 'per-site'>('aggregated')
 
   useEffect(() => {
     fetchData()
-  }, [dateRange])
+  }, [dateRange, selectedSite])
 
   const fetchData = async () => {
     setLoading(true)
@@ -48,6 +51,9 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
     }
     if (dateRange?.to) {
       params.append("endDate", dateRange.to.toISOString().split("T")[0])
+    }
+    if (selectedSite !== 'all') {
+      params.append("site", selectedSite)
     }
 
     try {
@@ -100,6 +106,11 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
     return colors[channel] || '#6B7280'
   }
 
+  const getSiteColor = (index: number) => {
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6']
+    return colors[index % colors.length]
+  }
+
   const getDeviceIcon = (device: string) => {
     switch(device.toLowerCase()) {
       case 'desktop': return <Monitor className="h-4 w-4" />
@@ -121,8 +132,41 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
     )
   }
 
+  // Get site-specific or aggregated metrics
+  const displayMetrics = selectedSite === 'all' 
+    ? data.summary 
+    : data.sites?.find((s: any) => s.id === selectedSite) || data.summary
+
   return (
     <div className="space-y-6">
+      {/* Site Selector */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Building className="h-5 w-5" />
+            Traffic Overview
+          </h3>
+          <Select value={selectedSite} onValueChange={setSelectedSite}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select site" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sites (Aggregate)</SelectItem>
+              {data.availableSites?.map((site: any) => (
+                <SelectItem key={site.id} value={site.id}>
+                  {site.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {selectedSite === 'all' && (
+          <Badge variant="outline" className="text-sm">
+            {data.sites?.length || 0} sites tracked
+          </Badge>
+        )}
+      </div>
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <Card>
@@ -131,9 +175,9 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(data.summary?.total_users || 0)}</div>
+            <div className="text-2xl font-bold">{formatNumber(displayMetrics?.total_users || 0)}</div>
             <p className="text-xs text-muted-foreground">
-              {formatNumber(data.summary?.new_users || 0)} new users
+              {formatNumber(displayMetrics?.new_users || 0)} new users
             </p>
           </CardContent>
         </Card>
@@ -144,7 +188,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <MousePointer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(data.summary?.total_sessions || 0)}</div>
+            <div className="text-2xl font-bold">{formatNumber(displayMetrics?.total_sessions || 0)}</div>
             <p className="text-xs text-muted-foreground">
               Total website sessions
             </p>
@@ -157,7 +201,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(data.summary?.page_views || 0)}</div>
+            <div className="text-2xl font-bold">{formatNumber(displayMetrics?.page_views || 0)}</div>
             <p className="text-xs text-muted-foreground">
               Total pages viewed
             </p>
@@ -171,8 +215,8 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {data.summary?.page_views && data.summary?.total_sessions 
-                ? (data.summary.page_views / data.summary.total_sessions).toFixed(1)
+              {displayMetrics?.page_views && displayMetrics?.total_sessions 
+                ? (displayMetrics.page_views / displayMetrics.total_sessions).toFixed(1)
                 : '0'}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -187,7 +231,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(data.summary?.total_conversions || 0)}</div>
+            <div className="text-2xl font-bold">{formatNumber(displayMetrics?.total_conversions || 0)}</div>
             <p className="text-xs text-muted-foreground">
               Goal completions
             </p>
@@ -201,8 +245,8 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {data.summary?.total_conversions && data.summary?.total_sessions 
-                ? formatPercent(data.summary.total_conversions / data.summary.total_sessions)
+              {displayMetrics?.total_conversions && displayMetrics?.total_sessions 
+                ? formatPercent(displayMetrics.total_conversions / displayMetrics.total_sessions)
                 : '0%'}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -212,37 +256,215 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
         </Card>
       </div>
 
-      {/* Site Comparison */}
-      {data.sites && data.sites.length > 1 && (
+      {/* Site Performance Breakdown - Only show when viewing all sites */}
+      {selectedSite === 'all' && data.sites && data.sites.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Site Performance Comparison</CardTitle>
-            <CardDescription>Metrics across different properties</CardDescription>
+            <CardTitle>Site Performance Breakdown</CardTitle>
+            <CardDescription>Metrics across all tracked properties</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {data.sites.map((site: any) => (
-                <div key={site.name} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">{site.site_name}</h4>
-                    <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
-                      <span>Users: {formatNumber(site.total_users || 0)}</span>
-                      <span>Sessions: {formatNumber(site.total_sessions || 0)}</span>
-                      <span>Page Views: {formatNumber(site.page_views || 0)}</span>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {data.sites.map((site: any, index: number) => (
+                <Card key={site.id} className="border-l-4" style={{ borderLeftColor: getSiteColor(index) }}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      <span>{site.name}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {((site.total_sessions / data.summary?.total_sessions) * 100).toFixed(1)}%
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Users:</span>
+                      <span className="font-medium">{formatNumber(site.total_users || 0)}</span>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-muted-foreground">Bounce Rate</div>
-                    <div className="text-lg font-semibold">
-                      {formatPercent(site.avg_bounce_rate || 0)}
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Sessions:</span>
+                      <span className="font-medium">{formatNumber(site.total_sessions || 0)}</span>
                     </div>
-                  </div>
-                </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Page Views:</span>
+                      <span className="font-medium">{formatNumber(site.page_views || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Bounce Rate:</span>
+                      <span className="font-medium">{formatPercent(site.avg_bounce_rate || 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Conversions:</span>
+                      <span className="font-medium">{formatNumber(site.total_conversions || 0)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Traffic Trend */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Traffic Trend</CardTitle>
+              <CardDescription>
+                {trendView === 'aggregated' ? 'Combined traffic across all sites' : 'Traffic per individual site'}
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              {selectedSite === 'all' && (
+                <div className="flex gap-1">
+                  <Button
+                    variant={trendView === 'aggregated' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setTrendView('aggregated')}
+                  >
+                    Aggregated
+                  </Button>
+                  <Button
+                    variant={trendView === 'per-site' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setTrendView('per-site')}
+                  >
+                    Per Site
+                  </Button>
+                </div>
+              )}
+              <div className="flex gap-1">
+                <Button
+                  variant={viewMode === 'users' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('users')}
+                >
+                  Users
+                </Button>
+                <Button
+                  variant={viewMode === 'sessions' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('sessions')}
+                >
+                  Sessions
+                </Button>
+                <Button
+                  variant={viewMode === 'pageviews' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('pageviews')}
+                >
+                  Page Views
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={350}>
+            {trendView === 'aggregated' || selectedSite !== 'all' ? (
+              // Aggregated trend chart
+              <LineChart data={data.aggregatedTrend?.map((item: any) => ({
+                ...item,
+                date: formatDate(item.date),
+                value: viewMode === 'users' ? item.users : 
+                       viewMode === 'sessions' ? item.sessions : 
+                       item.page_views
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="date" 
+                  className="text-xs"
+                  angle={data.aggregatedTrend?.length > 20 ? -45 : 0}
+                  textAnchor={data.aggregatedTrend?.length > 20 ? "end" : "middle"}
+                  height={data.aggregatedTrend?.length > 20 ? 80 : 40}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tickFormatter={formatNumber}
+                />
+                <Tooltip 
+                  formatter={(value: any) => formatNumber(value)}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="value"
+                  name={viewMode === 'users' ? 'Users' : viewMode === 'sessions' ? 'Sessions' : 'Page Views'}
+                  stroke="#3B82F6"
+                  strokeWidth={2}
+                  dot={data.aggregatedTrend?.length <= 30}
+                />
+                {viewMode === 'sessions' && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="conversions"
+                    name="Conversions"
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    dot={false}
+                    strokeDasharray="5 5"
+                  />
+                )}
+              </LineChart>
+            ) : (
+              // Per-site trend chart
+              <LineChart data={(() => {
+                const dates = [...new Set(data.siteTrends?.map((item: any) => item.date))].sort()
+                return dates.map((date: any) => {
+                  const dataPoint: any = { date: formatDate(date) }
+                  data.sites?.forEach((site: any) => {
+                    const siteData = data.siteTrends?.find((t: any) => 
+                      t.date === date && t.site_id === site.id
+                    )
+                    if (siteData) {
+                      dataPoint[site.name] = viewMode === 'users' ? siteData.users :
+                                             viewMode === 'sessions' ? siteData.sessions :
+                                             siteData.page_views
+                    }
+                  })
+                  return dataPoint
+                })
+              })()}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="date" 
+                  className="text-xs"
+                  angle={data.siteTrends?.length > 20 ? -45 : 0}
+                  textAnchor={data.siteTrends?.length > 20 ? "end" : "middle"}
+                  height={data.siteTrends?.length > 20 ? 80 : 40}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tickFormatter={formatNumber}
+                />
+                <Tooltip 
+                  formatter={(value: any) => formatNumber(value)}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                />
+                <Legend />
+                {data.sites?.map((site: any, index: number) => (
+                  <Line 
+                    key={site.id}
+                    type="monotone" 
+                    dataKey={site.name}
+                    stroke={getSiteColor(index)}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                ))}
+              </LineChart>
+            )}
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Channels and Devices */}
       <div className="grid gap-4 md:grid-cols-2">
@@ -253,49 +475,57 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <CardDescription>Session distribution by acquisition channel</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={data.channels || []}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(entry) => `${((entry.sessions / data.summary?.total_sessions) * 100).toFixed(1)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="sessions"
-                >
-                  {(data.channels || []).map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={getChannelColor(entry.channel)} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value: any) => formatNumber(value)}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
-              {data.channels?.slice(0, 5).map((channel: any) => (
-                <div key={channel.channel} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: getChannelColor(channel.channel) }}
+            {data.channels && data.channels.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={data.channels || []}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${((entry.sessions / displayMetrics?.total_sessions) * 100).toFixed(1)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="sessions"
+                    >
+                      {(data.channels || []).map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={getChannelColor(entry.channel)} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: any) => formatNumber(value)}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }}
                     />
-                    <span>{channel.channel}</span>
-                  </div>
-                  <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span>{formatNumber(channel.sessions)} sessions</span>
-                    <span>Bounce: {formatPercent(channel.bounce_rate || 0)}</span>
-                  </div>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-4 space-y-2">
+                  {data.channels?.slice(0, 5).map((channel: any) => (
+                    <div key={channel.channel} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: getChannelColor(channel.channel) }}
+                        />
+                        <span>{channel.channel}</span>
+                      </div>
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span>{formatNumber(channel.sessions)} sessions</span>
+                        <span>Bounce: {formatPercent(channel.bounce_rate || 0)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No channel data available for selected view
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -306,129 +536,51 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <CardDescription>User distribution by device type</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.devices || []}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="device" className="text-xs" />
-                <YAxis className="text-xs" tickFormatter={formatNumber} />
-                <Tooltip 
-                  formatter={(value: any, name: string) => {
-                    if (name === 'bounce_rate') return formatPercent(value)
-                    return formatNumber(value)
-                  }}
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
-                  }}
-                />
-                <Bar dataKey="sessions" fill="#3B82F6" name="Sessions" />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
-              {data.devices?.map((device: any) => (
-                <div key={device.device} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    {getDeviceIcon(device.device)}
-                    <span className="capitalize">{device.device}</span>
-                  </div>
-                  <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span>{formatNumber(device.users)} users</span>
-                    <span>{formatNumber(device.page_views)} views</span>
-                    <span>Bounce: {formatPercent(device.bounce_rate || 0)}</span>
-                  </div>
+            {data.devices && data.devices.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={data.devices || []}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="device" className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={formatNumber} />
+                    <Tooltip 
+                      formatter={(value: any, name: string) => {
+                        if (name === 'bounce_rate') return formatPercent(value)
+                        return formatNumber(value)
+                      }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Bar dataKey="sessions" fill="#3B82F6" name="Sessions" />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="mt-4 space-y-2">
+                  {data.devices?.map((device: any) => (
+                    <div key={device.device} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        {getDeviceIcon(device.device)}
+                        <span className="capitalize">{device.device}</span>
+                      </div>
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span>{formatNumber(device.users)} users</span>
+                        <span>{formatNumber(device.page_views)} views</span>
+                        <span>Bounce: {formatPercent(device.bounce_rate || 0)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No device data available for selected view
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Traffic Trend */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Traffic Trend</CardTitle>
-              <CardDescription>Daily website traffic metrics</CardDescription>
-            </div>
-            <div className="flex gap-1">
-              <Button
-                variant={viewMode === 'users' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('users')}
-              >
-                Users
-              </Button>
-              <Button
-                variant={viewMode === 'sessions' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('sessions')}
-              >
-                Sessions
-              </Button>
-              <Button
-                variant={viewMode === 'pageviews' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('pageviews')}
-              >
-                Page Views
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <LineChart data={data.trend?.map((item: any) => ({
-              ...item,
-              date: formatDate(item.date),
-              value: viewMode === 'users' ? item.users : 
-                     viewMode === 'sessions' ? item.sessions : 
-                     item.page_views
-            }))}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="date" 
-                className="text-xs"
-                angle={data.trend?.length > 20 ? -45 : 0}
-                textAnchor={data.trend?.length > 20 ? "end" : "middle"}
-                height={data.trend?.length > 20 ? 80 : 40}
-              />
-              <YAxis 
-                className="text-xs"
-                tickFormatter={formatNumber}
-              />
-              <Tooltip 
-                formatter={(value: any) => formatNumber(value)}
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '6px'
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="value"
-                name={viewMode === 'users' ? 'Users' : viewMode === 'sessions' ? 'Sessions' : 'Page Views'}
-                stroke="#3B82F6"
-                strokeWidth={2}
-                dot={data.trend?.length <= 30}
-              />
-              {viewMode === 'sessions' && (
-                <Line 
-                  type="monotone" 
-                  dataKey="conversions"
-                  name="Conversions"
-                  stroke="#10B981"
-                  strokeWidth={2}
-                  dot={false}
-                  strokeDasharray="5 5"
-                />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
 
       {/* Tables Section */}
       <div className="grid gap-4 md:grid-cols-2">
@@ -439,33 +591,39 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <CardDescription>Most visited pages on the site</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Page</TableHead>
-                  <TableHead className="text-right">Views</TableHead>
-                  <TableHead className="text-right">Users</TableHead>
-                  <TableHead className="text-right">Bounce</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.topPages?.slice(0, 10).map((page: any, index: number) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <div className="max-w-[200px]">
-                        <div className="truncate font-medium text-sm">{page.page}</div>
-                        {page.title && (
-                          <div className="truncate text-xs text-muted-foreground">{page.title}</div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{formatNumber(page.views)}</TableCell>
-                    <TableCell className="text-right">{formatNumber(page.users)}</TableCell>
-                    <TableCell className="text-right">{formatPercent(page.bounce_rate || 0)}</TableCell>
+            {data.topPages && data.topPages.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Page</TableHead>
+                    <TableHead className="text-right">Views</TableHead>
+                    <TableHead className="text-right">Users</TableHead>
+                    <TableHead className="text-right">Bounce</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {data.topPages?.slice(0, 10).map((page: any, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <div className="max-w-[200px]">
+                          <div className="truncate font-medium text-sm">{page.page}</div>
+                          {page.title && (
+                            <div className="truncate text-xs text-muted-foreground">{page.title}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">{formatNumber(page.views)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(page.users)}</TableCell>
+                      <TableCell className="text-right">{formatPercent(page.bounce_rate || 0)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                No page data available for selected view
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -476,31 +634,37 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
             <CardDescription>Where your visitors come from</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Source / Medium</TableHead>
-                  <TableHead className="text-right">Users</TableHead>
-                  <TableHead className="text-right">Sessions</TableHead>
-                  <TableHead className="text-right">Conv.</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.sources?.slice(0, 10).map((source: any, index: number) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <div className="max-w-[200px]">
-                        <div className="truncate font-medium text-sm">{source.source}</div>
-                        <div className="truncate text-xs text-muted-foreground">{source.medium || 'direct'}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{formatNumber(source.users)}</TableCell>
-                    <TableCell className="text-right">{formatNumber(source.sessions)}</TableCell>
-                    <TableCell className="text-right">{formatNumber(source.conversions || 0)}</TableCell>
+            {data.sources && data.sources.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Source / Medium</TableHead>
+                    <TableHead className="text-right">Users</TableHead>
+                    <TableHead className="text-right">Sessions</TableHead>
+                    <TableHead className="text-right">Conv.</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {data.sources?.slice(0, 10).map((source: any, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <div className="max-w-[200px]">
+                          <div className="truncate font-medium text-sm">{source.source}</div>
+                          <div className="truncate text-xs text-muted-foreground">{source.medium || 'direct'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">{formatNumber(source.users)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(source.sessions)}</TableCell>
+                      <TableCell className="text-right">{formatNumber(source.conversions || 0)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                No source data available for selected view
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -515,7 +679,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
           <CardContent>
             <div className="space-y-2">
               {data.geography.slice(0, 10).map((country: any) => {
-                const percentage = (country.sessions / data.summary?.total_sessions) * 100
+                const percentage = (country.sessions / displayMetrics?.total_sessions) * 100
                 return (
                   <div key={country.country} className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1">

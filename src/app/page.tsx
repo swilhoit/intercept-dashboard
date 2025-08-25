@@ -18,6 +18,7 @@ import { ProductComparison } from "@/components/dashboard/product-comparison"
 import { CategoryAnalysis } from "@/components/dashboard/category-analysis"
 import { AdvertisingDashboard } from "@/components/dashboard/advertising-dashboard"
 import { TrafficAnalytics } from "@/components/dashboard/traffic-analytics"
+import { SearchConsoleAnalytics } from "@/components/dashboard/search-console-analytics"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import {
   Select,
@@ -123,6 +124,7 @@ export default function DashboardPage() {
       comparison: "Product Comparison",
       advertising: "Advertising Dashboard",
       traffic: "Traffic Analytics",
+      "search-console": "Search Console Analytics",
       analytics: "Analytics & Metrics"
     }
     return titles[currentView] || "Sales Dashboard"
@@ -217,6 +219,9 @@ export default function DashboardPage() {
       case "traffic":
         return <TrafficAnalytics dateRange={dateRange} />
       
+      case "search-console":
+        return <SearchConsoleAnalytics dateRange={dateRange} />
+      
       case "analytics":
         return (
           <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
@@ -286,12 +291,12 @@ export default function DashboardPage() {
       <SidebarNav 
         currentView={currentView} 
         onViewChange={setCurrentView}
+        onCollapsedChange={setSidebarCollapsed}
       />
       
       <main className={cn(
         "flex-1 transition-all duration-300",
-        "md:ml-64", // Default sidebar width
-        sidebarCollapsed && "md:ml-16" // Collapsed sidebar width
+        sidebarCollapsed ? "md:ml-16" : "md:ml-64" // Dynamic margin based on sidebar state
       )}>
         <div className="p-8 pt-6">
           {/* Header */}

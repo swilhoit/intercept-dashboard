@@ -58,12 +58,12 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
     }
   }
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number, decimals: number = 0) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
     }).format(value)
   }
 
@@ -76,7 +76,25 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
   }
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
+    if (!dateStr) return ''
+    // Handle different date formats
+    let date: Date
+    if (dateStr.includes('T')) {
+      // ISO format
+      date = new Date(dateStr)
+    } else if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      // YYYY-MM-DD format
+      date = new Date(dateStr + 'T00:00:00')
+    } else {
+      // Fallback
+      date = new Date(dateStr)
+    }
+    
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateStr)
+      return dateStr // Return original string if parsing fails
+    }
+    
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
@@ -189,7 +207,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(data.summary?.totalClicks > 0 ? data.summary.totalSpend / data.summary.totalClicks : 0)}
+              {formatCurrency(data.summary?.totalClicks > 0 ? data.summary.totalSpend / data.summary.totalClicks : 0, 2)}
             </div>
             <p className="text-xs text-muted-foreground">
               Cost per click
@@ -255,7 +273,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                   <div className="flex gap-4 text-xs text-muted-foreground">
                     <span>{formatCurrency(channel.spend)}</span>
                     <span>CTR: {formatPercent(channel.ctr)}</span>
-                    <span>CPC: {formatCurrency(channel.cpc)}</span>
+                    <span>CPC: {formatCurrency(channel.cpc, 2)}</span>
                   </div>
                 </div>
               ))}
@@ -309,7 +327,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                   <div className="flex gap-4 text-xs text-muted-foreground">
                     <span>{formatCurrency(cat.spend)}</span>
                     <span>{cat.campaignCount} campaigns</span>
-                    <span>ROAS: {cat.roas.toFixed(2)}x</span>
+                    <span>ROAS: {(cat.roas || 0).toFixed(2)}x</span>
                   </div>
                 </div>
               ))}
@@ -479,14 +497,14 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                     {formatPercent(campaign.ctr)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrency(campaign.cpc)}
+                    {formatCurrency(campaign.cpc, 2)}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatNumber(campaign.conversions)}
                   </TableCell>
                   <TableCell className="text-right">
                     <span className={campaign.roas >= 1 ? 'text-green-600' : 'text-red-600'}>
-                      {campaign.roas.toFixed(2)}x
+                      {(campaign.roas || 0).toFixed(2)}x
                     </span>
                   </TableCell>
                 </TableRow>

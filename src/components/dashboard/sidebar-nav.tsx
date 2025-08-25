@@ -19,7 +19,8 @@ import {
   DollarSign,
   Users,
   Target,
-  Layers
+  Layers,
+  Search
 } from "lucide-react"
 
 interface NavItem {
@@ -32,9 +33,10 @@ interface NavItem {
 interface SidebarNavProps {
   currentView: string
   onViewChange: (view: string) => void
+  onCollapsedChange?: (collapsed: boolean) => void
 }
 
-export function SidebarNav({ currentView, onViewChange }: SidebarNavProps) {
+export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['sales', 'marketing', 'analytics']))
@@ -86,6 +88,11 @@ export function SidebarNav({ currentView, onViewChange }: SidebarNavProps) {
           title: "Traffic Analytics",
           value: "traffic",
           icon: <Globe className="h-4 w-4" />
+        },
+        {
+          title: "Search Console",
+          value: "search-console",
+          icon: <Search className="h-4 w-4" />
         }
       ]
     },
@@ -188,7 +195,11 @@ export function SidebarNav({ currentView, onViewChange }: SidebarNavProps) {
               variant="ghost"
               size="icon"
               className="hidden md:flex"
-              onClick={() => setIsCollapsed(!isCollapsed)}
+              onClick={() => {
+                const newCollapsed = !isCollapsed
+                setIsCollapsed(newCollapsed)
+                onCollapsedChange?.(newCollapsed)
+              }}
             >
               <Menu className="h-4 w-4" />
             </Button>
