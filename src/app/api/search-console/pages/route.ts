@@ -24,6 +24,11 @@ export async function GET(request: NextRequest) {
         name: 'Heatilator',
         dataset: 'searchconsole_heatilator',
         domain: 'heatilator.com'
+      },
+      {
+        name: 'Fireplaces.net',
+        dataset: 'searchconsole_fireplaces',
+        domain: 'fireplaces.net'
       }
     ];
     

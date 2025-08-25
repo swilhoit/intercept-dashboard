@@ -128,9 +128,10 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
       ])
 
       // Handle error responses
-      setOverviewData(overviewResult.error ? null : overviewResult)
-      setTopQueries(Array.isArray(queriesResult.queries) ? queriesResult.queries : [])
-      setTopPages(Array.isArray(pagesResult.pages) ? pagesResult.pages : [])
+      console.log('Search Console API responses:', { overviewResult, queriesResult, pagesResult })
+      setOverviewData(overviewResult && !overviewResult.error ? overviewResult : null)
+      setTopQueries(queriesResult && Array.isArray(queriesResult.queries) ? queriesResult.queries : [])
+      setTopPages(pagesResult && Array.isArray(pagesResult.pages) ? pagesResult.pages : [])
     } catch (error) {
       console.error("Error fetching search console data:", error)
       setOverviewData(null)
@@ -142,15 +143,17 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
   }
 
   // Prepare chart data
-  const chartData = overviewData?.trends?.reduce((acc: any[], trend) => {
-    const existingDate = acc.find(item => item.date === trend.date)
+  const chartData = overviewData?.trends?.reduce((acc: any[], trend: any) => {
+    // Handle date format - convert BigQuery date to JS date string
+    const dateStr = trend.date ? (typeof trend.date === 'object' && trend.date.value ? new Date(trend.date.value).toISOString().split('T')[0] : trend.date) : '';
+    const existingDate = acc.find(item => item.date === dateStr)
     if (existingDate) {
       existingDate.clicks += trend.clicks || 0
       existingDate.impressions += trend.impressions || 0
       existingDate.ctr = existingDate.impressions > 0 ? (existingDate.clicks / existingDate.impressions) * 100 : 0
     } else {
       acc.push({
-        date: trend.date,
+        date: dateStr,
         clicks: trend.clicks || 0,
         impressions: trend.impressions || 0,
         ctr: trend.ctr || 0,
@@ -164,7 +167,8 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
   const availableSites = [
     { value: "all", label: "All Sites" },
     { value: "brickanew.com", label: "Brick Anew" },
-    { value: "heatilator.com", label: "Heatilator" }
+    { value: "heatilator.com", label: "Heatilator" },
+    { value: "fireplaces.net", label: "Fireplaces.net" }
   ]
 
   if (loading) {
@@ -327,12 +331,20 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
                 <XAxis 
                   dataKey="date" 
                   fontSize={12}
-                  tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                  tickFormatter={(value) => {
+                    if (!value) return ''
+                    const date = new Date(value)
+                    return isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  }}
                 />
                 <YAxis yAxisId="left" />
                 <YAxis yAxisId="right" orientation="right" />
                 <Tooltip 
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  labelFormatter={(value) => {
+                    if (!value) return ''
+                    const date = new Date(value)
+                    return isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  }}
                   formatter={(value: any, name: string) => [
                     typeof value === 'number' ? value.toLocaleString() : value,
                     name === 'clicks' ? 'Clicks' : name === 'impressions' ? 'Impressions' : name
@@ -371,12 +383,20 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
                 <XAxis 
                   dataKey="date" 
                   fontSize={12}
-                  tickFormatter={(value) => new Date(value).toLocaleDateString()}
+                  tickFormatter={(value) => {
+                    if (!value) return ''
+                    const date = new Date(value)
+                    return isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  }}
                 />
                 <YAxis yAxisId="left" />
                 <YAxis yAxisId="right" orientation="right" domain={[0, 50]} reversed />
                 <Tooltip 
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  labelFormatter={(value) => {
+                    if (!value) return ''
+                    const date = new Date(value)
+                    return isNaN(date.getTime()) ? value : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  }}
                   formatter={(value: any, name: string) => [
                     name === 'ctr' ? `${Number(value).toFixed(2)}%` : Number(value).toFixed(1),
                     name === 'ctr' ? 'CTR' : 'Avg Position'

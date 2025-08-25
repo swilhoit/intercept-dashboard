@@ -59,9 +59,33 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
     try {
       const response = await fetch(`/api/analytics/traffic?${params}`)
       const result = await response.json()
-      setData(result)
+      console.log('Traffic Analytics API response:', result)
+      setData(result || {
+        summary: {},
+        sites: [],
+        siteTrends: [],
+        aggregatedTrend: [],
+        channels: [],
+        devices: [],
+        topPages: [],
+        sources: [],
+        geography: [],
+        availableSites: []
+      })
     } catch (error) {
       console.error("Error fetching traffic analytics:", error)
+      setData({
+        summary: {},
+        sites: [],
+        siteTrends: [],
+        aggregatedTrend: [],
+        channels: [],
+        devices: [],
+        topPages: [],
+        sources: [],
+        geography: [],
+        availableSites: []
+      })
     } finally {
       setLoading(false)
     }
@@ -86,9 +110,12 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const formatDate = (dateStr: any) => {
+    if (!dateStr) return ''
+    // Handle BigQuery date format
+    const dateValue = typeof dateStr === 'object' && dateStr.value ? dateStr.value : dateStr
+    const date = new Date(dateValue)
+    return isNaN(date.getTime()) ? String(dateValue) : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
   const getChannelColor = (channel: string) => {

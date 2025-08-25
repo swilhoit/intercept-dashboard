@@ -11,7 +11,8 @@
       "Bash(bq ls:*)",
       "Bash(bq show:*)",
       "Bash(rm:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
