@@ -305,8 +305,8 @@ export async function GET(request: NextRequest) {
       const dateToChannels = new Map<string, {amazon: number, woocommerce: number}>();
       
       channelTimeRows
-        .filter(row => row.category === category)
-        .forEach(row => {
+        .filter((row: any) => row.category === category)
+        .forEach((row: any) => {
           const { period, channel, channel_sales } = row;
           if (!dateToChannels.has(period)) {
             dateToChannels.set(period, { amazon: 0, woocommerce: 0 });
@@ -328,7 +328,7 @@ export async function GET(request: NextRequest) {
 
     // Set unique products from dedicated query
     Object.keys(categoryData).forEach(category => {
-      const unique = uniqueRows.find(row => row.category === category)?.total_unique_products || 0;
+      const unique = uniqueRows.find((row: any) => row.category === category)?.total_unique_products || 0;
       categoryData[category].uniqueProducts = unique;
     });
     
