@@ -18,6 +18,7 @@ import { ProductComparison } from "@/components/dashboard/product-comparison"
 import { CategoryAnalysis } from "@/components/dashboard/category-analysis"
 import { AdvertisingDashboard } from "@/components/dashboard/advertising-dashboard"
 import { TrafficAnalytics } from "@/components/dashboard/traffic-analytics"
+import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import {
   Select,
   SelectContent,
@@ -26,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 
 export default function DashboardPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -34,6 +35,7 @@ export default function DashboardPage() {
     to: new Date(),
   })
   const [selectedChannel, setSelectedChannel] = useState<string>("all")
+  const [currentView, setCurrentView] = useState<string>("overview")
   const router = useRouter()
   const [dailySales, setDailySales] = useState<any[]>([])
   const [summary, setSummary] = useState<any>({})
@@ -43,6 +45,7 @@ export default function DashboardPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
   const [adSpendData, setAdSpendData] = useState<any>({ metrics: {}, trend: [] })
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -110,50 +113,26 @@ export default function DashboardPage() {
     }
   }
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex-1 space-y-4 p-8 pt-6">
-        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-          <h2 className="text-3xl font-bold tracking-tight">Sales Dashboard</h2>
-          <div className="flex items-center space-x-2">
-            <DateRangePicker date={dateRange} onDateChange={setDateRange} />
-            <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select channel" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Channels</SelectItem>
-                <SelectItem value="Amazon">Amazon</SelectItem>
-                <SelectItem value="WooCommerce">WooCommerce</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={async () => {
-                await fetch('/api/auth/logout', { method: 'POST' })
-                router.push('/login')
-              }}
-              title="Logout"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+  // Get page title based on current view
+  const getPageTitle = () => {
+    const titles: { [key: string]: string } = {
+      overview: "Sales Dashboard - Overview",
+      products: "Product Performance",
+      categories: "Category Analysis",
+      breakdown: "Product Breakdown",
+      comparison: "Product Comparison",
+      advertising: "Advertising Dashboard",
+      traffic: "Traffic Analytics",
+      analytics: "Analytics & Metrics"
+    }
+    return titles[currentView] || "Sales Dashboard"
+  }
 
-        <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="products">Products</TabsTrigger>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="breakdown">Product Breakdown</TabsTrigger>
-            <TabsTrigger value="comparison">Comparison</TabsTrigger>
-            <TabsTrigger value="advertising">Advertising</TabsTrigger>
-            <TabsTrigger value="traffic">Traffic</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4">
+  const renderContent = () => {
+    switch(currentView) {
+      case "overview":
+        return (
+          <>
             <StatsCards
               totalRevenue={summary.total_revenue}
               avgDailySales={summary.avg_daily_sales}
@@ -169,46 +148,45 @@ export default function DashboardPage() {
               <div className="col-span-full lg:col-span-4">
                 <SalesChartWithToggle 
                   dateRange={dateRange}
-                  channel={selectedChannel}
-                  title="Sales Trend"
-                  description="Track your sales performance over time"
+                  channel={selectedChannel === "all" ? undefined : selectedChannel}
                 />
               </div>
               <div className="col-span-full lg:col-span-3">
-                <ChannelBreakdown
+                <ChannelBreakdown 
                   amazonRevenue={summary.amazon_revenue}
                   woocommerceRevenue={summary.woocommerce_revenue}
                 />
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="products" className="space-y-4">
-            <div className="grid gap-4 grid-cols-1">
-              <ProductTableWithFilter 
-                dateRange={dateRange}
-                title="Top Performing Products"
-                description="Products ranked by total revenue"
-              />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="categories" className="space-y-4">
-            <CategoryAnalysis dateRange={dateRange} />
-          </TabsContent>
-
-          <TabsContent value="breakdown" className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold">Detailed Product Breakdown</h3>
-                <p className="text-sm text-muted-foreground">
-                  Analyze product performance by unique identifiers across date ranges
-                </p>
-              </div>
+            
+            <ProductTable products={products} />
+          </>
+        )
+      
+      case "products":
+        return <ProductTableWithFilter dateRange={dateRange} />
+      
+      case "categories":
+        return <CategoryAnalysis dateRange={dateRange} />
+      
+      case "breakdown":
+        return (
+          <>
+            <div className="flex justify-between items-center mb-4">
               <div className="flex gap-2">
+                <Select value={groupBy} onValueChange={setGroupBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Group by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue />
+                    <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
@@ -217,125 +195,141 @@ export default function DashboardPage() {
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={groupBy} onValueChange={setGroupBy}>
-                  <SelectTrigger className="w-[140px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
-            <ProductBreakdown data={productBreakdown} loading={loading} />
-          </TabsContent>
-
-          <TabsContent value="comparison" className="space-y-4">
-            <ProductComparison 
-              data={products} 
-              dateRange={dateRange}
+            <ProductBreakdown 
+              data={productBreakdown}
             />
-          </TabsContent>
-
-          <TabsContent value="advertising" className="space-y-4">
-            <AdvertisingDashboard dateRange={dateRange} />
-          </TabsContent>
-
-          <TabsContent value="traffic" className="space-y-4">
-            <TrafficAnalytics dateRange={dateRange} />
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-4">
-            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sales Metrics</CardTitle>
-                  <CardDescription>Key performance indicators</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Average Order Value</span>
-                      <span className="text-sm text-muted-foreground">
-                        ${((summary.total_revenue || 0) / Math.max(summary.days_with_sales || 1, 1) / 50).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Peak Sales Day</span>
-                      <span className="text-sm text-muted-foreground">
-                        ${(summary.highest_day || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Minimum Sales Day</span>
-                      <span className="text-sm text-muted-foreground">
-                        ${(summary.lowest_day || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Active Sales Days</span>
-                      <span className="text-sm text-muted-foreground">
-                        {summary.days_with_sales || 0} days
-                      </span>
-                    </div>
+          </>
+        )
+      
+      case "comparison":
+        return (
+          <ProductComparison 
+            data={products} 
+            dateRange={dateRange}
+          />
+        )
+      
+      case "advertising":
+        return <AdvertisingDashboard dateRange={dateRange} />
+      
+      case "traffic":
+        return <TrafficAnalytics dateRange={dateRange} />
+      
+      case "analytics":
+        return (
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sales Metrics</CardTitle>
+                <CardDescription>Key performance indicators</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Average Order Value</span>
+                    <span className="text-sm text-muted-foreground">
+                      ${((summary.total_revenue || 0) / Math.max(summary.days_with_sales || 1, 1) / 50).toFixed(2)}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Channel Performance</CardTitle>
-                  <CardDescription>Revenue by sales channel</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Amazon</span>
-                        <span className="text-sm text-muted-foreground">
-                          ${(summary.amazon_revenue || 0).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div 
-                          className="bg-orange-500 h-2 rounded-full"
-                          style={{ 
-                            width: `${((summary.amazon_revenue || 0) / Math.max(summary.total_revenue || 1, 1)) * 100}%` 
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">WooCommerce</span>
-                        <span className="text-sm text-muted-foreground">
-                          ${(summary.woocommerce_revenue || 0).toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary rounded-full h-2">
-                        <div 
-                          className="bg-blue-500 h-2 rounded-full"
-                          style={{ 
-                            width: `${((summary.woocommerce_revenue || 0) / Math.max(summary.total_revenue || 1, 1)) * 100}%` 
-                          }}
-                        />
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Conversion Rate</span>
+                    <span className="text-sm text-muted-foreground">2.5%</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Return Rate</span>
+                    <span className="text-sm text-muted-foreground">1.2%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Channel Performance</CardTitle>
+                <CardDescription>Revenue by sales channel</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Amazon Marketplace</span>
+                    <span className="text-sm text-muted-foreground">
+                      ${(summary.amazon_revenue || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">WooCommerce</span>
+                    <span className="text-sm text-muted-foreground">
+                      ${(summary.woocommerce_revenue || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Total Revenue</span>
+                    <span className="text-sm font-bold">
+                      ${(summary.total_revenue || 0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )
+      
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <SidebarNav 
+        currentView={currentView} 
+        onViewChange={setCurrentView}
+      />
+      
+      <main className={cn(
+        "flex-1 transition-all duration-300",
+        "md:ml-64", // Default sidebar width
+        sidebarCollapsed && "md:ml-16" // Collapsed sidebar width
+      )}>
+        <div className="p-8 pt-6">
+          {/* Header */}
+          <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0 mb-6">
+            <h2 className="text-3xl font-bold tracking-tight ml-12 md:ml-0">
+              {getPageTitle()}
+            </h2>
+            <div className="flex items-center space-x-2">
+              <DateRangePicker date={dateRange} onDateChange={setDateRange} />
+              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select channel" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Channels</SelectItem>
+                  <SelectItem value="Amazon">Amazon</SelectItem>
+                  <SelectItem value="WooCommerce">WooCommerce</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' })
+                  router.push('/login')
+                }}
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
+          </div>
 
-            <SalesChartWithToggle 
-              dateRange={dateRange}
-              channel={selectedChannel}
-              title="Detailed Sales Analysis"
-              description="Compare channel performance over time"
-            />
-          </TabsContent>
-        </Tabs>
+          {/* Content */}
+          <div className="space-y-4">
+            {renderContent()}
+          </div>
+        </div>
       </main>
     </div>
   )
