@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
     
     // For channel, device, pages, sources - use first site with attribution data
     const primarySite = sites.find(s => s.hasAttribution) || sites[0];
-    let channelRows = [], deviceRows = [], pagesRows = [], sourcesRows = [], geoRows = [];
+    let channelRows: any[] = [], deviceRows: any[] = [], pagesRows: any[] = [], sourcesRows: any[] = [], geoRows: any[] = [];
     
     // Use attribution tables for channel, device, source breakdowns
     if (primarySite && primarySite.hasAttribution) {
