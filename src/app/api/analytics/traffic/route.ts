@@ -199,7 +199,8 @@ export async function GET(request: NextRequest) {
     const primarySite = sites.find(s => s.hasEventsSummary) || sites[0];
     let channelRows = [], deviceRows = [], pagesRows = [], sourcesRows = [], geoRows = [];
     
-    if (primarySite.hasEventsSummary && (selectedSite === 'all' || selectedSite === primarySite.propertyId)) {
+    // Always try to get channel, device, pages data when we have a site with events_summary
+    if (primarySite.hasEventsSummary) {
       // Get channel breakdown
       let channelQuery = `
         SELECT 
@@ -223,7 +224,10 @@ export async function GET(request: NextRequest) {
         ORDER BY sessions DESC
       `;
       
-      [channelRows] = await bigquery.query(channelQuery).catch(() => [[]]);
+      [channelRows] = await bigquery.query(channelQuery).catch((err: any) => {
+        console.error('Channel query failed:', err);
+        return [[]];
+      });
       
       // Get device breakdown
       let deviceQuery = `
@@ -247,7 +251,10 @@ export async function GET(request: NextRequest) {
         ORDER BY sessions DESC
       `;
       
-      [deviceRows] = await bigquery.query(deviceQuery).catch(() => [[]]);
+      [deviceRows] = await bigquery.query(deviceQuery).catch((err: any) => {
+        console.error('Device query failed:', err);
+        return [[]];
+      });
       
       // Get top pages
       let pagesQuery = `
@@ -272,7 +279,10 @@ export async function GET(request: NextRequest) {
         LIMIT 20
       `;
       
-      [pagesRows] = await bigquery.query(pagesQuery).catch(() => [[]]);
+      [pagesRows] = await bigquery.query(pagesQuery).catch((err: any) => {
+        console.error('Pages query failed:', err);
+        return [[]];
+      });
       
       // Get traffic sources
       let sourcesQuery = `
@@ -299,7 +309,10 @@ export async function GET(request: NextRequest) {
         LIMIT 20
       `;
       
-      [sourcesRows] = await bigquery.query(sourcesQuery).catch(() => [[]]);
+      [sourcesRows] = await bigquery.query(sourcesQuery).catch((err: any) => {
+        console.error('Sources query failed:', err);
+        return [[]];
+      });
       
       // Get geographic data
       let geoQuery = `
@@ -324,7 +337,10 @@ export async function GET(request: NextRequest) {
         LIMIT 10
       `;
       
-      [geoRows] = await bigquery.query(geoQuery).catch(() => [[]]);
+      [geoRows] = await bigquery.query(geoQuery).catch((err: any) => {
+        console.error('Geography query failed:', err);
+        return [[]];
+      });
     }
     
     // Process results
@@ -398,7 +414,7 @@ export async function GET(request: NextRequest) {
       total_revenue: 0
     });
     
-    return NextResponse.json({
+    const response = {
       summary: totalMetrics,
       sites: siteMetrics,
       siteTrends: allTrendData,
@@ -409,7 +425,19 @@ export async function GET(request: NextRequest) {
       sources: sourcesRows,
       geography: geoRows,
       availableSites: sites.map(s => ({ id: s.propertyId, name: s.name }))
+    };
+    
+    console.log('Traffic Analytics Response:', {
+      channelCount: channelRows.length,
+      deviceCount: deviceRows.length,
+      pagesCount: pagesRows.length,
+      sourcesCount: sourcesRows.length,
+      geoCount: geoRows.length,
+      selectedSite,
+      primarySite: primarySite?.name
     });
+    
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error);
   }
