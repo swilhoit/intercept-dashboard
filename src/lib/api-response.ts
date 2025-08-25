@@ -30,8 +30,8 @@ export function cachedResponse(
   return NextResponse.json(data, {
     headers: {
       'Cache-Control': cacheControl,
-      'CDN-Cache-Control': `max-age=${sMaxAge * 2}`, // Longer CDN cache
-      'Vercel-CDN-Cache-Control': `max-age=${sMaxAge * 4}`, // Even longer Vercel edge cache
+      'CDN-Cache-Control': `max-age=${(sMaxAge || 300) * 2}`, // Longer CDN cache
+      'Vercel-CDN-Cache-Control': `max-age=${(sMaxAge || 300) * 4}`, // Even longer Vercel edge cache
       'X-Cache': cacheHit ? 'HIT' : 'MISS',
       'X-Response-Time': `${Date.now()}`,
     }
