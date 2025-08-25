@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         MIN(segments_date) as start_date,
         MAX(segments_date) as end_date
       FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\`
-      WHERE _DATA_DATE = _LATEST_DATE
+      WHERE segments_date IS NOT NULL
     `;
     
     if (startDate && endDate) {
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         SUM(metrics_clicks) as daily_clicks,
         SUM(metrics_conversions) as daily_conversions
       FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\`
-      WHERE _DATA_DATE = _LATEST_DATE
+      WHERE segments_date IS NOT NULL
     `;
     
     if (startDate && endDate) {

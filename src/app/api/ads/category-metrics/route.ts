@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
     
     // Define category keywords matching the sales categories
     const categoryKeywords = {
-      'Paint': ['paint', 'brick-anew', 'brick anew', 'base coat', 'whitewash', 'stone fireplace paint'],
-      'Fireplace Doors': ['fireplace door', 'fp door', 'thermo-rite', 'glass door', 'fire screen']
+      'Paint': ['paint', 'brick-anew', 'brick anew', 'base coat', 'whitewash', 'stone fireplace paint', 'paint-kit', 'paint kit'],
+      'Fireplace Doors': ['fireplace door', 'fp door', 'thermo-rite', 'glass door', 'fire screen', 'ez door']
     };
     
     // Build date formatting based on aggregation  
@@ -72,11 +72,14 @@ export async function GET(request: NextRequest) {
           SUM(cs.metrics_conversions) as conversions,
           SUM(cs.metrics_conversions_value) as conversions_value
         FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\` cs
-        JOIN \`intercept-sales-2508061117.googleads_brickanew.ads_Campaign_4221545789\` c
+        JOIN (
+          SELECT DISTINCT campaign_id, customer_id, campaign_name 
+          FROM \`intercept-sales-2508061117.googleads_brickanew.ads_Campaign_4221545789\`
+          WHERE _DATA_DATE = _LATEST_DATE
+        ) c
           ON cs.campaign_id = c.campaign_id 
           AND cs.customer_id = c.customer_id
-          AND cs._DATA_DATE = c._DATA_DATE
-        WHERE cs._DATA_DATE = cs._LATEST_DATE
+        WHERE cs.segments_date IS NOT NULL
     `;
     
     if (startDate && endDate) {
@@ -126,14 +129,19 @@ export async function GET(request: NextRequest) {
     console.log('Google Ads Query:', query);
     const [rows] = await bigquery.query(query);
     
-    // Get sales data to calculate TACOS
+    // Get sales data to calculate TACOS - use same keywords as sales/categories route
+    const salesCategories = {
+      'Paint': ['paint kit', 'paint can', 'gallon paint', 'quart paint', 'primer paint', 'base coat', 'top coat', 'sealant', 'stain', 'varnish', 'enamel paint', 'latex paint', 'acrylic paint'],
+      'Fireplace Doors': ['ez door', 'glass door', 'fire screen', 'door steel', 'door plus']
+    };
+    
     let salesQuery = `
       WITH categorized_amazon AS (
         SELECT 
           ${dateFormat.replace('segments_date', 'DATE(date)')} as period,
           CASE 
-            WHEN (${categoryKeywords['Paint'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Paint'
-            WHEN (${categoryKeywords['Fireplace Doors'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Fireplace Doors'
+            WHEN (${salesCategories['Paint'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Paint'
+            WHEN (${salesCategories['Fireplace Doors'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Fireplace Doors'
             ELSE 'Other' 
           END as category,
           SUM(revenue) as sales
@@ -152,8 +160,8 @@ export async function GET(request: NextRequest) {
         SELECT 
           ${dateFormat.replace('segments_date', 'order_date')} as period,
           CASE 
-            WHEN (${categoryKeywords['Paint'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Paint'
-            WHEN (${categoryKeywords['Fireplace Doors'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Fireplace Doors'
+            WHEN (${salesCategories['Paint'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Paint'
+            WHEN (${salesCategories['Fireplace Doors'].map(k => `LOWER(product_name) LIKE '%${k}%'`).join(' OR ')}) THEN 'Fireplace Doors'
             ELSE 'Other' 
           END as category,
           SUM(total_revenue) as sales
