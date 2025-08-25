@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const selectedSite = searchParams.get('site') || 'all';
+    const groupBy = searchParams.get('groupBy') || 'day';
     
     // Define site configurations for Search Console data
     const sites = [
@@ -131,10 +132,14 @@ export async function GET(request: NextRequest) {
       ? (aggregated.total_clicks / aggregated.total_impressions) * 100 
       : 0;
     
-    // Get daily trend data
+    // Get trend data with grouping
+    const dateField = groupBy === 'day' ? 'data_date' :
+                     groupBy === 'week' ? 'DATE_TRUNC(data_date, WEEK)' :
+                     'DATE_TRUNC(data_date, MONTH)';
+    
     const trendQueries = sitesToQuery.map(site => `
       SELECT 
-        data_date as date,
+        ${dateField} as date,
         '${site.domain}' as site,
         '${site.name}' as site_name,
         SUM(clicks) as clicks,
@@ -143,8 +148,8 @@ export async function GET(request: NextRequest) {
         ROUND(SAFE_DIVIDE(SUM(clicks), SUM(impressions)) * 100, 2) as ctr
       FROM \`intercept-sales-2508061117.${site.dataset}.searchdata_site_impression\`
       WHERE 1=1 ${dateFilter}
-      GROUP BY data_date
-      ORDER BY data_date ASC
+      GROUP BY ${dateField}
+      ORDER BY date ASC
     `);
     
     console.log('Trend queries:', trendQueries);

@@ -11,8 +11,9 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const selectedSite = searchParams.get('site') || 'all';
+    const groupBy = searchParams.get('groupBy') || 'day';
     
-    console.log('Traffic Analytics API - Date Range:', { startDate, endDate, selectedSite });
+    console.log('Traffic Analytics API - Date Range:', { startDate, endDate, selectedSite, groupBy });
     // Note: Using attribution tables with full GA4 data from January 1, 2025 onwards
     
     // Define site configurations - only the 2 main sites
@@ -122,9 +123,13 @@ export async function GET(request: NextRequest) {
       
       if (site.hasAttribution) {
         // Use attribution tables for full year trends
+        const dateField = groupBy === 'day' ? 'date' :
+                         groupBy === 'week' ? 'DATE_TRUNC(date, WEEK)' :
+                         'DATE_TRUNC(date, MONTH)';
+        
         query = `
           SELECT 
-            date,
+            ${dateField} as date,
             '${site.propertyId}' as site_id,
             SUM(totalUsers) as users,
             SUM(sessions) as sessions,
@@ -141,13 +146,17 @@ export async function GET(request: NextRequest) {
         }
         
         query += `
-          GROUP BY date
+          GROUP BY ${dateField}
           ORDER BY date ASC
         `;
       } else {
+        const dateField = groupBy === 'day' ? 'PARSE_DATE(\'%Y%m%d\', event_date)' :
+                         groupBy === 'week' ? 'DATE_TRUNC(PARSE_DATE(\'%Y%m%d\', event_date), WEEK)' :
+                         'DATE_TRUNC(PARSE_DATE(\'%Y%m%d\', event_date), MONTH)';
+        
         query = `
           SELECT 
-            PARSE_DATE('%Y%m%d', event_date) as date,
+            ${dateField} as date,
             '${site.propertyId}' as site_id,
             COUNT(DISTINCT user_pseudo_id) as users,
             COUNT(DISTINCT CONCAT(user_pseudo_id, (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id'))) as sessions,
@@ -171,7 +180,7 @@ export async function GET(request: NextRequest) {
         }
         
         query += `
-          GROUP BY date
+          GROUP BY ${dateField}
           ORDER BY date ASC
         `;
       }
@@ -257,8 +266,46 @@ export async function GET(request: NextRequest) {
         return [[]];
       });
       
-      // Skip top pages for now - not in attribution tables
-      pagesRows = [];
+      // Get top pages from events tables (Aug 14+ only)
+      let pagesQuery = `
+        SELECT 
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location') as page,
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_title') as title,
+          COUNT(*) as views,
+          COUNT(DISTINCT user_pseudo_id) as users,
+          AVG((SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'engagement_time_msec')/1000) as avg_time_on_page,
+          0 as bounce_rate
+        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
+        WHERE _TABLE_SUFFIX BETWEEN '20250814' 
+          AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
+          AND event_name = 'page_view'
+      `;
+      
+      if (startDate && endDate) {
+        // Only use date filter if within available range
+        const effectiveStart = startDate >= '2025-08-14' ? startDate : '2025-08-14';
+        pagesQuery = pagesQuery.replace(
+          "WHERE _TABLE_SUFFIX BETWEEN '20250814'",
+          `WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE('${effectiveStart}'))`
+        ).replace(
+          "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
+          `FORMAT_DATE('%Y%m%d', DATE('${endDate}'))`
+        );
+      }
+      
+      pagesQuery += `
+        GROUP BY 
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_location'),
+          (SELECT value.string_value FROM UNNEST(event_params) WHERE key = 'page_title')
+        HAVING page IS NOT NULL
+        ORDER BY views DESC
+        LIMIT 20
+      `;
+      
+      [pagesRows] = await bigquery.query(pagesQuery).catch((err: any) => {
+        console.error('Pages query failed:', err);
+        return [[]];
+      });
       
       // Get traffic sources from attribution tables
       let sourcesQuery = `
@@ -294,8 +341,42 @@ export async function GET(request: NextRequest) {
         return [[]];
       });
       
-      // Skip geographic data for now - not in attribution tables
-      geoRows = [];
+      // Get geographic data from events tables (Aug 14+ only)
+      let geoQuery = `
+        SELECT 
+          geo.country as country,
+          COUNT(DISTINCT user_pseudo_id) as users,
+          COUNT(DISTINCT CONCAT(user_pseudo_id, (SELECT value.int_value FROM UNNEST(event_params) WHERE key = 'ga_session_id'))) as sessions,
+          COUNTIF(event_name = 'page_view') as page_views,
+          COUNTIF(event_name = 'purchase') as conversions,
+          SUM(CASE WHEN event_name = 'purchase' THEN ecommerce.purchase_revenue ELSE 0 END) as revenue
+        FROM \`intercept-sales-2508061117.${primarySite.dataset}.events_*\`
+        WHERE _TABLE_SUFFIX BETWEEN '20250814' 
+          AND FORMAT_DATE('%Y%m%d', CURRENT_DATE())
+          AND geo.country IS NOT NULL AND geo.country != ''
+      `;
+      
+      if (startDate && endDate) {
+        const effectiveStart = startDate >= '2025-08-14' ? startDate : '2025-08-14';
+        geoQuery = geoQuery.replace(
+          "WHERE _TABLE_SUFFIX BETWEEN '20250814'",
+          `WHERE _TABLE_SUFFIX BETWEEN FORMAT_DATE('%Y%m%d', DATE('${effectiveStart}'))`
+        ).replace(
+          "FORMAT_DATE('%Y%m%d', CURRENT_DATE())",
+          `FORMAT_DATE('%Y%m%d', DATE('${endDate}'))`
+        );
+      }
+      
+      geoQuery += `
+        GROUP BY geo.country
+        ORDER BY sessions DESC
+        LIMIT 10
+      `;
+      
+      [geoRows] = await bigquery.query(geoQuery).catch((err: any) => {
+        console.error('Geography query failed:', err);
+        return [[]];
+      });
     } else if (primarySite) {
       // Fallback to events tables if no attribution data
       console.log('Falling back to events tables for detailed breakdowns');
@@ -325,10 +406,13 @@ export async function GET(request: NextRequest) {
     const allTrendData: any[] = [];
     trendResults.forEach((result, index) => {
       const [rows] = result;
+      const site = sitesToQuery[index];
+      console.log(`Processing ${site.name} trend data:`, rows.length, 'rows');
       rows.forEach((row: any) => {
+        // Row already has site_id from query, just add site_name
         allTrendData.push({
           ...row,
-          site_name: sitesToQuery[index].name
+          site_name: site.name
         });
       });
     });
@@ -392,7 +476,11 @@ export async function GET(request: NextRequest) {
       sourcesCount: sourcesRows.length,
       geoCount: geoRows.length,
       selectedSite,
-      primarySite: primarySite?.name
+      primarySite: primarySite?.name,
+      sitesCount: siteMetrics.length,
+      siteTrendsCount: allTrendData.length,
+      aggregatedTrendCount: aggregatedTrend.length,
+      sites: siteMetrics.map(s => ({ name: s.name, id: s.id, sessions: s.total_sessions }))
     });
     
     return NextResponse.json(response);

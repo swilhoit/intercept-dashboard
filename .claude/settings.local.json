@@ -16,7 +16,8 @@
       "Bash(npm install:*)",
       "Bash(gcloud config get-value:*)",
       "Bash(gcloud config set:*)",
-      "Bash(bq rm:*)"
+      "Bash(bq rm:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

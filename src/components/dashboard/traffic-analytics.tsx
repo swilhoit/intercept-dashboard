@@ -37,10 +37,11 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
   const [viewMode, setViewMode] = useState<'users' | 'sessions' | 'pageviews'>('sessions')
   const [selectedSite, setSelectedSite] = useState<string>('all')
   const [trendView, setTrendView] = useState<'aggregated' | 'per-site'>('aggregated')
+  const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day')
 
   useEffect(() => {
     fetchData()
-  }, [dateRange, selectedSite])
+  }, [dateRange, selectedSite, groupBy])
 
   const fetchData = async () => {
     setLoading(true)
@@ -55,6 +56,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
     if (selectedSite !== 'all') {
       params.append("site", selectedSite)
     }
+    params.append("groupBy", groupBy)
 
     try {
       const response = await fetch(`/api/analytics/traffic?${params}`)
@@ -360,6 +362,29 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
                   </Button>
                 </div>
               )}
+              <div className="flex gap-1">
+                <Button
+                  variant={groupBy === 'day' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setGroupBy('day')}
+                >
+                  Day
+                </Button>
+                <Button
+                  variant={groupBy === 'week' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setGroupBy('week')}
+                >
+                  Week
+                </Button>
+                <Button
+                  variant={groupBy === 'month' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setGroupBy('month')}
+                >
+                  Month
+                </Button>
+              </div>
               <div className="flex gap-1">
                 <Button
                   variant={viewMode === 'users' ? 'default' : 'outline'}

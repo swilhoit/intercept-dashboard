@@ -88,6 +88,7 @@ interface PageData {
 export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProps) {
   const [loading, setLoading] = useState(true)
   const [selectedSite, setSelectedSite] = useState<string>("all")
+  const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day')
   const [overviewData, setOverviewData] = useState<{
     aggregated: AggregatedMetrics
     sites: SiteMetrics[]
@@ -98,7 +99,7 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
 
   useEffect(() => {
     fetchData()
-  }, [dateRange, selectedSite])
+  }, [dateRange, selectedSite, groupBy])
 
   const fetchData = async () => {
     setLoading(true)
@@ -113,6 +114,7 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
     if (selectedSite !== "all") {
       params.append("site", selectedSite)
     }
+    params.append("groupBy", groupBy)
 
     try {
       const [overviewRes, queriesRes, pagesRes] = await Promise.all([
@@ -322,8 +324,35 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Clicks & Impressions Trend</CardTitle>
-            <CardDescription>Daily performance over time</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Clicks & Impressions Trend</CardTitle>
+                <CardDescription>Performance over time</CardDescription>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  variant={groupBy === 'day' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setGroupBy('day')}
+                >
+                  Day
+                </Button>
+                <Button
+                  variant={groupBy === 'week' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setGroupBy('week')}
+                >
+                  Week
+                </Button>
+                <Button
+                  variant={groupBy === 'month' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setGroupBy('month')}
+                >
+                  Month
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
