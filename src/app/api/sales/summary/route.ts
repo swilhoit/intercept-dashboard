@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
+import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     
     const [rows] = await bigquery.query(query);
     
-    return NextResponse.json(rows[0] || {});
+    return cachedResponse(rows[0] || {}, CACHE_STRATEGIES.REALTIME);
   } catch (error) {
     return handleApiError(error);
   }}

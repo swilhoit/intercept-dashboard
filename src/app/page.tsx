@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils"
 
 export default function DashboardPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30),
+    from: subDays(new Date(), 7), // Reduced from 30 days to 7 for faster initial load
     to: new Date(),
   })
   const [selectedChannel, setSelectedChannel] = useState<string>("all")

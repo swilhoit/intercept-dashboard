@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
           
           console.log(`Search Console Query for ${site.name}:`, query);
           const [rows] = await bigquery.query(query);
+          console.log(`Search Console Results for ${site.name}:`, rows);
           return rows[0] || {
             site: site.domain,
             site_name: site.name,
@@ -79,6 +80,12 @@ export async function GET(request: NextRequest) {
           };
         } catch (error) {
           console.error(`Error querying ${site.name}:`, error);
+          console.error(`Full error details:`, {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            code: (error as any)?.code,
+            details: (error as any)?.details,
+            errors: (error as any)?.errors
+          });
           return {
             site: site.domain,
             site_name: site.name,
@@ -134,14 +141,18 @@ export async function GET(request: NextRequest) {
       ORDER BY data_date ASC
     `);
     
+    console.log('Trend queries:', trendQueries);
+    
     const trendData = await Promise.all(
-      trendQueries.map(query => 
+      trendQueries.map((query, index) => 
         bigquery.query(query).catch((err: any) => {
-          console.error('Trend query failed:', err);
+          console.error(`Trend query failed for site ${sitesToQuery[index].name}:`, err);
           return [[]];
         })
       )
     );
+    
+    console.log('Trend data results:', trendData);
     
     // Flatten and combine trend data
     const dailyTrends = trendData.flat().flat();

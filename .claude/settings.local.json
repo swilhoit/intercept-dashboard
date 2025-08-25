@@ -12,7 +12,8 @@
       "Bash(bq show:*)",
       "Bash(rm:*)",
       "Bash(grep:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
