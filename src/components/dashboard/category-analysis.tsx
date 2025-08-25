@@ -26,6 +26,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [loading, setLoading] = useState(false)
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
+  const [adsData, setAdsData] = useState<any>({ categories: {}, dates: [] })
 
   useEffect(() => {
     fetchData()
@@ -44,14 +45,17 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
     params.append("aggregation", aggregation)
 
     try {
-      const [categoryResponse, productsResponse] = await Promise.all([
+      const [categoryResponse, productsResponse, adsResponse] = await Promise.all([
         fetch(`/api/sales/categories?${params}`),
-        fetch(`/api/sales/category-products?${params}`)
+        fetch(`/api/sales/category-products?${params}`),
+        fetch(`/api/ads/category-metrics?${params}`)
       ])
       const categoryData = await categoryResponse.json()
       const productsData = await productsResponse.json()
+      const adsMetrics = await adsResponse.json()
       setData(categoryData)
       setProducts(productsData.products || [])
+      setAdsData(adsMetrics)
     } catch (error) {
       console.error("Error fetching category data:", error)
     } finally {
@@ -463,6 +467,178 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                 ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      {/* Ad Spend Metrics by Category */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Advertising Performance by Category</CardTitle>
+          <CardDescription>Google Ads metrics and TACOS (Total Advertising Cost of Sales) per category</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+            {Object.values(adsData.categories || {}).map((category: any) => (
+              <Card key={category.name}>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center justify-between">
+                    <span>{category.name}</span>
+                    <Badge style={{ backgroundColor: getCategoryColor(category.name), color: 'white' }}>
+                      Ad Metrics
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Ad Spend</p>
+                      <p className="font-semibold">{formatCurrency(category.totalAdSpend)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">TACOS</p>
+                      <p className="font-semibold text-red-600">{category.avgTACOS.toFixed(2)}%</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Clicks</p>
+                      <p className="font-semibold">{category.totalClicks.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">CPC</p>
+                      <p className="font-semibold">${category.avgCPC.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">CTR</p>
+                      <p className="font-semibold">{category.avgCTR.toFixed(2)}%</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Conv. Rate</p>
+                      <p className="font-semibold">{category.avgConversionRate.toFixed(2)}%</p>
+                    </div>
+                  </div>
+                  {category.totalSales > 0 && (
+                    <div className="pt-2 border-t">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Sales</span>
+                        <span className="font-medium">{formatCurrency(category.totalSales)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">ROAS</span>
+                        <span className="font-medium text-green-600">{category.avgROAS.toFixed(2)}x</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* TACOS Trend Chart */}
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-medium mb-4">TACOS Trend (Total Advertising Cost of Sales %)</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={adsData.dates?.map((date: string) => {
+                const dataPoint: any = { date: formatDate(date) }
+                Object.values(adsData.categories || {}).forEach((cat: any) => {
+                  const dayData = cat.data?.find((d: any) => d.date === date)
+                  if (dayData) {
+                    dataPoint[`${cat.name}_tacos`] = dayData.tacos
+                    dataPoint[`${cat.name}_spend`] = dayData.adSpend
+                  }
+                })
+                return dataPoint
+              })}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="date" 
+                  className="text-xs"
+                  tick={{ fill: 'currentColor' }}
+                  angle={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? -45 : 0}
+                  textAnchor={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? "end" : "middle"}
+                  height={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? 80 : 40}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fill: 'currentColor' }}
+                  tickFormatter={(value) => `${value.toFixed(1)}%`}
+                />
+                <Tooltip 
+                  formatter={(value: any, name: string) => {
+                    if (name.includes('tacos')) {
+                      return [`${value.toFixed(2)}%`, name.replace('_tacos', ' TACOS')]
+                    }
+                    return [formatCurrency(value), name.replace('_spend', ' Spend')]
+                  }}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                />
+                <Legend formatter={(value) => value.replace('_tacos', ' TACOS').replace('_spend', ' Spend')} />
+                {Object.values(adsData.categories || {}).map((cat: any) => (
+                  <Line 
+                    key={`${cat.name}_tacos`}
+                    type="monotone" 
+                    dataKey={`${cat.name}_tacos`}
+                    stroke={getCategoryColor(cat.name)}
+                    strokeWidth={2}
+                    dot={aggregation !== "daily" || (adsData.dates?.length || 0) <= 30}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Ad Spend Trend Chart */}
+          <div className="border-t pt-4 mt-4">
+            <h4 className="text-sm font-medium mb-4">Ad Spend Trend</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={adsData.dates?.map((date: string) => {
+                const dataPoint: any = { date: formatDate(date) }
+                Object.values(adsData.categories || {}).forEach((cat: any) => {
+                  const dayData = cat.data?.find((d: any) => d.date === date)
+                  if (dayData) {
+                    dataPoint[cat.name] = dayData.adSpend
+                  }
+                })
+                return dataPoint
+              })}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis 
+                  dataKey="date" 
+                  className="text-xs"
+                  tick={{ fill: 'currentColor' }}
+                  angle={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? -45 : 0}
+                  textAnchor={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? "end" : "middle"}
+                  height={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? 80 : 40}
+                />
+                <YAxis 
+                  className="text-xs"
+                  tick={{ fill: 'currentColor' }}
+                  tickFormatter={formatCurrency}
+                />
+                <Tooltip 
+                  formatter={(value: any) => formatCurrency(value)}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '6px'
+                  }}
+                />
+                <Legend />
+                {Object.values(adsData.categories || {}).map((cat: any) => (
+                  <Line 
+                    key={cat.name}
+                    type="monotone" 
+                    dataKey={cat.name}
+                    stroke={getCategoryColor(cat.name)}
+                    strokeWidth={2}
+                    dot={aggregation !== "daily" || (adsData.dates?.length || 0) <= 30}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
