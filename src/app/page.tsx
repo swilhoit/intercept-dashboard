@@ -17,6 +17,7 @@ import { ProductBreakdown } from "@/components/dashboard/product-breakdown"
 import { ProductComparison } from "@/components/dashboard/product-comparison"
 import { CategoryAnalysis } from "@/components/dashboard/category-analysis"
 import { AdvertisingDashboard } from "@/components/dashboard/advertising-dashboard"
+import { TrafficAnalytics } from "@/components/dashboard/traffic-analytics"
 import {
   Select,
   SelectContent,
@@ -148,6 +149,7 @@ export default function DashboardPage() {
             <TabsTrigger value="breakdown">Product Breakdown</TabsTrigger>
             <TabsTrigger value="comparison">Comparison</TabsTrigger>
             <TabsTrigger value="advertising">Advertising</TabsTrigger>
+            <TabsTrigger value="traffic">Traffic</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -239,6 +241,10 @@ export default function DashboardPage() {
 
           <TabsContent value="advertising" className="space-y-4">
             <AdvertisingDashboard dateRange={dateRange} />
+          </TabsContent>
+
+          <TabsContent value="traffic" className="space-y-4">
+            <TrafficAnalytics dateRange={dateRange} />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
