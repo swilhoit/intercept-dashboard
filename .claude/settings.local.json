@@ -10,7 +10,8 @@
       "Bash(done)",
       "Bash(bq ls:*)",
       "Bash(bq show:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
