@@ -52,9 +52,11 @@ export function SalesChartWithToggle({
     try {
       const response = await fetch(`/api/sales/aggregated?${params}`)
       const salesData = await response.json()
-      setData(salesData)
+      // Ensure data is always an array
+      setData(Array.isArray(salesData) ? salesData : [])
     } catch (error) {
       console.error("Error fetching chart data:", error)
+      setData([]) // Set empty array on error
     } finally {
       setLoading(false)
     }
@@ -86,7 +88,7 @@ export function SalesChartWithToggle({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  const chartData = data.map(item => ({
+  const chartData = (Array.isArray(data) ? data : []).map(item => ({
     ...item,
     date: item.period || formatDate(item.date),
     Amazon: item.amazon_sales,
