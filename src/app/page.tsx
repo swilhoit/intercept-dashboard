@@ -19,6 +19,8 @@ import { CategoryAnalysis } from "@/components/dashboard/category-analysis"
 import { AdvertisingDashboard } from "@/components/dashboard/advertising-dashboard"
 import { TrafficAnalytics } from "@/components/dashboard/traffic-analytics"
 import { SearchConsoleAnalytics } from "@/components/dashboard/search-console-analytics"
+import { AmazonDashboard } from "@/components/dashboard/site-amazon"
+import { WooCommerceDashboard } from "@/components/dashboard/site-woocommerce"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import {
   Select,
@@ -47,10 +49,51 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [adSpendData, setAdSpendData] = useState<any>({ metrics: {}, trend: [] })
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [siteData, setSiteData] = useState<any>(null)
+  const [trafficData, setTrafficData] = useState<any>(null)
+  const [searchConsoleData, setSearchConsoleData] = useState<any>(null)
 
   useEffect(() => {
     fetchData()
   }, [dateRange, selectedChannel, groupBy, categoryFilter])
+
+  // Fetch site-specific data when viewing site pages
+  useEffect(() => {
+    if (currentView === 'site-amazon' || currentView === 'site-woocommerce') {
+      fetchSiteData()
+    }
+  }, [currentView, dateRange])
+
+  const fetchSiteData = async () => {
+    const params = new URLSearchParams()
+    if (dateRange?.from) {
+      params.append("startDate", dateRange.from.toISOString().split("T")[0])
+    }
+    if (dateRange?.to) {
+      params.append("endDate", dateRange.to.toISOString().split("T")[0])
+    }
+
+    try {
+      const site = currentView === 'site-amazon' ? 'amazon' : 'woocommerce'
+      const [siteRes, trafficRes, searchRes] = await Promise.all([
+        fetch(`/api/sites/${site}?${params}`),
+        fetch(`/api/analytics/traffic?${params}`),
+        fetch(`/api/search-console/overview?${params}`)
+      ])
+
+      const [siteInfo, trafficInfo, searchInfo] = await Promise.all([
+        siteRes.json(),
+        trafficRes.json(),
+        searchRes.json()
+      ])
+
+      setSiteData(siteInfo)
+      setTrafficData(trafficInfo)
+      setSearchConsoleData(searchInfo)
+    } catch (error) {
+      console.error("Error fetching site data:", error)
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -118,6 +161,8 @@ export default function DashboardPage() {
   const getPageTitle = () => {
     const titles: { [key: string]: string } = {
       overview: "Sales Dashboard - Overview",
+      "site-amazon": "Amazon Store",
+      "site-woocommerce": "WooCommerce Store",
       products: "Product Performance",
       categories: "Category Analysis",
       breakdown: "Product Breakdown",
@@ -221,6 +266,31 @@ export default function DashboardPage() {
       
       case "search-console":
         return <SearchConsoleAnalytics dateRange={dateRange} />
+      
+      case "site-amazon":
+        return (
+          <AmazonDashboard
+            salesData={siteData}
+            productData={siteData?.products || []}
+            categoryData={siteData?.categories || []}
+            trafficData={trafficData}
+            startDate={dateRange?.from?.toISOString().split("T")[0] || ''}
+            endDate={dateRange?.to?.toISOString().split("T")[0] || ''}
+          />
+        )
+      
+      case "site-woocommerce":
+        return (
+          <WooCommerceDashboard
+            salesData={siteData}
+            productData={siteData?.products || []}
+            categoryData={siteData?.categories || []}
+            trafficData={trafficData}
+            searchConsoleData={searchConsoleData}
+            startDate={dateRange?.from?.toISOString().split("T")[0] || ''}
+            endDate={dateRange?.to?.toISOString().split("T")[0] || ''}
+          />
+        )
       
       case "analytics":
         return (

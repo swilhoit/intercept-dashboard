@@ -20,7 +20,8 @@ import {
   Users,
   Target,
   Layers,
-  Search
+  Search,
+  Store
 } from "lucide-react"
 
 interface NavItem {
@@ -39,13 +40,30 @@ interface SidebarNavProps {
 export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['sales', 'marketing', 'analytics']))
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['sales', 'marketing', 'analytics', 'sites']))
 
   const navItems: NavItem[] = [
     {
       title: "Overview",
       value: "overview",
       icon: <LayoutDashboard className="h-4 w-4" />
+    },
+    {
+      title: "Sites & Channels",
+      value: "sites",
+      icon: <Store className="h-4 w-4" />,
+      children: [
+        {
+          title: "Amazon",
+          value: "site-amazon",
+          icon: <ShoppingCart className="h-4 w-4" />
+        },
+        {
+          title: "WooCommerce",
+          value: "site-woocommerce",
+          icon: <Globe className="h-4 w-4" />
+        }
+      ]
     },
     {
       title: "Sales",
