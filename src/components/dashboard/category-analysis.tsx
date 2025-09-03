@@ -74,16 +74,19 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
     }).format(value)
   }
 
-  const formatDate = (dateStr: string) => {
-    if (dateStr && dateStr.includes('W')) {
-      const [year, week] = dateStr.split('-W')
+  const formatDate = (dateStr: any) => {
+    // Convert to string if not already
+    const str = String(dateStr || '')
+    
+    if (str && str.includes('W')) {
+      const [, week] = str.split('-W')
       return `Week ${week}`
-    } else if (dateStr && dateStr.match(/^\d{4}-\d{2}$/)) {
-      const [year, month] = dateStr.split('-')
+    } else if (str && str.match(/^\d{4}-\d{2}$/)) {
+      const [year, month] = str.split('-')
       const date = new Date(parseInt(year), parseInt(month) - 1)
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     }
-    const date = new Date(dateStr)
+    const date = new Date(str)
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 

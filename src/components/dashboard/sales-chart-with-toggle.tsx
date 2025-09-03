@@ -71,20 +71,23 @@ export function SalesChartWithToggle({
     }).format(value)
   }
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = (dateStr: any) => {
+    // Convert to string if not already
+    const str = String(dateStr || '')
+    
     // Handle period format for weekly/monthly aggregations
-    if (dateStr && dateStr.includes('W')) {
+    if (str && str.includes('W')) {
       // Weekly format like "2025-W30"
-      const [year, week] = dateStr.split('-W')
+      const [, week] = str.split('-W')
       return `Week ${week}`
-    } else if (dateStr && dateStr.match(/^\d{4}-\d{2}$/)) {
+    } else if (str && str.match(/^\d{4}-\d{2}$/)) {
       // Monthly format like "2025-07"
-      const [year, month] = dateStr.split('-')
+      const [year, month] = str.split('-')
       const date = new Date(parseInt(year), parseInt(month) - 1)
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     }
     // Daily format
-    const date = new Date(dateStr)
+    const date = new Date(str)
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
