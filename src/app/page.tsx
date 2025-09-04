@@ -83,33 +83,39 @@ export default function DashboardPage() {
           fetch(`/api/analytics/traffic?${params}`)
         ])
 
+        // Handle failed API responses gracefully
         const [dailySales, products, ads, trafficInfo] = await Promise.all([
-          dailySalesRes.json(),
-          productsRes.json(),
-          adsRes.json(),
-          trafficRes.json()
+          dailySalesRes.ok ? dailySalesRes.json().catch(() => []) : [],
+          productsRes.ok ? productsRes.json().catch(() => []) : [],
+          adsRes.ok ? adsRes.json().catch(() => []) : [],
+          trafficRes.ok ? trafficRes.json().catch(() => ({})) : {}
         ])
+
+        // Ensure data arrays are valid before processing
+        const validDailySales = Array.isArray(dailySales) ? dailySales : []
+        const validProducts = Array.isArray(products) ? products : []
+        const validAds = Array.isArray(ads) ? ads : []
 
         // Transform data to match expected format
         const amazonSiteData = {
           summary: {
-            total_revenue: dailySales.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0),
-            total_units: dailySales.reduce((sum: number, day: any) => sum + (day.order_count || 0), 0),
-            avg_order_value: dailySales.length > 0 
-              ? dailySales.reduce((sum: number, day: any) => sum + (day.avg_order_value || 0), 0) / dailySales.length
+            total_revenue: validDailySales.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0),
+            total_units: validDailySales.reduce((sum: number, day: any) => sum + (day.order_count || 0), 0),
+            avg_order_value: validDailySales.length > 0 
+              ? validDailySales.reduce((sum: number, day: any) => sum + (day.avg_order_value || 0), 0) / validDailySales.length
               : 0
           },
-          daily: dailySales.map((day: any) => ({
+          daily: validDailySales.map((day: any) => ({
             date: day.date,
             sales: day.total_sales || 0
           })),
-          products: products.map((product: any) => ({
+          products: validProducts.map((product: any) => ({
             product_name: product.product_name,
             total_sales: product.total_sales,
             quantity: product.order_count,
             channel: 'Amazon'
           })),
-          ads: ads
+          ads: validAds
         }
 
         setSiteData(amazonSiteData)
