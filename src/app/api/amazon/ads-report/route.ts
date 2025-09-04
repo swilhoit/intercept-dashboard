@@ -45,216 +45,149 @@ export async function GET(request: NextRequest) {
       }));
     }
     
-    // Main metrics query using SharePoint data
+    // Main metrics query using enhanced keywords data
     const metricsQuery = `
-      WITH combined_ads AS (
-        SELECT 
-          date,
-          campaign_name,
-          campaign_id,
-          campaign_status,
-          ad_group_name,
-          ad_group_id,
-          portfolio_name,
-          keyword_text,
-          match_type,
-          search_term,
-          clicks,
-          impressions,
-          cost,
-          conversions_1d_total as conversions
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords\`
-        WHERE 1=1 ${dateFilter}
-        
-        UNION ALL
-        
-        SELECT 
-          date,
-          campaign_name,
-          campaign_id,
-          campaign_status,
-          ad_group_name,
-          ad_group_id,
-          portfolio_name,
-          '' as keyword_text,
-          '' as match_type,
-          '' as search_term,
-          clicks,
-          impressions,
-          cost,
-          conversions_1d_total as conversions
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
-        WHERE 1=1 ${dateFilter}
-      ),
-      aggregated_metrics AS (
-        SELECT 
-          ${groupBy === 'portfolio' 
-            ? 'COALESCE(portfolio_name, "No Portfolio") as group_name, portfolio_name as group_id,'
-            : groupBy === 'adgroup'
-            ? 'ad_group_name as group_name, ad_group_id as group_id, campaign_name, portfolio_name,'
-            : 'campaign_name as group_name, campaign_id as group_id, portfolio_name, campaign_status,'}
-          SUM(clicks) as total_clicks,
-          SUM(impressions) as total_impressions,
-          ROUND(SUM(cost), 2) as total_cost,
-          SUM(conversions) as total_conversions,
-          COUNT(DISTINCT CASE WHEN keyword_text != '' THEN keyword_text END) as unique_keywords,
-          COUNT(DISTINCT CASE WHEN search_term != '' THEN search_term END) as unique_search_terms,
-          ${groupBy === 'campaign' ? 'COUNT(DISTINCT ad_group_id) as ad_groups_count,' : ''}
-          
-          -- Calculate metrics
-          ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as avg_cpc,
-          ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as ctr,
-          ROUND(SAFE_DIVIDE(SUM(conversions) * 100.0, SUM(clicks)), 2) as conversion_rate,
-          ROUND(SAFE_DIVIDE(SUM(impressions), NULLIF(COUNT(DISTINCT CASE WHEN keyword_text != '' THEN keyword_text END), 0)), 0) as avg_impressions_per_keyword
-        FROM combined_ads
-        GROUP BY ${groupBy === 'portfolio' 
-          ? 'portfolio_name'
+      SELECT 
+        ${groupBy === 'portfolio' 
+          ? 'COALESCE(portfolio_name, "No Portfolio") as group_name, portfolio_name as group_id,'
           : groupBy === 'adgroup'
-          ? 'ad_group_name, ad_group_id, campaign_name, portfolio_name'
-          : 'campaign_name, campaign_id, portfolio_name, campaign_status'}
-      )
-      SELECT * FROM aggregated_metrics
+          ? 'ad_group_name as group_name, CAST(ad_group_id AS STRING) as group_id, campaign_name, portfolio_name,'
+          : 'campaign_name as group_name, CAST(campaign_id AS STRING) as group_id, portfolio_name, campaign_status,'}
+        SUM(clicks) as total_clicks,
+        SUM(impressions) as total_impressions,
+        ROUND(SUM(cost), 2) as total_cost,
+        SUM(conversions_1d_total) as total_conversions,
+        SUM(conversions_1d_sku) as sku_conversions,
+        COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END) as unique_keywords,
+        COUNT(DISTINCT CASE WHEN has_search_term THEN search_term END) as unique_search_terms,
+        COUNT(DISTINCT date) as active_days,
+        ${groupBy === 'campaign' ? 'COUNT(DISTINCT ad_group_id) as ad_groups_count,' : ''}
+        
+        -- Calculate metrics
+        ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as avg_cpc,
+        ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as ctr,
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate,
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_sku) * 100.0, SUM(clicks)), 2) as sku_conversion_rate,
+        ROUND(SAFE_DIVIDE(SUM(impressions), NULLIF(COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END), 0)), 0) as avg_impressions_per_keyword,
+        
+        -- Performance quality indicators  
+        ROUND(AVG(CASE WHEN has_performance THEN cpc END), 2) as weighted_cpc,
+        ROUND(AVG(CASE WHEN has_performance THEN ctr END), 2) as weighted_ctr
+      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
+      WHERE has_performance = TRUE ${dateFilter}
+      GROUP BY ${groupBy === 'portfolio' 
+        ? 'portfolio_name'
+        : groupBy === 'adgroup'
+        ? 'ad_group_name, ad_group_id, campaign_name, portfolio_name'
+        : 'campaign_name, campaign_id, portfolio_name, campaign_status'}
       ORDER BY total_cost DESC
     `;
 
     const [metricsRows] = await bigquery.query(metricsQuery);
 
-    // Get top performing keywords from SharePoint data
+    // Get top performing keywords from enhanced data
     const keywordsQuery = `
       SELECT 
         keyword_text as keyword,
         search_term,
         match_type,
         campaign_name as campaign,
+        portfolio_name as portfolio,
+        campaign_status,
         SUM(clicks) as clicks,
         SUM(impressions) as impressions,
         ROUND(SUM(cost), 2) as cost,
         SUM(conversions_1d_total) as conversions,
+        SUM(conversions_1d_sku) as sku_conversions,
+        COUNT(DISTINCT date) as active_days,
         ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as cpc,
         ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as ctr,
-        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate
-      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords\`
-      WHERE keyword_text IS NOT NULL AND keyword_text != '' ${dateFilter}
-      GROUP BY keyword_text, search_term, match_type, campaign_name
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate,
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_sku) * 100.0, SUM(clicks)), 2) as sku_conversion_rate,
+        -- Quality flags
+        MAX(CASE WHEN has_keyword_data THEN 1 ELSE 0 END) as has_keyword_data,
+        MAX(CASE WHEN has_search_term THEN 1 ELSE 0 END) as has_search_term
+      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
+      WHERE has_keyword_data = TRUE AND has_performance = TRUE ${dateFilter}
+      GROUP BY keyword_text, search_term, match_type, campaign_name, portfolio_name, campaign_status
       HAVING clicks > 0
-      ORDER BY clicks DESC
-      LIMIT 20
+      ORDER BY cost DESC
+      LIMIT 25
     `;
 
     const [keywordsRows] = await bigquery.query(keywordsQuery);
 
-    // Get portfolio summary from SharePoint data
+    // Get portfolio summary from enhanced data
     const portfolioQuery = `
-      WITH portfolio_data AS (
-        SELECT 
-          COALESCE(portfolio_name, 'No Portfolio') as portfolio,
-          campaign_id,
-          ad_group_id,
-          keyword_id,
-          clicks,
-          impressions,
-          cost,
-          conversions_1d_total as conversions
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords\`
-        WHERE 1=1 ${dateFilter}
-        
-        UNION ALL
-        
-        SELECT 
-          COALESCE(portfolio_name, 'No Portfolio') as portfolio,
-          campaign_id,
-          ad_group_id,
-          0 as keyword_id,
-          clicks,
-          impressions,
-          cost,
-          conversions_1d_total as conversions
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
-        WHERE 1=1 ${dateFilter}
-      )
       SELECT 
-        portfolio,
+        COALESCE(portfolio_name, 'No Portfolio') as portfolio,
         COUNT(DISTINCT campaign_id) as campaigns,
         COUNT(DISTINCT ad_group_id) as ad_groups,
-        COUNT(DISTINCT CASE WHEN keyword_id > 0 THEN keyword_id END) as keywords,
+        COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END) as keywords,
+        COUNT(DISTINCT date) as active_days,
         SUM(clicks) as clicks,
         SUM(impressions) as impressions,
         ROUND(SUM(cost), 2) as cost,
-        SUM(conversions) as conversions,
+        SUM(conversions_1d_total) as conversions,
+        SUM(conversions_1d_sku) as sku_conversions,
         ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as avg_cpc,
         ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as ctr,
-        ROUND(SAFE_DIVIDE(SUM(conversions) * 100.0, SUM(clicks)), 2) as conversion_rate
-      FROM portfolio_data
-      GROUP BY portfolio
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate,
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_sku) * 100.0, SUM(clicks)), 2) as sku_conversion_rate
+      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
+      WHERE has_performance = TRUE ${dateFilter}
+      GROUP BY portfolio_name
       ORDER BY cost DESC
     `;
 
     const [portfolioRows] = await bigquery.query(portfolioQuery);
 
-    // Calculate overall summary from SharePoint data
+    // Calculate overall summary from enhanced data
     const summaryQuery = `
-      WITH combined_summary AS (
-        SELECT 
-          campaign_id,
-          campaign_status,
-          ad_group_id,
-          keyword_id,
-          portfolio_name,
-          clicks,
-          impressions,
-          cost,
-          conversions_1d_total as conversions
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords\`
-        WHERE 1=1 ${dateFilter}
-        
-        UNION ALL
-        
-        SELECT 
-          campaign_id,
-          campaign_status,
-          ad_group_id,
-          0 as keyword_id,
-          portfolio_name,
-          clicks,
-          impressions,
-          cost,
-          conversions_1d_total as conversions
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
-        WHERE 1=1 ${dateFilter}
-      )
       SELECT 
         COUNT(DISTINCT campaign_id) as total_campaigns,
         COUNT(DISTINCT CASE WHEN campaign_status = 'ENABLED' THEN campaign_id END) as active_campaigns,
         COUNT(DISTINCT ad_group_id) as total_ad_groups,
-        COUNT(DISTINCT CASE WHEN keyword_id > 0 THEN keyword_id END) as total_keywords,
+        COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END) as total_keywords,
         COUNT(DISTINCT portfolio_name) as total_portfolios,
+        COUNT(DISTINCT date) as active_days,
         SUM(clicks) as total_clicks,
         SUM(impressions) as total_impressions,
         ROUND(SUM(cost), 2) as total_cost,
-        SUM(conversions) as total_conversions,
+        SUM(conversions_1d_total) as total_conversions,
+        SUM(conversions_1d_sku) as sku_conversions,
         ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as overall_cpc,
         ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as overall_ctr,
-        ROUND(SAFE_DIVIDE(SUM(conversions) * 100.0, SUM(clicks)), 2) as overall_conversion_rate,
-        ROUND(SAFE_DIVIDE(SUM(cost), NULLIF(COUNT(DISTINCT CASE WHEN keyword_id > 0 THEN keyword_id END), 0)), 2) as avg_cost_per_keyword
-      FROM combined_summary
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as overall_conversion_rate,
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_sku) * 100.0, SUM(clicks)), 2) as overall_sku_conversion_rate,
+        ROUND(SAFE_DIVIDE(SUM(cost), NULLIF(COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END), 0)), 2) as avg_cost_per_keyword,
+        -- Data quality metrics
+        ROUND(AVG(CASE WHEN has_keyword_data THEN 100.0 ELSE 0 END), 1) as keyword_data_coverage,
+        ROUND(AVG(CASE WHEN has_search_term THEN 100.0 ELSE 0 END), 1) as search_term_coverage
+      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
+      WHERE has_performance = TRUE ${dateFilter}
     `;
 
     const [summaryRows] = await bigquery.query(summaryQuery);
 
-    // Get match type performance from SharePoint data
+    // Get match type performance from enhanced data
     const matchTypeQuery = `
       SELECT 
         COALESCE(match_type, 'Not Specified') as match_type,
         COUNT(*) as keyword_count,
+        COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END) as unique_keywords,
+        COUNT(DISTINCT date) as active_days,
         SUM(clicks) as clicks,
         SUM(impressions) as impressions,
         ROUND(SUM(cost), 2) as cost,
         SUM(conversions_1d_total) as conversions,
+        SUM(conversions_1d_sku) as sku_conversions,
         ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as avg_cpc,
         ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as ctr,
-        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate
-      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords\`
-      WHERE 1=1 ${dateFilter}
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate,
+        ROUND(SAFE_DIVIDE(SUM(conversions_1d_sku) * 100.0, SUM(clicks)), 2) as sku_conversion_rate
+      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
+      WHERE has_performance = TRUE ${dateFilter}
       GROUP BY match_type
       ORDER BY cost DESC
     `;

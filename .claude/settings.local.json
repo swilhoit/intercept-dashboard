@@ -48,7 +48,9 @@
       "Bash(git log:*)",
       "Bash(intercept-sales-2508061117:MASTER.TOTAL_DAILY_ADS)",
       "Bash(python:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(export MICROSOFT_CLIENT_ID=\"b79c7d96-273d-4972-b6a3-0be2bf763919\")",
+      "Bash(export MICROSOFT_TENANT_ID=\"b58aa5c5-f291-4316-91dc-78ae5f30b0f3\")"
     ],
     "deny": [],
     "ask": [],
