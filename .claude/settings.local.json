@@ -50,12 +50,15 @@
       "Bash(python:*)",
       "Bash(lsof:*)",
       "Bash(export MICROSOFT_CLIENT_ID=\"b79c7d96-273d-4972-b6a3-0be2bf763919\")",
-      "Bash(export MICROSOFT_TENANT_ID=\"b58aa5c5-f291-4316-91dc-78ae5f30b0f3\")"
+      "Bash(export MICROSOFT_TENANT_ID=\"b58aa5c5-f291-4316-91dc-78ae5f30b0f3\")",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": [],
     "additionalDirectories": [
-      "/Users/samwilhoit/Documents"
+      "/Users/samwilhoit/Documents",
+      "/Users/samwilhoit",
+      "/private/tmp"
     ]
   }
 }
