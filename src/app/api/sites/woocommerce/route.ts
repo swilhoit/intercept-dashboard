@@ -53,32 +53,37 @@ export async function GET(request: NextRequest) {
       LIMIT 12
     `;
     
-    // Get top products for WooCommerce
+    // Get top products for WooCommerce from actual table
     const productsQuery = `
       SELECT 
         product_name,
         'WooCommerce' as channel,
-        SUM(revenue) as revenue,
-        SUM(quantity_sold) as quantity,
-        AVG(revenue / NULLIF(quantity_sold, 0)) as avg_price
-      FROM \`intercept-sales-2508061117.MASTER.TOTAL_PRODUCTS_DAILY_DETAILED_SALES\`
-      WHERE channel = 'WooCommerce' ${whereClause.replace('date', 'order_date')}
+        SUM(total_revenue) as revenue,
+        SUM(total_quantity_sold) as quantity,
+        AVG(avg_unit_price) as avg_price
+      FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
+      WHERE 1=1 ${whereClause.replace('date', 'order_date')}
       GROUP BY product_name
       ORDER BY revenue DESC
       LIMIT 20
     `;
     
-    // Get category data for WooCommerce
+    // Get category data for WooCommerce - create basic categories from product names
     const categoryQuery = `
       SELECT 
-        category as name,
+        CASE 
+          WHEN UPPER(product_name) LIKE '%FIREPLACE%' OR UPPER(product_name) LIKE '%DOOR%' THEN 'Fireplace Doors'
+          WHEN UPPER(product_name) LIKE '%PAINT%' OR UPPER(product_name) LIKE '%ROLLER%' THEN 'Paint Products'
+          WHEN UPPER(product_name) LIKE '%BELT%' OR UPPER(product_name) LIKE '%GRAB%' THEN 'Automotive'
+          ELSE 'Other'
+        END as name,
         'WooCommerce' as channel,
-        SUM(revenue) as revenue,
-        SUM(quantity_sold) as quantity,
+        SUM(total_revenue) as revenue,
+        SUM(total_quantity_sold) as quantity,
         COUNT(DISTINCT product_name) as product_count
-      FROM \`intercept-sales-2508061117.MASTER.TOTAL_PRODUCTS_DAILY_DETAILED_SALES\`
-      WHERE channel = 'WooCommerce' ${whereClause.replace('date', 'order_date')}
-      GROUP BY category
+      FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
+      WHERE 1=1 ${whereClause.replace('date', 'order_date')}
+      GROUP BY name
       ORDER BY revenue DESC
       LIMIT 10
     `;
