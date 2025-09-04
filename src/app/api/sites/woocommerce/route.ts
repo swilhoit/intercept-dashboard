@@ -13,8 +13,10 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     
     let whereClause = '';
+    let wooWhereClause = '';
     if (startDate && endDate) {
       whereClause = ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+      wooWhereClause = ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
     }
     
     // Get WooCommerce sales summary
@@ -62,7 +64,7 @@ export async function GET(request: NextRequest) {
         SUM(total_quantity_sold) as quantity,
         AVG(avg_unit_price) as avg_price
       FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
-      WHERE 1=1 ${whereClause.replace('date', 'order_date')}
+      WHERE 1=1 ${wooWhereClause}
       GROUP BY product_name
       ORDER BY revenue DESC
       LIMIT 20
@@ -82,7 +84,7 @@ export async function GET(request: NextRequest) {
         SUM(total_quantity_sold) as quantity,
         COUNT(DISTINCT product_name) as product_count
       FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
-      WHERE 1=1 ${whereClause.replace('date', 'order_date')}
+      WHERE 1=1 ${wooWhereClause}
       GROUP BY name
       ORDER BY revenue DESC
       LIMIT 10
