@@ -103,11 +103,6 @@ export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: Sid
           icon: <Megaphone className="h-4 w-4" />
         },
         {
-          title: "Amazon Ads Report",
-          value: "amazon-ads",
-          icon: <Target className="h-4 w-4" />
-        },
-        {
           title: "Traffic Analytics",
           value: "traffic",
           icon: <Globe className="h-4 w-4" />

@@ -16,7 +16,7 @@ import { ChannelBreakdown } from "@/components/dashboard/channel-breakdown"
 import { ProductBreakdown } from "@/components/dashboard/product-breakdown"
 import { ProductComparison } from "@/components/dashboard/product-comparison"
 import { CategoryAnalysis } from "@/components/dashboard/category-analysis"
-import { AdvertisingDashboard } from "@/components/dashboard/advertising-dashboard"
+import { CombinedAdvertisingDashboard } from "@/components/dashboard/combined-advertising-dashboard"
 import { AmazonAdsReport } from "@/components/dashboard/amazon-ads-report"
 import { TrafficAnalytics } from "@/components/dashboard/traffic-analytics"
 import { SearchConsoleAnalytics } from "@/components/dashboard/search-console-analytics"
@@ -310,10 +310,8 @@ export default function DashboardPage() {
         )
       
       case "advertising":
-        return <AdvertisingDashboard dateRange={dateRange} />
+        return <CombinedAdvertisingDashboard dateRange={dateRange} />
       
-      case "amazon-ads":
-        return <AmazonAdsReport dateRange={dateRange} />
       
       case "traffic":
         return <TrafficAnalytics dateRange={dateRange} />
