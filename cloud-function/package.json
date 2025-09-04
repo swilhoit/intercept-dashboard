@@ -1,0 +1,14 @@
+{
+  "name": "amazon-sync-function",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@google-cloud/bigquery": "^7.0.0",
+    "@azure/msal-node": "^2.0.0", 
+    "node-fetch": "^2.6.7",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": "20"
+  }
+}
