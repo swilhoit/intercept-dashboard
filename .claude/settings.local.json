@@ -35,9 +35,17 @@
       "Bash(gcloud builds submit:*)",
       "Bash(gcloud scheduler jobs delete:*)",
       "Bash(GOOGLE_CLOUD_PROJECT_ID=intercept-sales-2508061117 npx tsx sync-now.ts)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(gcloud scheduler jobs run:*)",
+      "Bash(gcloud logging read:*)",
+      "Bash(cp:*)",
+      "Bash(vercel:*)",
+      "Bash(gcloud iam service-accounts:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "/Users/samwilhoit/Documents"
+    ]
   }
 }
