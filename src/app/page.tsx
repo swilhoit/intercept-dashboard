@@ -17,6 +17,7 @@ import { ProductBreakdown } from "@/components/dashboard/product-breakdown"
 import { ProductComparison } from "@/components/dashboard/product-comparison"
 import { CategoryAnalysis } from "@/components/dashboard/category-analysis"
 import { AdvertisingDashboard } from "@/components/dashboard/advertising-dashboard"
+import { AmazonAdsReport } from "@/components/dashboard/amazon-ads-report"
 import { TrafficAnalytics } from "@/components/dashboard/traffic-analytics"
 import { SearchConsoleAnalytics } from "@/components/dashboard/search-console-analytics"
 import { AmazonDashboard } from "@/components/dashboard/site-amazon"
@@ -106,7 +107,7 @@ export default function DashboardPage() {
               : 0
           },
           daily: validDailySales.map((day: any) => ({
-            date: day.date,
+            date: day.date?.value || day.date,
             sales: day.total_sales || 0
           })),
           products: validProducts.map((product: any) => ({
@@ -217,6 +218,7 @@ export default function DashboardPage() {
       breakdown: "Product Breakdown",
       comparison: "Product Comparison",
       advertising: "Advertising Dashboard",
+      "amazon-ads": "Amazon Ads Report",
       traffic: "Traffic Analytics",
       "search-console": "Search Console Analytics",
       analytics: "Analytics & Metrics"
@@ -309,6 +311,9 @@ export default function DashboardPage() {
       
       case "advertising":
         return <AdvertisingDashboard dateRange={dateRange} />
+      
+      case "amazon-ads":
+        return <AmazonAdsReport dateRange={dateRange} />
       
       case "traffic":
         return <TrafficAnalytics dateRange={dateRange} />

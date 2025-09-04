@@ -1,13 +1,23 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
 import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
   if (configError) return configError;
 
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    
+    let whereClause = 'WHERE Date IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0';
+    if (startDate && endDate) {
+      // Convert dates to Excel serial format for filtering
+      whereClause += ` AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) >= '${startDate}' AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) <= '${endDate}'`;
+    }
+    
     const query = `
       SELECT 
         ASIN,
@@ -18,9 +28,7 @@ export async function GET() {
         MIN(Item_Price) as min_price,
         MAX(Item_Price) as max_price
       FROM \`amazon_seller.amazon_orders_2025\`
-      WHERE Date IS NOT NULL 
-        AND Item_Price IS NOT NULL
-        AND Item_Price > 0
+      ${whereClause}
       GROUP BY ASIN, Product_Name
       ORDER BY total_sales DESC
       LIMIT 50

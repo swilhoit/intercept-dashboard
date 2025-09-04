@@ -1,24 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
 import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
   if (configError) return configError;
 
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    
+    let whereClause = 'WHERE Date IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0';
+    if (startDate && endDate) {
+      // Convert dates to Excel serial format for filtering
+      whereClause += ` AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) >= '${startDate}' AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) <= '${endDate}'`;
+    }
+    
     const query = `
       SELECT 
-        DATE(PARSE_DATE('%Y%m%d', CAST(CAST(Date AS INT64) AS STRING))) as date,
+        DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) as date,
         COUNT(*) as order_count,
         SUM(Item_Price) as total_sales,
         ROUND(AVG(Item_Price), 2) as avg_order_value
       FROM \`amazon_seller.amazon_orders_2025\`
-      WHERE Date IS NOT NULL 
-        AND Item_Price IS NOT NULL
-        AND Item_Price > 0
-      GROUP BY DATE(PARSE_DATE('%Y%m%d', CAST(CAST(Date AS INT64) AS STRING)))
+      ${whereClause}
+      GROUP BY DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
       ORDER BY date DESC
       LIMIT 100
     `;

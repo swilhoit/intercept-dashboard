@@ -83,8 +83,46 @@ export async function GET(request: NextRequest) {
     let query = '';
     
     if (channel === 'Amazon' || !channel || channel === 'all') {
+      // Update date formatting for amazon_seller table (uses Excel serial dates)
+      let sellerDateFormat = `FORMAT_DATE("%Y-%m-%d", DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY))`;
+      let sellerDateField = `DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)`;
+      
+      if (groupBy === 'weekly') {
+        sellerDateFormat = `FORMAT_DATE("%Y-W%U", DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY))`;
+        sellerDateField = `DATE_TRUNC(DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY), WEEK)`;
+      } else if (groupBy === 'monthly') {
+        sellerDateFormat = `FORMAT_DATE("%Y-%m", DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY))`;
+        sellerDateField = `DATE_TRUNC(DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY), MONTH)`;
+      }
+      
       query = `
         WITH amazon_breakdown AS (
+          -- Recent data from amazon_seller table
+          SELECT 
+            ${sellerDateFormat} as period,
+            MIN(${sellerDateField}) as period_date,
+            Product_Name as product_name,
+            ASIN as product_id,
+            ASIN as sku,
+            'Amazon' as channel,
+            SUM(Item_Price) as total_sales,
+            COUNT(*) as quantity,
+            AVG(Item_Price) as avg_price,
+            COUNT(*) as transaction_count
+          FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+          WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0${categoryFilter}
+      `;
+      
+      if (startDate && endDate) {
+        query += ` AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) >= '${startDate}' AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) <= '${endDate}'`;
+      }
+      
+      query += `
+          GROUP BY period, Product_Name, ASIN
+          
+          UNION ALL
+          
+          -- Historical data from amazon orders table  
           SELECT 
             ${amazonDateFormat} as period,
             MIN(${amazonDateField}) as period_date,
@@ -97,7 +135,7 @@ export async function GET(request: NextRequest) {
             AVG(price) as avg_price,
             COUNT(*) as transaction_count
           FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-          WHERE product_name IS NOT NULL${categoryFilter}
+          WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0${categoryFilter}
       `;
       
       if (startDate && endDate) {

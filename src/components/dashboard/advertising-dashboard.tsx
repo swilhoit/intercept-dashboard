@@ -372,7 +372,8 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
         <CardContent>
           <ResponsiveContainer width="100%" height={350}>
             <LineChart data={data.trend?.map((item: any) => {
-              const dataPoint: any = { date: formatDate(item.date) }
+              const dateValue = item.date?.value || item.date
+              const dataPoint: any = { date: formatDate(dateValue) }
               Object.keys(item).forEach(key => {
                 if (key !== 'date' && item[key]) {
                   dataPoint[key] = item[key][viewMode] || 0

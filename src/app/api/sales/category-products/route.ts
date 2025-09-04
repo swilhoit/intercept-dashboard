@@ -39,20 +39,41 @@ export async function GET(request: NextRequest) {
     
     caseStatement += `ELSE 'Other' END`;
     
-    // Query for Amazon products with categories
+    // Query for Amazon products with categories - combine both data sources
     let amazonQuery = `
+      WITH combined_amazon AS (
+        -- Recent data from amazon_seller table
+        SELECT 
+          Product_Name as product_name,
+          Item_Price as revenue,
+          1 as item_quantity,
+          DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) as order_date
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+        
+        UNION ALL
+        
+        -- Historical data from amazon orders table  
+        SELECT 
+          product_name,
+          revenue,
+          item_quantity,
+          DATE(date) as order_date
+        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+        WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+      )
       SELECT 
         product_name,
         ${caseStatement} as category,
         'Amazon' as channel,
         SUM(revenue) as total_sales,
         SUM(item_quantity) as quantity
-      FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+      FROM combined_amazon
       WHERE product_name IS NOT NULL
     `;
     
     if (startDate && endDate) {
-      amazonQuery += ` AND DATE(date) >= '${startDate}' AND DATE(date) <= '${endDate}'`;
+      amazonQuery += ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
     }
     
     amazonQuery += `
