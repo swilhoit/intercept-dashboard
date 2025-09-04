@@ -14,10 +14,5 @@
         }
       ]
     }
-  ],
-  "projectSettings": {
-    "protection": {
-      "enabled": false
-    }
-  }
+  ]
 }
