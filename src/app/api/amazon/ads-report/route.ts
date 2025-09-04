@@ -21,7 +21,13 @@ export async function GET(request: NextRequest) {
     }
     
     // Get time-series data if requested
-    let timeSeriesData = [];
+    let timeSeriesData: Array<{
+      date: string;
+      spend: number;
+      clicks: number;
+      impressions: number;
+      conversions: number;
+    }> = [];
     if (includeTimeSeries) {
       const timeSeriesQuery = `
         SELECT 
