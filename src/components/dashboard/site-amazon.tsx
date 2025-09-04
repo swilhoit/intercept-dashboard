@@ -42,6 +42,7 @@ export function AmazonDashboard({
   const chartData = view === 'daily' ? salesData?.daily || [] : salesData?.monthly || []
   const topProducts = productData?.filter((p: any) => p.channel === 'Amazon').slice(0, 10) || []
   const categories = categoryData?.filter((c: any) => c.channel === 'Amazon') || []
+  const adsData = salesData?.ads || []
 
   const stats = [
     {
@@ -103,10 +104,11 @@ export function AmazonDashboard({
       </div>
 
       <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList className="grid w-full max-w-[600px] grid-cols-4">
+        <TabsList className="grid w-full max-w-[800px] grid-cols-5">
           <TabsTrigger value="sales">Sales Trend</TabsTrigger>
           <TabsTrigger value="products">Top Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="advertising">Ads Performance</TabsTrigger>
           <TabsTrigger value="marketing">Marketing</TabsTrigger>
         </TabsList>
 
@@ -215,6 +217,120 @@ export function AmazonDashboard({
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="advertising" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Performing Campaigns</CardTitle>
+                <CardDescription>Best campaigns by cost and performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {adsData.slice(0, 5).map((campaign: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm truncate">{campaign.campaign_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          CTR: {campaign.ctr}% | CPC: ${campaign.cpc}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-sm">${campaign.total_cost}</p>
+                        <p className="text-xs text-muted-foreground">{campaign.total_clicks} clicks</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Advertising Metrics</CardTitle>
+                <CardDescription>Key performance indicators</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-muted-foreground">Total Ad Spend</span>
+                      <span className="text-sm font-medium">
+                        ${formatNumber(adsData.reduce((sum: number, ad: any) => sum + (ad.total_cost || 0), 0))}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-[#FF9500] h-2 rounded-full" style={{ width: '85%' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-muted-foreground">Total Clicks</span>
+                      <span className="text-sm font-medium">
+                        {formatNumber(adsData.reduce((sum: number, ad: any) => sum + (ad.total_clicks || 0), 0))}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-[#FF9500] h-2 rounded-full" style={{ width: '70%' }} />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-muted-foreground">Avg CTR</span>
+                      <span className="text-sm font-medium">
+                        {adsData.length > 0 
+                          ? (adsData.reduce((sum: number, ad: any) => sum + (ad.ctr || 0), 0) / adsData.length).toFixed(2) 
+                          : 0}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-[#FF9500] h-2 rounded-full" style={{ width: '65%' }} />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Keywords Performance</CardTitle>
+              <CardDescription>Top performing keywords and search terms</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2">Keyword</th>
+                      <th className="text-left p-2">Search Term</th>
+                      <th className="text-left p-2">Match Type</th>
+                      <th className="text-right p-2">Clicks</th>
+                      <th className="text-right p-2">Cost</th>
+                      <th className="text-right p-2">CTR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adsData.filter((ad: any) => ad.keyword_text).slice(0, 10).map((ad: any, index: number) => (
+                      <tr key={index} className="border-b">
+                        <td className="p-2 font-medium truncate max-w-[200px]">{ad.keyword_text}</td>
+                        <td className="p-2 text-muted-foreground truncate max-w-[200px]">{ad.search_term || '-'}</td>
+                        <td className="p-2">
+                          <span className="px-2 py-1 bg-gray-100 rounded text-xs">
+                            {ad.match_type}
+                          </span>
+                        </td>
+                        <td className="p-2 text-right">{ad.total_clicks}</td>
+                        <td className="p-2 text-right">${ad.total_cost}</td>
+                        <td className="p-2 text-right">{ad.ctr}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="marketing" className="space-y-4">

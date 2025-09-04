@@ -74,22 +74,65 @@ export default function DashboardPage() {
     }
 
     try {
-      const site = currentView === 'site-amazon' ? 'amazon' : 'woocommerce'
-      const [siteRes, trafficRes, searchRes] = await Promise.all([
-        fetch(`/api/sites/${site}?${params}`),
-        fetch(`/api/analytics/traffic?${params}`),
-        fetch(`/api/search-console/overview?${params}`)
-      ])
+      if (currentView === 'site-amazon') {
+        // Fetch data from new Amazon APIs
+        const [dailySalesRes, productsRes, adsRes, trafficRes] = await Promise.all([
+          fetch(`/api/amazon/daily-sales?${params}`),
+          fetch(`/api/amazon/products?${params}`),
+          fetch(`/api/amazon/ads?${params}`),
+          fetch(`/api/analytics/traffic?${params}`)
+        ])
 
-      const [siteInfo, trafficInfo, searchInfo] = await Promise.all([
-        siteRes.json(),
-        trafficRes.json(),
-        searchRes.json()
-      ])
+        const [dailySales, products, ads, trafficInfo] = await Promise.all([
+          dailySalesRes.json(),
+          productsRes.json(),
+          adsRes.json(),
+          trafficRes.json()
+        ])
 
-      setSiteData(siteInfo)
-      setTrafficData(trafficInfo)
-      setSearchConsoleData(searchInfo)
+        // Transform data to match expected format
+        const amazonSiteData = {
+          summary: {
+            total_revenue: dailySales.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0),
+            total_units: dailySales.reduce((sum: number, day: any) => sum + (day.order_count || 0), 0),
+            avg_order_value: dailySales.length > 0 
+              ? dailySales.reduce((sum: number, day: any) => sum + (day.avg_order_value || 0), 0) / dailySales.length
+              : 0
+          },
+          daily: dailySales.map((day: any) => ({
+            date: day.date,
+            sales: day.total_sales || 0
+          })),
+          products: products.map((product: any) => ({
+            product_name: product.product_name,
+            total_sales: product.total_sales,
+            quantity: product.order_count,
+            channel: 'Amazon'
+          })),
+          ads: ads
+        }
+
+        setSiteData(amazonSiteData)
+        setTrafficData(trafficInfo)
+      } else {
+        // Original WooCommerce logic
+        const site = 'woocommerce'
+        const [siteRes, trafficRes, searchRes] = await Promise.all([
+          fetch(`/api/sites/${site}?${params}`),
+          fetch(`/api/analytics/traffic?${params}`),
+          fetch(`/api/search-console/overview?${params}`)
+        ])
+
+        const [siteInfo, trafficInfo, searchInfo] = await Promise.all([
+          siteRes.json(),
+          trafficRes.json(),
+          searchRes.json()
+        ])
+
+        setSiteData(siteInfo)
+        setTrafficData(trafficInfo)
+        setSearchConsoleData(searchInfo)
+      }
     } catch (error) {
       console.error("Error fetching site data:", error)
     }

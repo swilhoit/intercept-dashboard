@@ -5,12 +5,17 @@ import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
 // Define your sync configurations here
 const SYNC_CONFIGS = [
   {
-    name: 'Sales Data Sync',
+    name: 'Amazon Orders 2025',
     oneDriveFileId: process.env.SALES_EXCEL_FILE_ID || '',
-    bigQueryTableId: 'EXCEL_SALES_DATA',
-    sheetName: 'Sales', // Optional: defaults to first sheet
+    bigQueryTableId: 'amazon_seller.amazon_orders_2025',
+    sheetName: 'Funnel data',
   },
-  // Add more sync configurations as needed
+  {
+    name: 'Amazon Ads Keywords',
+    oneDriveFileId: process.env.AMAZON_ADS_EXCEL_FILE_ID || '',
+    bigQueryTableId: 'amazon_ads.keywords',
+    sheetName: 'Funnel data',
+  },
 ];
 
 export async function POST(request: NextRequest) {

@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Cloud deployment files with secrets  
+cloud-sync-run.yaml
+cloudbuild.yaml
+sync-function.js
+package-cloud-function.json
+
+# Development files with sensitive data
+debug-sheets.ts

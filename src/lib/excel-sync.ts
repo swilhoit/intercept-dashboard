@@ -19,9 +19,46 @@ export class ExcelSyncService {
   async downloadExcelFromOneDrive(): Promise<Buffer> {
     try {
       const graphClient = getGraphClient();
-      const fileResponse = await graphClient
-        .api(`/me/drive/items/${this.config.oneDriveFileId}/content`)
+      
+      // Map SharePoint IDs to actual share URLs
+      const shareUrlMap: { [key: string]: string } = {
+        'ET27IzaEhPBOim8JgIJNepUBr38bFsOScEH4UCqiyidk_A': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/ET27IzaEhPBOim8JgIJNepUBr38bFsOScEH4UCqiyidk_A',
+        'EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q'
+      };
+      
+      const shareUrl = shareUrlMap[this.config.oneDriveFileId];
+      if (!shareUrl) {
+        throw new Error(`No share URL found for file ID: ${this.config.oneDriveFileId}`);
+      }
+      
+      // Encode the share URL for the API
+      const base64Value = Buffer.from(shareUrl).toString('base64');
+      const encodedUrl = 'u!' + base64Value.replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      
+      // Get the shared item
+      const sharedItem = await graphClient
+        .api(`/shares/${encodedUrl}/driveItem`)
         .get();
+      
+      // Download the file content
+      const fileResponse = await graphClient
+        .api(`/drives/${sharedItem.parentReference.driveId}/items/${sharedItem.id}/content`)
+        .get();
+      
+      // Convert ReadableStream to Buffer
+      if (fileResponse instanceof ReadableStream) {
+        const reader = fileResponse.getReader();
+        const chunks: Uint8Array[] = [];
+        let done = false;
+        
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          if (value) chunks.push(value);
+          done = readerDone;
+        }
+        
+        return Buffer.concat(chunks.map(chunk => Buffer.from(chunk)));
+      }
       
       return Buffer.from(fileResponse);
     } catch (error) {
@@ -76,21 +113,53 @@ export class ExcelSyncService {
     }
 
     try {
-      const table = bigquery.dataset('MASTER').table(this.config.bigQueryTableId);
+      const [datasetId, tableId] = this.config.bigQueryTableId.includes('.') 
+        ? this.config.bigQueryTableId.split('.')
+        : ['MASTER', this.config.bigQueryTableId];
       
-      // Clear existing data (full replace strategy)
-      await table.delete({ ignoreNotFound: true });
+      const table = bigquery.dataset(datasetId).table(tableId);
       
-      // Create table with schema inferred from data
+      // Insert data if we have data
       if (data.length > 0) {
-        const [job] = await table.createLoadJob(data, {
-          sourceFormat: 'JSON',
-          writeDisposition: 'WRITE_TRUNCATE',
-          autodetect: true,
-        });
-
-        await job.promise();
-        console.log(`Successfully loaded ${data.length} rows into ${this.config.bigQueryTableId}`);
+        try {
+          // For initial sync, skip deletion to avoid streaming buffer issues
+          // TODO: Implement upsert logic for production
+          
+          // Clean data field names to match BigQuery schema
+          const cleanData = data.map(row => {
+            const cleanRow: any = {};
+            Object.keys(row).forEach(key => {
+              // Create a clean field name mapping for Amazon data
+              let cleanKey = key;
+              
+              // Handle specific Amazon field mappings
+              if (key.includes('Item Price')) {
+                cleanKey = 'Item_Price';
+              } else if (key.includes('Product Name')) {
+                cleanKey = 'Product_Name';
+              } else if (key.includes('Purchase Date')) {
+                cleanKey = 'Purchase_Date';
+              } else {
+                // General cleaning: replace non-alphanumeric with single underscore
+                cleanKey = key.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+              }
+              
+              cleanRow[cleanKey] = row[key];
+            });
+            return cleanRow;
+          });
+          
+          // Insert all data
+          await table.insert(cleanData, { createInsertId: false });
+          console.log(`Successfully loaded ${data.length} rows into ${this.config.bigQueryTableId}`);
+        } catch (insertError: any) {
+          if (insertError.name === 'PartialFailureError') {
+            console.error('Some rows failed to insert:', insertError.errors);
+            console.error('Failed rows sample:', insertError.errors?.[0]);
+            throw new Error(`Partial insert failure: ${insertError.errors?.length || 0} rows failed`);
+          }
+          throw insertError;
+        }
       }
     } catch (error) {
       console.error('Error updating BigQuery table:', error);

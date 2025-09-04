@@ -1,18 +1,11 @@
 import { BigQuery } from '@google-cloud/bigquery';
 
-const privateKey = process.env.GOOGLE_CLOUD_PRIVATE_KEY || '';
-const clientEmail = process.env.GOOGLE_CLOUD_CLIENT_EMAIL || '';
-const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || '';
+const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || 'intercept-sales-2508061117';
 
-const credentials = clientEmail && privateKey ? {
-  client_email: clientEmail,
-  private_key: privateKey.replace(/\\n/g, '\n'),
-} : undefined;
-
-export const bigquery = projectId && credentials ? new BigQuery({
+// Use Application Default Credentials or service account
+export const bigquery = new BigQuery({
   projectId: projectId,
-  credentials,
-}) : null as any;
+});
 
 export interface DailySales {
   date: string;
