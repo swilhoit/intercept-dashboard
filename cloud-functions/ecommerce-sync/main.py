@@ -44,10 +44,22 @@ def sync_ecommerce(request):
             
             UNION ALL
             
-            -- WooCommerce data from existing table
+            -- WooCommerce data from all sites
             SELECT 'WooCommerce' as channel, SUM(total_revenue) as total_revenue
-            FROM `{PROJECT_ID}.woocommerce.brickanew_daily_product_sales`
-            WHERE order_date = CURRENT_DATE()
+            FROM (
+                SELECT total_revenue FROM `{PROJECT_ID}.woocommerce.brickanew_daily_product_sales`
+                WHERE order_date = CURRENT_DATE()
+                
+                UNION ALL
+                
+                SELECT total_revenue FROM `{PROJECT_ID}.woocommerce.heatilator_daily_product_sales`
+                WHERE order_date = CURRENT_DATE()
+                
+                UNION ALL
+                
+                SELECT total_revenue FROM `{PROJECT_ID}.woocommerce.superior_daily_product_sales`
+                WHERE order_date = CURRENT_DATE()
+            )
         )
         WHERE NOT EXISTS (
             SELECT 1 FROM `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES`

@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     if (category && category !== 'all') {
       const categories: { [key: string]: string[] } = {
         'Paint': ['paint kit', 'paint can', 'gallon paint', 'quart paint', 'primer paint', 'base coat', 'top coat', 'sealant', 'stain', 'varnish', 'enamel paint', 'latex paint', 'acrylic paint'],
-        'Fireplace Doors': ['ez door', 'glass door', 'fire screen', 'door steel', 'door plus']
+        'Fireplace Doors': ['ez door', 'glass door', 'fire screen', 'door steel', 'door plus', 'fireplace door', 'thermo-rite', 'fp door']
       };
       
       const paintAccessoryKeywords = ['roller', 'brush', 'tray', 'tape', 'drop cloth', 'scraper', 'putty knife', 'paint pad', 'extension pole', 'roller cover', 'roller frame'];

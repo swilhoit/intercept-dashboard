@@ -55,14 +55,15 @@ export async function GET(request: NextRequest) {
       LIMIT 12
     `;
     
-    // Get top products for WooCommerce from actual table
+    // Get top products for WooCommerce from all sites (starting with BrickAnew only until other sites have data)
     const productsQuery = `
       SELECT 
         product_name,
         'WooCommerce' as channel,
         SUM(total_revenue) as revenue,
         SUM(total_quantity_sold) as quantity,
-        AVG(avg_unit_price) as avg_price
+        AVG(avg_unit_price) as avg_price,
+        1 as sites_available
       FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
       WHERE 1=1 ${wooWhereClause}
       GROUP BY product_name
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
       LIMIT 20
     `;
     
-    // Get category data for WooCommerce - create basic categories from product names
+    // Get category data for WooCommerce - create basic categories (starting with BrickAnew only until other sites have data)
     const categoryQuery = `
       SELECT 
         CASE 
@@ -82,7 +83,8 @@ export async function GET(request: NextRequest) {
         'WooCommerce' as channel,
         SUM(total_revenue) as revenue,
         SUM(total_quantity_sold) as quantity,
-        COUNT(DISTINCT product_name) as product_count
+        COUNT(DISTINCT product_name) as product_count,
+        1 as sites_available
       FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
       WHERE 1=1 ${wooWhereClause}
       GROUP BY name

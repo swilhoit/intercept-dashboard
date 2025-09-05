@@ -1,0 +1,50 @@
+{
+  "woocommerce_sites": {
+    "brickanew": {
+      "name": "BrickAnew",
+      "base_url": "https://brickanew.com",
+      "consumer_key": "existing_key",
+      "consumer_secret": "NEED_TO_GET_FROM_EXISTING_SETUP",
+      "table": "brickanew_daily_product_sales",
+      "status": "active",
+      "notes": "Already integrated - fireplace paint products"
+    },
+    "heatilator": {
+      "name": "Heatilator",
+      "base_url": "NEED_SITE_URL",
+      "consumer_key": "ck_b7954d336fa5cbdc4981bb0dcdb3219b7af8cc90",
+      "consumer_secret": "NEED_CONSUMER_SECRET",
+      "table": "heatilator_daily_product_sales",
+      "status": "pending_config",
+      "notes": "Fireplace doors and accessories"
+    },
+    "superior": {
+      "name": "Superior",
+      "base_url": "NEED_SITE_URL", 
+      "consumer_key": "ck_fa744f3de5885bbc8e0520e8bee27a8db36b8eff",
+      "consumer_secret": "NEED_CONSUMER_SECRET",
+      "table": "superior_daily_product_sales", 
+      "status": "pending_config",
+      "notes": "Fireplace and heating products"
+    }
+  },
+  "missing_information": {
+    "heatilator": [
+      "Site URL (e.g., https://heatilator.com or https://shop.heatilator.com)",
+      "Consumer Secret (paired with the consumer key)",
+      "Verification that WooCommerce REST API is enabled"
+    ],
+    "superior": [
+      "Site URL (e.g., https://superior.com or https://shop.superior.com)",
+      "Consumer Secret (paired with the consumer key)", 
+      "Verification that WooCommerce REST API is enabled"
+    ]
+  },
+  "next_steps": [
+    "1. Get missing site URLs and consumer secrets",
+    "2. Update fetch-woo-data.py with correct configuration",
+    "3. Test API connections: python3 fetch-woo-data.py test",
+    "4. Fetch recent data: python3 fetch-woo-data.py all",
+    "5. Process data: python3 process-multi-woo.py"
+  ]
+}

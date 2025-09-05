@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Define category keywords - Paint should be checked first since many products contain both keywords
     const categories = {
       'Paint': ['paint kit', 'paint can', 'gallon paint', 'quart paint', 'primer paint', 'base coat', 'top coat', 'sealant', 'stain', 'varnish', 'enamel paint', 'latex paint', 'acrylic paint'],
-      'Fireplace Doors': ['ez door', 'glass door', 'fire screen', 'door steel', 'door plus']
+      'Fireplace Doors': ['ez door', 'glass door', 'fire screen', 'door steel', 'door plus', 'fireplace door', 'thermo-rite', 'fp door']
     };
     
     // Define exclusion keywords for paint accessories
