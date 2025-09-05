@@ -79,6 +79,12 @@ export async function GET(request: NextRequest) {
         SELECT product_name, 'WaterWise' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
         FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
         WHERE 1=1 ${wooWhereClause}
+        
+        UNION ALL
+        
+        SELECT product_name, 'Majestic' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
+        FROM \`intercept-sales-2508061117.woocommerce.majestic_daily_product_sales\`
+        WHERE 1=1 ${wooWhereClause}
       )
       SELECT 
         product_name,
@@ -117,6 +123,12 @@ export async function GET(request: NextRequest) {
         SELECT product_name, 'WaterWise' as site, total_revenue, total_quantity_sold, order_date
         FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
         WHERE 1=1 ${wooWhereClause}
+        
+        UNION ALL
+        
+        SELECT product_name, 'Majestic' as site, total_revenue, total_quantity_sold, order_date
+        FROM \`intercept-sales-2508061117.woocommerce.majestic_daily_product_sales\`
+        WHERE 1=1 ${wooWhereClause}
       )
       SELECT 
         CASE 
@@ -125,6 +137,7 @@ export async function GET(request: NextRequest) {
           WHEN UPPER(product_name) LIKE '%BELT%' OR UPPER(product_name) LIKE '%GRAB%' THEN 'Automotive'
           WHEN UPPER(product_name) LIKE '%HEATILATOR%' OR UPPER(product_name) LIKE '%SLIM%' THEN 'Heatilator Products'
           WHEN UPPER(product_name) LIKE '%WATER%' OR UPPER(product_name) LIKE '%FILTER%' OR UPPER(product_name) LIKE '%PURIFIER%' THEN 'Water Treatment'
+          WHEN UPPER(product_name) LIKE '%MAJESTIC%' OR UPPER(product_name) LIKE '%PREMIUM%' THEN 'Majestic Products'
           ELSE 'Other'
         END as name,
         'WooCommerce' as channel,

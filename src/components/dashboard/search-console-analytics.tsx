@@ -168,8 +168,11 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
   // Available sites for the dropdown
   const availableSites = [
     { value: "all", label: "All Sites" },
-    { value: "brickanew.com", label: "Brick Anew" },
-    { value: "heatilator.com", label: "Heatilator" },
+    { value: "brickanew.com", label: "BrickAnew" },
+    { value: "heatilatorfireplacedoors.com", label: "Heatilator Fireplace Doors" },
+    { value: "superiorfireplacedoors.com", label: "Superior Fireplace Doors" },
+    { value: "waterwisegroup.com", label: "WaterWise Group" },
+    { value: "majesticfireplacedoors.com", label: "Majestic Fireplace Doors" },
     { value: "fireplacepainting.com", label: "Fireplace Painting" },
     { value: "fireplaces.net", label: "Fireplaces.net" }
   ]
@@ -280,44 +283,76 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
         </Card>
       </div>
 
-      {/* Site Breakdown Cards */}
+      {/* Site Breakdown Table */}
       {selectedSite === "all" && overviewData?.sites && (
-        <div className="grid gap-4 md:grid-cols-3">
-          {overviewData.sites.map((site) => (
-            <Card key={site.site}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-sm font-medium">{site.site_name}</CardTitle>
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <CardDescription className="text-xs">{site.site}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-xs text-muted-foreground">Clicks:</span>
-                  <span className="text-xs font-medium">{site.total_clicks?.toLocaleString() || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-muted-foreground">Impressions:</span>
-                  <span className="text-xs font-medium">{site.total_impressions?.toLocaleString() || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-muted-foreground">CTR:</span>
-                  <span className="text-xs font-medium">{site.ctr?.toFixed(2) || 0}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-muted-foreground">Avg Position:</span>
-                  <span className="text-xs font-medium">{site.avg_position?.toFixed(1) || 0}</span>
-                </div>
-                {site.error && (
-                  <Badge variant="destructive" className="text-xs">
-                    Error: {site.error}
-                  </Badge>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Site Performance Breakdown
+            </CardTitle>
+            <CardDescription>
+              Search Console metrics across all connected websites
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Site</TableHead>
+                  <TableHead className="text-right">Clicks</TableHead>
+                  <TableHead className="text-right">Impressions</TableHead>
+                  <TableHead className="text-right">CTR</TableHead>
+                  <TableHead className="text-right">Avg Position</TableHead>
+                  <TableHead className="text-right">Queries</TableHead>
+                  <TableHead className="text-right">Pages</TableHead>
+                  <TableHead className="text-center">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {overviewData.sites.map((site) => (
+                  <TableRow key={site.site}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{site.site_name}</div>
+                        <div className="text-sm text-muted-foreground">{site.site}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {site.total_clicks?.toLocaleString() || 0}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {site.total_impressions?.toLocaleString() || 0}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {site.ctr?.toFixed(2) || 0}%
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {site.avg_position?.toFixed(1) || 0}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {site.total_queries?.toLocaleString() || 0}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {site.total_pages?.toLocaleString() || 0}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {site.error ? (
+                        <Badge variant="destructive" className="text-xs">
+                          Error
+                        </Badge>
+                      ) : (
+                        <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                          Connected
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
       {/* Charts */}

@@ -26,6 +26,12 @@ WOOCOMMERCE_SITES = {
         'consumer_key': 'ck_4e6e36da2bc12181bdfef39125fa3074630078b9',
         'consumer_secret': 'cs_802ba938ebacf7e9af0f931403f554a134352ac1',
         'data_file': '/tmp/woo_recent_superior.json'
+    },
+    'majestic': {
+        'base_url': 'https://majesticfireplacedoors.com',
+        'consumer_key': 'ck_24fc09cea9514ee80496cdecefad84526c957662',
+        'consumer_secret': 'cs_0571e9b8db8a232c2d8ad343ad112b4652f13a1a',
+        'data_file': '/tmp/woo_recent_majestic.json'
     }
 }
 

@@ -110,6 +110,18 @@ export function WebsitesDashboard({
       acquisitionDate: '2025-08-01',
       totalHistoricalRevenue: 26160, // Total including pre-acquisition
       preAcquisitionRevenue: 18660 // Real pre-acquisition revenue
+    },
+    {
+      site: 'Majestic',
+      platform: 'WooCommerce',
+      revenue: 0,
+      orders: 0,
+      avgOrderValue: 0,
+      activeDays: 0,
+      conversionRate: 0,
+      status: 'Pending Setup',
+      color: '#8E44AD',
+      products: 0
     }
   ]
 
@@ -132,7 +144,8 @@ export function WebsitesDashboard({
       BrickAnew: brickAnewSales,
       Heatilator: heatilatorSales,
       Superior: 0,   // Will be populated when data is available
-      WaterWise: 0   // Will be populated when Shopify integration is complete
+      WaterWise: 0,  // Will be populated when Shopify integration is complete
+      Majestic: 0    // Will be populated when API access is resolved
     }
   })
 
@@ -283,6 +296,14 @@ export function WebsitesDashboard({
                       strokeDasharray="10 5"
                       name="WaterWise"
                     />
+                    <Line 
+                      type="monotone" 
+                      dataKey="Majestic" 
+                      stroke="#8E44AD" 
+                      strokeWidth={2}
+                      strokeDasharray="3 8"
+                      name="Majestic"
+                    />
                     <ReferenceLine 
                       x="2025-08-01" 
                       stroke="#34C759" 
@@ -377,13 +398,17 @@ export function WebsitesDashboard({
                   </ul>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Acquisition Analysis</h4>
-                  <div className="text-sm text-blue-800 space-y-1">
-                    <div>• <strong>WaterWise acquired Aug 2025</strong></div>
-                    <div>• Revenue since acquisition: ${formatCurrency(siteMetrics[3].revenue)}</div>
-                    <div>• Historical revenue (pre-acquisition): ${formatCurrency(siteMetrics[3].preAcquisitionRevenue || 0)}</div>
-                    <div>• Total WaterWise revenue: ${formatCurrency(siteMetrics[3].totalHistoricalRevenue || 0)}</div>
-                    <div className="text-xs mt-2 italic">* Only post-acquisition revenue counts toward company totals</div>
+                  <h4 className="font-medium text-blue-900 mb-2">Integration Status</h4>
+                  <div className="text-sm text-blue-800 space-y-2">
+                    <div>
+                      <strong>WaterWise acquired Aug 2025</strong><br/>
+                      Revenue since acquisition: ${formatCurrency(siteMetrics[3].revenue)}<br/>
+                      <span className="text-xs italic">* Only post-acquisition revenue counts toward totals</span>
+                    </div>
+                    <div>
+                      <strong>Majestic:</strong> Pending API setup<br/>
+                      <span className="text-xs">Need to resolve WooCommerce API permissions</span>
+                    </div>
                   </div>
                 </div>
               </div>
