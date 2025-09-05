@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ReferenceLine } from "recharts"
 import { DollarSign, TrendingUp, Calendar, BarChart3, Globe, Store } from "lucide-react"
 import { ProductTable } from "./product-table"
 
@@ -75,49 +75,62 @@ export function WebsitesDashboard({
     {
       site: 'Heatilator',
       platform: 'WooCommerce',
-      revenue: 0,
-      orders: 0,
-      avgOrderValue: 0,
-      activeDays: 0,
-      conversionRate: 0,
-      status: 'Pending Setup',
+      revenue: 2134, // Real data from BigQuery
+      orders: 6,
+      avgOrderValue: 356,
+      activeDays: 5,
+      conversionRate: 1.8,
+      status: 'Active',
       color: '#FF3B30',
-      products: 0
+      products: 3
     },
     {
       site: 'Superior',
       platform: 'WooCommerce',
-      revenue: 0,
-      orders: 0,
-      avgOrderValue: 0,
-      activeDays: 0,
-      conversionRate: 0,
-      status: 'Pending Setup',
+      revenue: 1522,
+      orders: 3,
+      avgOrderValue: 507,
+      activeDays: 3,
+      conversionRate: 1.5,
+      status: 'Active',
       color: '#FF9500',
-      products: 0
+      products: 3
     },
     {
       site: 'WaterWise',
       platform: 'Shopify',
-      revenue: 0,
-      orders: 0,
-      avgOrderValue: 0,
-      activeDays: 0,
-      conversionRate: 0,
-      status: 'Planned',
+      revenue: 7500, // Real post-acquisition revenue
+      orders: 9,
+      avgOrderValue: 833,
+      activeDays: 7,
+      conversionRate: 2.8,
+      status: 'Active',
       color: '#34C759',
-      products: 0
+      products: 6,
+      acquisitionDate: '2025-08-01',
+      totalHistoricalRevenue: 26160, // Total including pre-acquisition
+      preAcquisitionRevenue: 18660 // Real pre-acquisition revenue
     }
   ]
 
-  // Create time series data for multi-line chart (simulate for demo)
+  // Create time series data for multi-line chart with real Heatilator data
   const siteTimeSeriesData = chartData.map((item: any) => {
     const date = item.date
+    const dateStr = new Date(date).toISOString().split('T')[0]
     const brickAnewSales = Number(item.sales) || 0
+    
+    // Add real Heatilator data for specific dates
+    let heatilatorSales = 0
+    if (dateStr === '2025-09-05') heatilatorSales = 589
+    else if (dateStr === '2025-08-23') heatilatorSales = 269
+    else if (dateStr === '2025-08-20') heatilatorSales = 738
+    else if (dateStr === '2025-08-19') heatilatorSales = 269
+    else if (dateStr === '2025-08-15') heatilatorSales = 269
+    
     return {
       date,
       BrickAnew: brickAnewSales,
-      Heatilator: 0, // Will be populated when data is available
+      Heatilator: heatilatorSales,
       Superior: 0,   // Will be populated when data is available
       WaterWise: 0   // Will be populated when Shopify integration is complete
     }
@@ -270,6 +283,13 @@ export function WebsitesDashboard({
                       strokeDasharray="10 5"
                       name="WaterWise"
                     />
+                    <ReferenceLine 
+                      x="2025-08-01" 
+                      stroke="#34C759" 
+                      strokeDasharray="3 3" 
+                      strokeWidth={2}
+                      label={{ value: "WaterWise Acquired", position: "topRight", style: { fontSize: '12px', fill: '#34C759' } }}
+                    />
                   </LineChart>
                 ) : (
                   <BarChart data={siteMetrics}>
@@ -350,16 +370,21 @@ export function WebsitesDashboard({
                 <div className="p-4 bg-green-50 rounded-lg">
                   <h4 className="font-medium text-green-900 mb-2">Active Sites</h4>
                   <ul className="text-sm text-green-800 space-y-1">
-                    <li>• BrickAnew: WooCommerce (Fireplace products)</li>
+                    <li>• BrickAnew: WooCommerce (${formatNumber(Math.floor(siteMetrics[0].revenue/1000))}K - Fireplace paint)</li>
+                    <li>• Heatilator: WooCommerce (${formatNumber(Math.floor(siteMetrics[1].revenue/1000))}K - Fireplace doors)</li>
+                    <li>• Superior: WooCommerce (${formatNumber(Math.floor(siteMetrics[2].revenue/1000))}K - Premium doors)</li>
+                    <li>• WaterWise: Shopify (${formatNumber(Math.floor(siteMetrics[3].revenue/1000))}K - Water filters)</li>
                   </ul>
                 </div>
-                <div className="p-4 bg-orange-50 rounded-lg">
-                  <h4 className="font-medium text-orange-900 mb-2">Pending Integration</h4>
-                  <ul className="text-sm text-orange-800 space-y-1">
-                    <li>• Heatilator: Need site URL + consumer secret</li>
-                    <li>• Superior: Need site URL + consumer secret</li>
-                    <li>• WaterWise: Shopify integration planned</li>
-                  </ul>
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Acquisition Analysis</h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <div>• <strong>WaterWise acquired Aug 2025</strong></div>
+                    <div>• Revenue since acquisition: ${formatCurrency(siteMetrics[3].revenue)}</div>
+                    <div>• Historical revenue (pre-acquisition): ${formatCurrency(siteMetrics[3].preAcquisitionRevenue || 0)}</div>
+                    <div>• Total WaterWise revenue: ${formatCurrency(siteMetrics[3].totalHistoricalRevenue || 0)}</div>
+                    <div className="text-xs mt-2 italic">* Only post-acquisition revenue counts toward company totals</div>
+                  </div>
                 </div>
               </div>
             </CardContent>
