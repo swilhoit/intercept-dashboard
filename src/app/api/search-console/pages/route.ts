@@ -16,14 +16,29 @@ export async function GET(request: NextRequest) {
     // Define site configurations
     const sites = [
       { 
-        name: 'Brick Anew',
+        name: 'BrickAnew',
         dataset: 'searchconsole_brickanew',
         domain: 'brickanew.com'
       },
       { 
-        name: 'Heatilator',
+        name: 'Heatilator Fireplace Doors',
         dataset: 'searchconsole_heatilator',
-        domain: 'heatilator.com'
+        domain: 'heatilatorfireplacedoors.com'
+      },
+      { 
+        name: 'Superior Fireplace Doors',
+        dataset: 'searchconsole_superior',
+        domain: 'superiorfireplacedoors.com'
+      },
+      { 
+        name: 'WaterWise Group',
+        dataset: 'searchconsole_waterwise',
+        domain: 'waterwisegroup.com'
+      },
+      { 
+        name: 'Majestic Fireplace Doors',
+        dataset: 'searchconsole_majestic',
+        domain: 'majesticfireplacedoors.com'
       },
       {
         name: 'Fireplace Painting',

@@ -17,6 +17,7 @@ import {
 import { 
   Search, 
   TrendingUp, 
+  TrendingDown,
   Eye, 
   MousePointer, 
   BarChart3, 
@@ -38,6 +39,20 @@ interface SiteMetrics {
   ctr: number
   total_queries: number
   total_pages: number
+  // Previous period values
+  prev_total_clicks?: number
+  prev_total_impressions?: number
+  prev_avg_position?: number
+  prev_ctr?: number
+  prev_total_queries?: number
+  prev_total_pages?: number
+  // Percentage changes
+  clicks_change?: number
+  impressions_change?: number
+  position_change?: number
+  ctr_change?: number
+  queries_change?: number
+  pages_change?: number
   error?: string
 }
 
@@ -83,6 +98,24 @@ interface PageData {
   impressions: number
   avg_position: number
   ctr: number
+}
+
+// Helper component for displaying percentage changes
+function PercentageChange({ value, isPositive }: { value: number | undefined, isPositive?: boolean }) {
+  if (value === undefined || value === 0) {
+    return <span className="text-xs text-muted-foreground">No change</span>
+  }
+  
+  const isUp = isPositive !== undefined ? isPositive : value > 0
+  const color = isUp ? "text-green-600" : "text-red-600"
+  const Icon = isUp ? TrendingUp : TrendingDown
+  
+  return (
+    <span className={`flex items-center gap-1 text-xs ${color}`}>
+      <Icon className="h-3 w-3" />
+      {Math.abs(value).toFixed(1)}%
+    </span>
+  )
 }
 
 export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProps) {
@@ -144,6 +177,35 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
     }
   }
 
+  // Calculate aggregated percentage changes
+  const aggregatedChanges = overviewData?.sites?.reduce((acc, site) => {
+    const clicks_change = site.clicks_change || 0
+    const impressions_change = site.impressions_change || 0
+    const ctr_change = site.ctr_change || 0
+    const position_change = site.position_change || 0
+    
+    const weight = site.total_impressions || 0
+    const totalWeight = overviewData.aggregated.total_impressions || 1
+    const siteWeight = weight / totalWeight
+    
+    return {
+      clicks_change: acc.clicks_change + (clicks_change * siteWeight),
+      impressions_change: acc.impressions_change + (impressions_change * siteWeight),
+      ctr_change: acc.ctr_change + (ctr_change * siteWeight),
+      position_change: acc.position_change + (position_change * siteWeight),
+    }
+  }, {
+    clicks_change: 0,
+    impressions_change: 0,
+    ctr_change: 0,
+    position_change: 0,
+  }) || {
+    clicks_change: 0,
+    impressions_change: 0,
+    ctr_change: 0,
+    position_change: 0,
+  }
+
   // Prepare chart data
   const chartData = overviewData?.trends?.reduce((acc: any[], trend: any) => {
     // Handle date format - convert BigQuery date to JS date string
@@ -165,7 +227,7 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
     return acc
   }, []) || []
 
-  // Available sites for the dropdown
+  // Available sites for the dropdown (matching API domains)
   const availableSites = [
     { value: "all", label: "All Sites" },
     { value: "brickanew.com", label: "BrickAnew" },
@@ -231,9 +293,12 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
             <div className="text-2xl font-bold">
               {overviewData?.aggregated?.total_clicks?.toLocaleString() || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Across {overviewData?.aggregated?.site_count || 0} sites
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Across {overviewData?.aggregated?.site_count || 0} sites
+              </p>
+              <PercentageChange value={aggregatedChanges.clicks_change} />
+            </div>
           </CardContent>
         </Card>
 
@@ -246,9 +311,12 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
             <div className="text-2xl font-bold">
               {overviewData?.aggregated?.total_impressions?.toLocaleString() || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {overviewData?.aggregated?.total_queries?.toLocaleString() || 0} unique queries
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {overviewData?.aggregated?.total_queries?.toLocaleString() || 0} unique queries
+              </p>
+              <PercentageChange value={aggregatedChanges.impressions_change} />
+            </div>
           </CardContent>
         </Card>
 
@@ -261,24 +329,33 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
             <div className="text-2xl font-bold">
               {overviewData?.aggregated?.ctr?.toFixed(2) || 0}%
             </div>
-            <p className="text-xs text-muted-foreground">
-              Position: {overviewData?.aggregated?.avg_position?.toFixed(1) || 0}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Position: {overviewData?.aggregated?.avg_position?.toFixed(1) || 0}
+              </p>
+              <PercentageChange value={aggregatedChanges.ctr_change} />
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Pages</CardTitle>
+            <CardTitle className="text-sm font-medium">Average Position</CardTitle>
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {overviewData?.aggregated?.total_pages?.toLocaleString() || 0}
+              {overviewData?.aggregated?.avg_position?.toFixed(1) || 0}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Pages with impressions
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Search result ranking
+              </p>
+              <PercentageChange 
+                value={aggregatedChanges.position_change} 
+                isPositive={aggregatedChanges.position_change < 0} 
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -306,6 +383,7 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
                   <TableHead className="text-right">Avg Position</TableHead>
                   <TableHead className="text-right">Queries</TableHead>
                   <TableHead className="text-right">Pages</TableHead>
+                  <TableHead className="text-center">Change %</TableHead>
                   <TableHead className="text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -335,6 +413,18 @@ export function SearchConsoleAnalytics({ dateRange }: SearchConsoleAnalyticsProp
                     </TableCell>
                     <TableCell className="text-right">
                       {site.total_pages?.toLocaleString() || 0}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex flex-col gap-1">
+                        <div className="text-xs">
+                          <span className="font-mono text-muted-foreground">C: </span>
+                          <PercentageChange value={site.clicks_change} />
+                        </div>
+                        <div className="text-xs">
+                          <span className="font-mono text-muted-foreground">I: </span>
+                          <PercentageChange value={site.impressions_change} />
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       {site.error ? (

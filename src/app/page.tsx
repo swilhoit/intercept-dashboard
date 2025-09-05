@@ -240,6 +240,12 @@ export default function DashboardPage() {
               tacos={(adSpendData.metrics?.totalAdSpend && summary.total_revenue > 0) 
                 ? (adSpendData.metrics.totalAdSpend / summary.total_revenue * 100) 
                 : 0}
+              percentageChanges={{
+                total_revenue: summary.percentage_changes?.total_revenue,
+                avg_daily_sales: summary.percentage_changes?.avg_daily_sales,
+                totalAdSpend: adSpendData.metrics?.percentage_changes?.totalAdSpend
+              }}
+              hasComparison={summary.has_comparison || adSpendData.metrics?.has_comparison}
             />
             
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">

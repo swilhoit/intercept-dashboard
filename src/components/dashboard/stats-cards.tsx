@@ -10,9 +10,15 @@ interface StatsCardsProps {
   highestDay: number
   totalAdSpend?: number
   tacos?: number
+  percentageChanges?: {
+    total_revenue?: number
+    avg_daily_sales?: number
+    totalAdSpend?: number
+  }
+  hasComparison?: boolean
 }
 
-export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highestDay, totalAdSpend, tacos }: StatsCardsProps) {
+export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highestDay, totalAdSpend, tacos, percentageChanges, hasComparison }: StatsCardsProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -26,6 +32,23 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
     return new Intl.NumberFormat('en-US').format(value || 0)
   }
 
+  const formatPercentageChange = (change: number) => {
+    const sign = change > 0 ? '+' : ''
+    return `${sign}${change.toFixed(1)}%`
+  }
+
+  const getChangeColor = (change: number) => {
+    if (change > 0) return 'text-green-600'
+    if (change < 0) return 'text-red-600'
+    return 'text-muted-foreground'
+  }
+
+  const getChangeIcon = (change: number) => {
+    if (change > 0) return <ArrowUpIcon className="h-3 w-3" />
+    if (change < 0) return <ArrowDownIcon className="h-3 w-3" />
+    return null
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <Card>
@@ -35,9 +58,17 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
-          <p className="text-xs text-muted-foreground">
-            Period sales revenue
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Period sales revenue
+            </p>
+            {hasComparison && percentageChanges?.total_revenue !== undefined && (
+              <div className={`flex items-center text-xs ${getChangeColor(percentageChanges.total_revenue)}`}>
+                {getChangeIcon(percentageChanges.total_revenue)}
+                <span className="ml-1">{formatPercentageChange(percentageChanges.total_revenue)}</span>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
       
@@ -48,9 +79,17 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatCurrency(totalAdSpend || 0)}</div>
-          <p className="text-xs text-muted-foreground">
-            Google Ads spend
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Google Ads spend
+            </p>
+            {hasComparison && percentageChanges?.totalAdSpend !== undefined && (
+              <div className={`flex items-center text-xs ${getChangeColor(percentageChanges.totalAdSpend)}`}>
+                {getChangeIcon(percentageChanges.totalAdSpend)}
+                <span className="ml-1">{formatPercentageChange(percentageChanges.totalAdSpend)}</span>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
       
@@ -74,9 +113,17 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{formatCurrency(avgDailySales)}</div>
-          <p className="text-xs text-muted-foreground">
-            Average per day
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Average per day
+            </p>
+            {hasComparison && percentageChanges?.avg_daily_sales !== undefined && (
+              <div className={`flex items-center text-xs ${getChangeColor(percentageChanges.avg_daily_sales)}`}>
+                {getChangeIcon(percentageChanges.avg_daily_sales)}
+                <span className="ml-1">{formatPercentageChange(percentageChanges.avg_daily_sales)}</span>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
       

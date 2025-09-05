@@ -16,16 +16,34 @@ export async function GET(request: NextRequest) {
     // Define site configurations for Search Console data
     const sites = [
       { 
-        name: 'Brick Anew',
+        name: 'BrickAnew',
         dataset: 'searchconsole_brickanew',
         property: 'sc-domain:brickanew.com',
         domain: 'brickanew.com'
       },
       { 
-        name: 'Heatilator',
+        name: 'Heatilator Fireplace Doors',
         dataset: 'searchconsole_heatilator',
-        property: 'sc-domain:heatilator.com',
-        domain: 'heatilator.com'
+        property: 'sc-domain:heatilatorfireplacedoors.com',
+        domain: 'heatilatorfireplacedoors.com'
+      },
+      { 
+        name: 'Superior Fireplace Doors',
+        dataset: 'searchconsole_superior',
+        property: 'sc-domain:superiorfireplacedoors.com',
+        domain: 'superiorfireplacedoors.com'
+      },
+      { 
+        name: 'WaterWise Group',
+        dataset: 'searchconsole_waterwise',
+        property: 'sc-domain:waterwisegroup.com',
+        domain: 'waterwisegroup.com'
+      },
+      { 
+        name: 'Majestic Fireplace Doors',
+        dataset: 'searchconsole_majestic',
+        property: 'sc-domain:majesticfireplacedoors.com',
+        domain: 'majesticfireplacedoors.com'
       },
       {
         name: 'Fireplace Painting',
@@ -46,19 +64,36 @@ export async function GET(request: NextRequest) {
       ? sites 
       : sites.filter(s => s.domain === selectedSite);
     
-    // Build date filter
+    // Build date filter and comparison period
     let dateFilter = '';
+    let comparisonFilter = '';
+    let currentPeriodDays = 30;
+    
     if (startDate && endDate) {
       dateFilter = `AND data_date >= '${startDate}' AND data_date <= '${endDate}'`;
+      // Calculate period length and comparison period
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      currentPeriodDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Comparison period (same length, immediately before current period)
+      const comparisonEnd = new Date(start);
+      comparisonEnd.setDate(comparisonEnd.getDate() - 1);
+      const comparisonStart = new Date(comparisonEnd);
+      comparisonStart.setDate(comparisonStart.getDate() - currentPeriodDays + 1);
+      
+      comparisonFilter = `AND data_date >= '${comparisonStart.toISOString().split('T')[0]}' AND data_date <= '${comparisonEnd.toISOString().split('T')[0]}'`;
     } else {
       dateFilter = `AND data_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)`;
+      comparisonFilter = `AND data_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) AND data_date < DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)`;
     }
     
     // Get aggregated metrics for each site
     const siteMetrics = await Promise.all(
       sitesToQuery.map(async (site) => {
         try {
-          const query = `
+          // Query current period
+          const currentQuery = `
             SELECT 
               '${site.domain}' as site,
               '${site.name}' as site_name,
@@ -72,10 +107,31 @@ export async function GET(request: NextRequest) {
             WHERE 1=1 ${dateFilter}
           `;
           
-          console.log(`Search Console Query for ${site.name}:`, query);
-          const [rows] = await bigquery.query(query);
-          console.log(`Search Console Results for ${site.name}:`, rows);
-          return rows[0] || {
+          // Query comparison period
+          const comparisonQuery = `
+            SELECT 
+              SUM(clicks) as prev_total_clicks,
+              SUM(impressions) as prev_total_impressions,
+              ROUND(SAFE_DIVIDE(SUM(sum_top_position), SUM(impressions)), 2) as prev_avg_position,
+              ROUND(SAFE_DIVIDE(SUM(clicks), SUM(impressions)) * 100, 2) as prev_ctr,
+              COUNT(DISTINCT query) as prev_total_queries,
+              COUNT(DISTINCT site_url) as prev_total_pages
+            FROM \`intercept-sales-2508061117.${site.dataset}.searchdata_site_impression\`
+            WHERE 1=1 ${comparisonFilter}
+          `;
+          
+          console.log(`Search Console Current Query for ${site.name}:`, currentQuery);
+          console.log(`Search Console Comparison Query for ${site.name}:`, comparisonQuery);
+          
+          const [[currentRows], [prevRows]] = await Promise.all([
+            bigquery.query(currentQuery),
+            bigquery.query(comparisonQuery).catch(() => [[]])
+          ]);
+          
+          console.log(`Search Console Current Results for ${site.name}:`, currentRows);
+          console.log(`Search Console Previous Results for ${site.name}:`, prevRows);
+          
+          const current = currentRows[0] || {
             site: site.domain,
             site_name: site.name,
             total_clicks: 0,
@@ -84,6 +140,39 @@ export async function GET(request: NextRequest) {
             ctr: 0,
             total_queries: 0,
             total_pages: 0
+          };
+          
+          const previous = prevRows[0] || {
+            prev_total_clicks: 0,
+            prev_total_impressions: 0,
+            prev_avg_position: 0,
+            prev_ctr: 0,
+            prev_total_queries: 0,
+            prev_total_pages: 0
+          };
+          
+          // Calculate percentage changes
+          const calculateChange = (current: number, previous: number) => {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            return Math.round(((current - previous) / previous) * 100 * 100) / 100;
+          };
+          
+          return {
+            ...current,
+            // Previous period values
+            prev_total_clicks: previous.prev_total_clicks,
+            prev_total_impressions: previous.prev_total_impressions,
+            prev_avg_position: previous.prev_avg_position,
+            prev_ctr: previous.prev_ctr,
+            prev_total_queries: previous.prev_total_queries,
+            prev_total_pages: previous.prev_total_pages,
+            // Percentage changes
+            clicks_change: calculateChange(current.total_clicks, previous.prev_total_clicks),
+            impressions_change: calculateChange(current.total_impressions, previous.prev_total_impressions),
+            position_change: calculateChange(previous.prev_avg_position, current.avg_position), // Reversed for position (lower is better)
+            ctr_change: calculateChange(current.ctr, previous.prev_ctr),
+            queries_change: calculateChange(current.total_queries, previous.prev_total_queries),
+            pages_change: calculateChange(current.total_pages, previous.prev_total_pages)
           };
         } catch (error) {
           console.error(`Error querying ${site.name}:`, error);

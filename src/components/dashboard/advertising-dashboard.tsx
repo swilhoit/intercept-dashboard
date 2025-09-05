@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, BarChart, Bar } from "recharts"
 import { DateRange } from "react-day-picker"
-import { TrendingUp, TrendingDown, DollarSign, MousePointer, Eye, ShoppingCart, Target } from "lucide-react"
+import { TrendingUp, TrendingDown, DollarSign, MousePointer, Eye, ShoppingCart, Target, ArrowUpIcon, ArrowDownIcon } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -73,6 +73,23 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
 
   const formatPercent = (value: number) => {
     return `${value.toFixed(2)}%`
+  }
+
+  const formatPercentageChange = (change: number) => {
+    const sign = change > 0 ? '+' : ''
+    return `${sign}${change.toFixed(1)}%`
+  }
+
+  const getChangeColor = (change: number) => {
+    if (change > 0) return 'text-green-600'
+    if (change < 0) return 'text-red-600'
+    return 'text-muted-foreground'
+  }
+
+  const getChangeIcon = (change: number) => {
+    if (change > 0) return <ArrowUpIcon className="h-3 w-3" />
+    if (change < 0) return <ArrowDownIcon className="h-3 w-3" />
+    return null
   }
 
   const formatDate = (dateStr: string) => {
@@ -155,9 +172,17 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(data.summary?.totalSpend || 0)}</div>
-            <p className="text-xs text-muted-foreground">
-              {data.summary?.activeCampaigns || 0} active campaigns
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {data.summary?.activeCampaigns || 0} active campaigns
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.totalAdSpend !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.totalAdSpend)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.totalAdSpend)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.totalAdSpend)}</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -168,9 +193,17 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(data.summary?.totalImpressions || 0)}</div>
-            <p className="text-xs text-muted-foreground">
-              Total ad views
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Total ad views
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.totalImpressions !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.totalImpressions)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.totalImpressions)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.totalImpressions)}</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -181,9 +214,17 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(data.summary?.totalClicks || 0)}</div>
-            <p className="text-xs text-muted-foreground">
-              Total interactions
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Total interactions
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.totalClicks !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.totalClicks)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.totalClicks)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.totalClicks)}</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -194,9 +235,17 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(data.summary?.totalConversions || 0)}</div>
-            <p className="text-xs text-muted-foreground">
-              Total conversions
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Total conversions
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.totalConversions !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.totalConversions)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.totalConversions)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.totalConversions)}</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -209,9 +258,17 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
             <div className="text-2xl font-bold">
               {formatCurrency(data.summary?.totalClicks > 0 ? data.summary.totalSpend / data.summary.totalClicks : 0, 2)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Cost per click
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Cost per click
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.cpc !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.cpc)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.cpc)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.cpc)}</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -224,9 +281,17 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
             <div className="text-2xl font-bold">
               {formatPercent(data.summary?.totalImpressions > 0 ? (data.summary.totalClicks * 100.0) / data.summary.totalImpressions : 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Click-through rate
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Click-through rate
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.ctr !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.ctr)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.ctr)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.ctr)}</span>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
