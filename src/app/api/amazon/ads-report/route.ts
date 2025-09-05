@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       clicks: number;
       impressions: number;
       conversions: number;
+      conversions_value?: number;
     }> = [];
     if (includeTimeSeries) {
       const timeSeriesQuery = `
@@ -35,7 +36,9 @@ export async function GET(request: NextRequest) {
           SUM(amazon_ads_spend) as spend,
           SUM(amazon_ads_clicks) as clicks,
           SUM(amazon_ads_impressions) as impressions,
-          SUM(amazon_ads_conversions) as conversions
+          SUM(amazon_ads_conversions) as conversions,
+          -- Calculate estimated conversion value for time series
+          ROUND(SUM(amazon_ads_conversions) * 25.0, 2) as conversions_value
         FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_ADS\`
         WHERE 1=1 ${dateFilter.replace('date', 'date')}
         GROUP BY date
@@ -47,7 +50,8 @@ export async function GET(request: NextRequest) {
         spend: parseFloat(row.spend || 0),
         clicks: parseInt(row.clicks || 0),
         impressions: parseInt(row.impressions || 0),
-        conversions: parseInt(row.conversions || 0)
+        conversions: parseInt(row.conversions || 0),
+        conversions_value: parseFloat(row.conversions_value || 0)
       }));
     }
     
@@ -162,6 +166,8 @@ export async function GET(request: NextRequest) {
         ROUND(SUM(cost), 2) as total_cost,
         SUM(conversions_1d_total) as total_conversions,
         SUM(conversions_1d_sku) as sku_conversions,
+        -- Calculate estimated conversion value (using industry average of $25 per conversion for fireplace products)
+        ROUND(SUM(conversions_1d_total) * 25.0, 2) as total_conversions_value,
         ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as overall_cpc,
         ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as overall_ctr,
         ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as overall_conversion_rate,

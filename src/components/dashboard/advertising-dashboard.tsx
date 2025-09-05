@@ -143,7 +143,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
       case 'spend': return b.spend - a.spend
       case 'clicks': return b.clicks - a.clicks
       case 'conversions': return b.conversions - a.conversions
-      case 'ctr': return b.ctr - a.ctr
+      case 'conversionRate': return (b.conversionRate || 0) - (a.conversionRate || 0)
       case 'roas': return b.roas - a.roas
       default: return b.spend - a.spend
     }
@@ -164,7 +164,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Spend</CardTitle>
@@ -274,21 +274,67 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">CTR</CardTitle>
+            <CardTitle className="text-sm font-medium">Conv. Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatPercent(data.summary?.totalImpressions > 0 ? (data.summary.totalClicks * 100.0) / data.summary.totalImpressions : 0)}
+              {formatPercent(data.summary?.totalClicks > 0 ? (data.summary.totalConversions * 100.0) / data.summary.totalClicks : 0)}
             </div>
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                Click-through rate
+                Conversion rate
               </p>
-              {data.summary?.has_comparison && data.summary?.percentage_changes?.ctr !== undefined && (
-                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.ctr)}`}>
-                  {getChangeIcon(data.summary.percentage_changes.ctr)}
-                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.ctr)}</span>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.conversionRate !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.conversionRate)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.conversionRate)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.conversionRate)}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cost/Conv.</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(data.summary?.totalConversions > 0 ? data.summary.totalSpend / data.summary.totalConversions : 0, 2)}
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Cost per conversion
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.costPerConversion !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(-data.summary.percentage_changes.costPerConversion)}`}>
+                  {getChangeIcon(-data.summary.percentage_changes.costPerConversion)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.costPerConversion)}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">ROAS</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {(data.summary?.totalSpend > 0 ? (data.summary.totalConversionsValue || 0) / data.summary.totalSpend : 0).toFixed(2)}x
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Return on ad spend
+              </p>
+              {data.summary?.has_comparison && data.summary?.percentage_changes?.roas !== undefined && (
+                <div className={`flex items-center text-xs ${getChangeColor(data.summary.percentage_changes.roas)}`}>
+                  {getChangeIcon(data.summary.percentage_changes.roas)}
+                  <span className="ml-1">{formatPercentageChange(data.summary.percentage_changes.roas)}</span>
                 </div>
               )}
             </div>
@@ -313,7 +359,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                 <Tooltip 
                   formatter={(value: any, name: string) => {
                     if (name === 'spend') return formatCurrency(value)
-                    if (name === 'ctr') return formatPercent(value)
+                    if (name === 'conversionRate') return formatPercent(value)
                     return formatNumber(value)
                   }}
                   contentStyle={{ 
@@ -337,7 +383,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                   </div>
                   <div className="flex gap-4 text-xs text-muted-foreground">
                     <span>{formatCurrency(channel.spend)}</span>
-                    <span>CTR: {formatPercent(channel.ctr)}</span>
+                    <span>Conv. Rate: {formatPercent(channel.conversionRate || 0)}</span>
                     <span>CPC: {formatCurrency(channel.cpc, 2)}</span>
                   </div>
                 </div>
@@ -500,7 +546,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                 <SelectItem value="spend">Sort by Spend</SelectItem>
                 <SelectItem value="clicks">Sort by Clicks</SelectItem>
                 <SelectItem value="conversions">Sort by Conversions</SelectItem>
-                <SelectItem value="ctr">Sort by CTR</SelectItem>
+                <SelectItem value="conversionRate">Sort by Conv. Rate</SelectItem>
                 <SelectItem value="roas">Sort by ROAS</SelectItem>
               </SelectContent>
             </Select>
@@ -515,7 +561,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                 <TableHead>Channel</TableHead>
                 <TableHead className="text-right">Spend</TableHead>
                 <TableHead className="text-right">Clicks</TableHead>
-                <TableHead className="text-right">CTR</TableHead>
+                <TableHead className="text-right">Conv. Rate</TableHead>
                 <TableHead className="text-right">CPC</TableHead>
                 <TableHead className="text-right">Conv.</TableHead>
                 <TableHead className="text-right">ROAS</TableHead>
@@ -560,7 +606,7 @@ export function AdvertisingDashboard({ dateRange }: AdvertisingDashboardProps) {
                     {formatNumber(campaign.clicks)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatPercent(campaign.ctr)}
+                    {formatPercent(campaign.conversionRate || 0)}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(campaign.cpc, 2)}

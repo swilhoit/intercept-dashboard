@@ -82,6 +82,7 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
     totalClicks: (googleData.summary?.totalClicks || 0) + (amazonData.summary?.total_clicks || 0),
     totalImpressions: (googleData.summary?.totalImpressions || 0) + (amazonData.summary?.total_impressions || 0),
     totalConversions: (googleData.summary?.totalConversions || 0) + (amazonData.summary?.total_conversions || 0),
+    totalConversionsValue: (googleData.summary?.totalConversionsValue || 0) + (amazonData.summary?.total_conversions_value || 0),
     googleSpend: googleData.summary?.totalSpend || 0,
     amazonSpend: amazonData.summary?.total_cost || 0
   }
@@ -174,7 +175,7 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
 
         <TabsContent value="overview" className="space-y-4">
           {/* Combined Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Ad Spend</CardTitle>
@@ -244,15 +245,45 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Overall CTR</CardTitle>
+                <CardTitle className="text-sm font-medium">Overall Conv. Rate</CardTitle>
                 <Zap className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatPercent(combinedMetrics.totalImpressions > 0 ? (combinedMetrics.totalClicks * 100) / combinedMetrics.totalImpressions : 0)}
+                  {formatPercent(combinedMetrics.totalClicks > 0 ? (combinedMetrics.totalConversions * 100) / combinedMetrics.totalClicks : 0)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Combined click-through rate
+                  Combined conversion rate
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Cost/Conv.</CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(combinedMetrics.totalConversions > 0 ? combinedMetrics.totalSpend / combinedMetrics.totalConversions : 0, 2)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Combined cost per conversion
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">ROAS</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {(combinedMetrics.totalSpend > 0 ? combinedMetrics.totalConversionsValue / combinedMetrics.totalSpend : 0).toFixed(2)}x
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Combined return on ad spend
                 </p>
               </CardContent>
             </Card>

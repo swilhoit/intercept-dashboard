@@ -101,7 +101,56 @@ export default function OverviewPage() {
         </div>
       </div>
       
-      <ProductTable products={products} />
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <div className="bg-white rounded-lg border shadow-sm p-6">
+          <h3 className="text-lg font-semibold mb-4">Site Breakdown</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#FF9500]"></div>
+                <span className="text-sm font-medium">Amazon</span>
+              </div>
+              <span className="text-sm font-mono">${(summary.amazon_revenue || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#7B68EE]"></div>
+                <span className="text-sm font-medium">WooCommerce</span>
+              </div>
+              <span className="text-sm font-mono">${(summary.woocommerce_revenue || 0).toLocaleString()}</span>
+            </div>
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between items-center font-semibold">
+                <span className="text-sm">Total Revenue</span>
+                <span className="text-sm font-mono">${(summary.total_revenue || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg border shadow-sm p-6">
+          <h3 className="text-lg font-semibold mb-4">Performance Summary</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Total Orders</span>
+              <span className="text-sm font-mono">{(summary.total_orders || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Avg Daily Sales</span>
+              <span className="text-sm font-mono">${(summary.avg_daily_sales || 0).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Days with Sales</span>
+              <span className="text-sm font-mono">{summary.days_with_sales || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Total Ad Spend</span>
+              <span className="text-sm font-mono">${(adSpendData.metrics?.totalAdSpend || 0).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <ProductTable products={products.slice(0, 25)} />
     </>
   )
 }

@@ -512,10 +512,6 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                       <p className="font-semibold">${category.avgCPC.toFixed(2)}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">CTR</p>
-                      <p className="font-semibold">{category.avgCTR.toFixed(2)}%</p>
-                    </div>
-                    <div>
                       <p className="text-muted-foreground">Conv. Rate</p>
                       <p className="font-semibold">{category.avgConversionRate.toFixed(2)}%</p>
                     </div>

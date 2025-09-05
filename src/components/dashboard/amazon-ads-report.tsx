@@ -107,7 +107,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Spend</CardTitle>
@@ -142,7 +142,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
           <CardContent>
             <div className="text-2xl font-bold">{formatNumber(data.summary?.total_impressions || 0)}</div>
             <p className="text-xs text-muted-foreground">
-              CTR: {formatPercent(data.summary?.overall_ctr || 0)}
+              Conv. Rate: {formatPercent(data.summary?.overall_conversion_rate || 0)}
             </p>
           </CardContent>
         </Card>
@@ -182,6 +182,36 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
             <div className="text-2xl font-bold">{data.summary?.total_portfolios || 0}</div>
             <p className="text-xs text-muted-foreground">
               Product groups
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cost/Conv.</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency((data.summary?.total_conversions || 0) > 0 ? (data.summary?.total_cost || 0) / data.summary.total_conversions : 0, 2)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Cost per conversion
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">ROAS</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {((data.summary?.total_cost || 0) > 0 ? (data.summary?.total_conversions_value || 0) / data.summary.total_cost : 0).toFixed(2)}x
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Return on ad spend
             </p>
           </CardContent>
         </Card>
@@ -227,7 +257,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                   </div>
                   <div className="flex gap-4 text-xs text-muted-foreground">
                     <span>{formatCurrency(portfolio.cost)}</span>
-                    <span>CTR: {formatPercent(portfolio.ctr)}</span>
+                    <span>Conv. Rate: {formatPercent(portfolio.conversion_rate || 0)}</span>
                   </div>
                 </div>
               ))}
@@ -255,7 +285,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                 }} />
                 <Legend />
                 <Bar yAxisId="left" dataKey="cost" fill="#8884d8" name="Cost" />
-                <Bar yAxisId="right" dataKey="ctr" fill="#82ca9d" name="CTR %" />
+                <Bar yAxisId="right" dataKey="conversion_rate" fill="#82ca9d" name="Conv. Rate %" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -283,12 +313,12 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
               <YAxis yAxisId="right" orientation="right" stroke="#4ECDC4" />
               <Tooltip formatter={(value: any, name: string) => {
                 if (name.includes('CPC')) return formatCurrency(value)
-                if (name.includes('CTR')) return formatPercent(value)
+                if (name.includes('Conv. Rate')) return formatPercent(value)
                 return value
               }} />
               <Legend />
               <Bar yAxisId="left" dataKey="avg_cpc" fill="#FF6B6B" name="Avg CPC ($)" />
-              <Bar yAxisId="right" dataKey="ctr" fill="#4ECDC4" name="CTR (%)" />
+              <Bar yAxisId="right" dataKey="conversion_rate" fill="#4ECDC4" name="Conv. Rate (%)" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -325,7 +355,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                 <TableHead className="text-right">Cost</TableHead>
                 <TableHead className="text-right">Clicks</TableHead>
                 <TableHead className="text-right">Impressions</TableHead>
-                <TableHead className="text-right">CTR</TableHead>
+                <TableHead className="text-right">Conv. Rate</TableHead>
                 <TableHead className="text-right">CPC</TableHead>
                 {groupBy === 'campaign' && <TableHead className="text-right">Ad Groups</TableHead>}
               </TableRow>
@@ -363,7 +393,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                     {formatNumber(item.total_impressions)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatPercent(item.ctr)}
+                    {formatPercent(item.conversion_rate || 0)}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(item.avg_cpc)}
@@ -397,7 +427,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                 <TableHead className="text-right">Clicks</TableHead>
                 <TableHead className="text-right">Cost</TableHead>
                 <TableHead className="text-right">CPC</TableHead>
-                <TableHead className="text-right">CTR</TableHead>
+                <TableHead className="text-right">Conv. Rate</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -425,8 +455,8 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                     {formatCurrency(keyword.cpc)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <span className={keyword.ctr > 2 ? 'text-green-600 font-medium' : ''}>
-                      {formatPercent(keyword.ctr)}
+                    <span className={(keyword.conversion_rate || 0) > 5 ? 'text-green-600 font-medium' : ''}>
+                      {formatPercent(keyword.conversion_rate || 0)}
                     </span>
                   </TableCell>
                 </TableRow>
@@ -452,7 +482,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                 <TableHead className="text-right">Keywords</TableHead>
                 <TableHead className="text-right">Cost</TableHead>
                 <TableHead className="text-right">Clicks</TableHead>
-                <TableHead className="text-right">CTR</TableHead>
+                <TableHead className="text-right">Conv. Rate</TableHead>
                 <TableHead className="text-right">Avg CPC</TableHead>
               </TableRow>
             </TableHeader>
@@ -484,8 +514,8 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
                     {formatNumber(portfolio.clicks)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <span className={portfolio.ctr > 2 ? 'text-green-600 font-medium' : ''}>
-                      {formatPercent(portfolio.ctr)}
+                    <span className={(portfolio.conversion_rate || 0) > 5 ? 'text-green-600 font-medium' : ''}>
+                      {formatPercent(portfolio.conversion_rate || 0)}
                     </span>
                   </TableCell>
                   <TableCell className="text-right">

@@ -16,6 +16,18 @@ async function runSync() {
       oneDriveFileId: process.env.AMAZON_ADS_EXCEL_FILE_ID || '',
       bigQueryTableId: 'amazon_ads.keywords',
       sheetName: 'Funnel data',
+    },
+    {
+      name: 'Amazon Sales and Traffic',
+      oneDriveFileId: 'EVVhQiD7dYdAqleBi6wfX04BdnHuCyhrzfK1-XxGvR11TQ',
+      bigQueryTableId: 'amazon_data.sales_traffic',
+      sheetName: 'Funnel data',
+    },
+    {
+      name: 'Amazon Returns',
+      oneDriveFileId: 'EYsjv8DaHP1HqWgIfueicnABjPhAL9ic6j1uiWs8EKTbXw',
+      bigQueryTableId: 'amazon_data.returns',
+      sheetName: 'Funnel data',
     }
   ];
 

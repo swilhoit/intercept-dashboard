@@ -23,7 +23,9 @@ export class ExcelSyncService {
       // Map SharePoint IDs to actual share URLs
       const shareUrlMap: { [key: string]: string } = {
         'ET27IzaEhPBOim8JgIJNepUBr38bFsOScEH4UCqiyidk_A': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/ET27IzaEhPBOim8JgIJNepUBr38bFsOScEH4UCqiyidk_A',
-        'EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q'
+        'EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q',
+        'EVVhQiD7dYdAqleBi6wfX04BdnHuCyhrzfK1-XxGvR11TQ': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EVVhQiD7dYdAqleBi6wfX04BdnHuCyhrzfK1-XxGvR11TQ',
+        'EYsjv8DaHP1HqWgIfueicnABjPhAL9ic6j1uiWs8EKTbXw': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EYsjv8DaHP1HqWgIfueicnABjPhAL9ic6j1uiWs8EKTbXw'
       };
       
       const shareUrl = shareUrlMap[this.config.oneDriveFileId];
@@ -119,6 +121,23 @@ export class ExcelSyncService {
       
       const table = bigquery.dataset(datasetId).table(tableId);
       
+      // Check if table exists and has schema, recreate if needed
+      try {
+        const [exists] = await table.exists();
+        if (!exists) {
+          console.log(`Table ${this.config.bigQueryTableId} does not exist, will be created during load job`);
+        } else {
+          // Check if table has schema
+          const [metadata] = await table.getMetadata();
+          if (!metadata.schema || !metadata.schema.fields || metadata.schema.fields.length === 0) {
+            console.log(`Table ${this.config.bigQueryTableId} exists but has no schema, recreating...`);
+            await table.delete();
+          }
+        }
+      } catch (tableError) {
+        console.error('Error checking table:', tableError);
+      }
+      
       // Insert data if we have data
       if (data.length > 0) {
         try {
@@ -149,9 +168,12 @@ export class ExcelSyncService {
             return cleanRow;
           });
           
-          // Insert all data
-          await table.insert(cleanData, { createInsertId: false });
-          console.log(`Successfully loaded ${data.length} rows into ${this.config.bigQueryTableId}`);
+          // Try to insert data directly, which will auto-create the table schema
+          await table.insert(cleanData, { 
+            createInsertId: false,
+            schema: { autodetect: true }
+          });
+          console.log(`Successfully loaded ${cleanData.length} rows into ${this.config.bigQueryTableId}`);
         } catch (insertError: any) {
           if (insertError.name === 'PartialFailureError') {
             console.error('Some rows failed to insert:', insertError.errors);
