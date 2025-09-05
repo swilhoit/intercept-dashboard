@@ -4,10 +4,10 @@ import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import { DollarSign, TrendingUp, Calendar, BarChart3 } from "lucide-react"
+import { DollarSign, TrendingUp, Calendar, BarChart3, Globe, Store } from "lucide-react"
 import { ProductTable } from "./product-table"
 
-interface WooCommerceDashboardProps {
+interface WebsitesDashboardProps {
   salesData: any
   productData: any
   categoryData: any
@@ -17,7 +17,7 @@ interface WooCommerceDashboardProps {
   endDate: string
 }
 
-export function WooCommerceDashboard({ 
+export function WebsitesDashboard({ 
   salesData, 
   productData, 
   categoryData,
@@ -25,7 +25,7 @@ export function WooCommerceDashboard({
   searchConsoleData,
   startDate, 
   endDate 
-}: WooCommerceDashboardProps) {
+}: WebsitesDashboardProps) {
   const [view, setView] = useState<'daily' | 'monthly'>('daily')
   
   const formatCurrency = (value: number) => {
@@ -41,9 +41,53 @@ export function WooCommerceDashboard({
     return new Intl.NumberFormat('en-US').format(value)
   }
 
-  const chartData = view === 'daily' ? salesData?.daily || [] : salesData?.monthly || []
+  // Fix data handling with better error checking
+  const chartData = view === 'daily' 
+    ? (salesData?.daily || []).map((item: any) => ({
+        ...item,
+        date: item.date?.value || item.date,
+        sales: Number(item.sales) || 0
+      }))
+    : (salesData?.monthly || []).map((item: any) => ({
+        ...item,
+        date: item.date?.value || item.date,
+        sales: Number(item.sales) || 0
+      }))
+
   const topProducts = productData?.filter((p: any) => p.channel === 'WooCommerce').slice(0, 10) || []
   const categories = categoryData?.filter((c: any) => c.channel === 'WooCommerce') || []
+
+  // Create site breakdown data (prepare for multi-site)
+  const siteBreakdown = [
+    {
+      site: 'BrickAnew',
+      revenue: salesData?.summary?.total_revenue || 0,
+      orders: salesData?.summary?.active_days || 0,
+      status: 'Active',
+      color: '#007AFF'
+    },
+    {
+      site: 'Heatilator',
+      revenue: 0, // Will be populated when data is available
+      orders: 0,
+      status: 'Pending Setup',
+      color: '#FF3B30'
+    },
+    {
+      site: 'Superior',
+      revenue: 0, // Will be populated when data is available
+      orders: 0,
+      status: 'Pending Setup',
+      color: '#FF9500'
+    },
+    {
+      site: 'WaterWise (Shopify)',
+      revenue: 0, // Will be populated when Shopify integration is complete
+      orders: 0,
+      status: 'Planned',
+      color: '#34C759'
+    }
+  ]
 
   const stats = [
     {
@@ -78,14 +122,19 @@ export function WooCommerceDashboard({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">WooCommerce Store</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Website Sales</h2>
           <p className="text-muted-foreground">
-            Direct sales performance for your WooCommerce store
+            Direct sales performance across all website channels
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-[#007AFF]" />
-          <span className="text-sm font-medium">WooCommerce</span>
+        <div className="flex items-center gap-4">
+          {siteBreakdown.map((site) => (
+            <div key={site.site} className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: site.color }} />
+              <span className="text-sm font-medium">{site.site}</span>
+              <span className="text-xs text-muted-foreground">({site.status})</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -104,12 +153,81 @@ export function WooCommerceDashboard({
         ))}
       </div>
 
-      <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList className="grid w-full max-w-[400px] grid-cols-3">
+      <Tabs defaultValue="sites" className="space-y-4">
+        <TabsList className="grid w-full max-w-[500px] grid-cols-4">
+          <TabsTrigger value="sites">Sites</TabsTrigger>
           <TabsTrigger value="sales">Sales</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="sites" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Site Performance Overview</CardTitle>
+                <CardDescription>Revenue breakdown by website</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={siteBreakdown}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="site" angle={-45} textAnchor="end" height={80} />
+                    <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                    <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                    <Bar dataKey="revenue">
+                      {siteBreakdown.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Site Status & Details</CardTitle>
+                <CardDescription>Integration status for all websites</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {siteBreakdown.map((site) => (
+                    <div key={site.site} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 rounded-full" style={{ backgroundColor: site.color }} />
+                          <span className="font-medium">{site.site}</span>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          site.status === 'Active' ? 'bg-green-100 text-green-800' :
+                          site.status === 'Pending Setup' ? 'bg-orange-100 text-orange-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {site.status}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium">{formatCurrency(site.revenue)}</div>
+                        <div className="text-sm text-muted-foreground">{site.orders} days</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Integration notes */}
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Integration Status</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• BrickAnew: Fully integrated and active</li>
+                    <li>• Heatilator & Superior: BigQuery tables created, need API credentials</li>
+                    <li>• WaterWise: Planned Shopify integration</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         <TabsContent value="sales" className="space-y-4">
           <Card>
@@ -117,7 +235,7 @@ export function WooCommerceDashboard({
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Revenue Trend</CardTitle>
-                  <CardDescription>WooCommerce sales performance over time</CardDescription>
+                  <CardDescription>Website sales performance over time</CardDescription>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -148,7 +266,7 @@ export function WooCommerceDashboard({
                     dataKey="sales" 
                     stroke="#007AFF" 
                     strokeWidth={2}
-                    name="WooCommerce Sales"
+                    name="Website Sales"
                   />
                 </LineChart>
               </ResponsiveContainer>

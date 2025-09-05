@@ -1,6 +1,6 @@
 # Sales Dashboard - Claude Context
 
-## WooCommerce Sites & Credentials
+## Website Sites & Credentials (WooCommerce + Shopify)
 
 ### 1. BrickAnew (Currently Active)
 - **Status**: Already integrated
@@ -16,6 +16,12 @@
 - **Consumer Key**: `ck_fa744f3de5885bbc8e0520e8bee27a8db36b8eff`
 - **Status**: Needs integration  
 - **Planned Table**: `woocommerce.superior_daily_product_sales`
+
+### 4. WaterWise (Shopify)
+- **Platform**: Shopify
+- **Status**: Planned integration
+- **Planned Table**: `shopify.waterwise_daily_product_sales`
+- **Products**: Water filtration and treatment products
 
 ## Integration Status ✅ COMPLETED
 

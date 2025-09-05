@@ -59,7 +59,7 @@ export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: Sid
           icon: <ShoppingCart className="h-4 w-4" />
         },
         {
-          title: "WooCommerce",
+          title: "Websites",
           value: "site-woocommerce",
           icon: <Globe className="h-4 w-4" />
         }

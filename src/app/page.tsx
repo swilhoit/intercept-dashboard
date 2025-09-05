@@ -21,7 +21,7 @@ import { AmazonAdsReport } from "@/components/dashboard/amazon-ads-report"
 import { TrafficAnalytics } from "@/components/dashboard/traffic-analytics"
 import { SearchConsoleAnalytics } from "@/components/dashboard/search-console-analytics"
 import { AmazonDashboard } from "@/components/dashboard/site-amazon"
-import { WooCommerceDashboard } from "@/components/dashboard/site-woocommerce"
+import { WebsitesDashboard } from "@/components/dashboard/site-woocommerce"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import {
   Select,
@@ -333,7 +333,7 @@ export default function DashboardPage() {
       
       case "site-woocommerce":
         return (
-          <WooCommerceDashboard
+          <WebsitesDashboard
             salesData={siteData}
             productData={siteData?.products || []}
             categoryData={siteData?.categories || []}
