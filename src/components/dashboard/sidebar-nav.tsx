@@ -40,7 +40,7 @@ interface SidebarNavProps {
 export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['sales', 'marketing', 'analytics', 'sites']))
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['sales', 'marketing', 'sites']))
 
   const navItems: NavItem[] = [
     {
@@ -113,11 +113,6 @@ export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: Sid
           icon: <Search className="h-4 w-4" />
         }
       ]
-    },
-    {
-      title: "Analytics",
-      value: "analytics",
-      icon: <LineChart className="h-4 w-4" />
     }
   ]
 
