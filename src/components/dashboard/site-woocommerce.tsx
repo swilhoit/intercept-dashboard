@@ -288,7 +288,7 @@ export function WebsitesDashboard({
                       stroke="#34C759" 
                       strokeDasharray="3 3" 
                       strokeWidth={2}
-                      label={{ value: "WaterWise Acquired", position: "topRight", style: { fontSize: '12px', fill: '#34C759' } }}
+                      label={{ value: "WaterWise Acquired", position: "top", style: { fontSize: '12px', fill: '#34C759' } }}
                     />
                   </LineChart>
                 ) : (
