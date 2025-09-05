@@ -28,6 +28,7 @@ export function WebsitesDashboard({
 }: WebsitesDashboardProps) {
   const [view, setView] = useState<'daily' | 'monthly'>('daily')
   const [siteChartView, setSiteChartView] = useState<'line' | 'bar'>('line')
+  const [chartGroupBy, setChartGroupBy] = useState<'day' | 'week' | 'month'>('day')
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -125,19 +126,60 @@ export function WebsitesDashboard({
     }
   ]
 
+  // Group and aggregate data based on chartGroupBy setting
+  const groupData = (data: any[], groupBy: 'day' | 'week' | 'month') => {
+    if (groupBy === 'day') {
+      return data
+    }
+    
+    const grouped = data.reduce((acc, item) => {
+      const date = new Date(item.date)
+      let key: string
+      
+      if (groupBy === 'week') {
+        // Get the Monday of the week
+        const monday = new Date(date)
+        monday.setDate(date.getDate() - date.getDay() + 1)
+        key = monday.toISOString().split('T')[0]
+      } else { // month
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`
+      }
+      
+      if (!acc[key]) {
+        acc[key] = {
+          date: key,
+          sales: 0,
+          count: 0
+        }
+      }
+      
+      acc[key].sales += Number(item.sales) || 0
+      acc[key].count += 1
+      
+      return acc
+    }, {} as any)
+    
+    return Object.values(grouped).sort((a: any, b: any) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
+  }
+
   // Create time series data for multi-line chart with real Heatilator data
-  const siteTimeSeriesData = chartData.map((item: any) => {
+  const groupedChartData = groupData(chartData, chartGroupBy)
+  const siteTimeSeriesData = groupedChartData.map((item: any) => {
     const date = item.date
     const dateStr = new Date(date).toISOString().split('T')[0]
     const brickAnewSales = Number(item.sales) || 0
     
-    // Add real Heatilator data for specific dates
+    // Add real Heatilator data for specific dates (only for daily view)
     let heatilatorSales = 0
-    if (dateStr === '2025-09-05') heatilatorSales = 589
-    else if (dateStr === '2025-08-23') heatilatorSales = 269
-    else if (dateStr === '2025-08-20') heatilatorSales = 738
-    else if (dateStr === '2025-08-19') heatilatorSales = 269
-    else if (dateStr === '2025-08-15') heatilatorSales = 269
+    if (chartGroupBy === 'day') {
+      if (dateStr === '2025-09-05') heatilatorSales = 589
+      else if (dateStr === '2025-08-23') heatilatorSales = 269
+      else if (dateStr === '2025-08-20') heatilatorSales = 738
+      else if (dateStr === '2025-08-19') heatilatorSales = 269
+      else if (dateStr === '2025-08-15') heatilatorSales = 269
+    }
     
     return {
       date,
@@ -147,7 +189,9 @@ export function WebsitesDashboard({
       WaterWise: 0,  // Will be populated when Shopify integration is complete
       Majestic: 0    // Will be populated when API access is resolved
     }
-  })
+  }).sort((a: any, b: any) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  )
 
   const stats = [
     {
@@ -228,21 +272,45 @@ export function WebsitesDashboard({
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Revenue Trends by Site</CardTitle>
-                  <CardDescription>Daily performance comparison across all websites</CardDescription>
+                  <CardDescription>
+                    {chartGroupBy === 'day' ? 'Daily' : chartGroupBy === 'week' ? 'Weekly' : 'Monthly'} performance comparison across all websites
+                  </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setSiteChartView('line')}
-                    className={`px-3 py-1 text-sm rounded ${siteChartView === 'line' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
-                  >
-                    Line Chart
-                  </button>
-                  <button
-                    onClick={() => setSiteChartView('bar')}
-                    className={`px-3 py-1 text-sm rounded ${siteChartView === 'bar' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
-                  >
-                    Bar Chart
-                  </button>
+                  <div className="flex gap-1 mr-4">
+                    <button
+                      onClick={() => setChartGroupBy('day')}
+                      className={`px-3 py-1 text-sm rounded ${chartGroupBy === 'day' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
+                    >
+                      Day
+                    </button>
+                    <button
+                      onClick={() => setChartGroupBy('week')}
+                      className={`px-3 py-1 text-sm rounded ${chartGroupBy === 'week' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
+                    >
+                      Week
+                    </button>
+                    <button
+                      onClick={() => setChartGroupBy('month')}
+                      className={`px-3 py-1 text-sm rounded ${chartGroupBy === 'month' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
+                    >
+                      Month
+                    </button>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setSiteChartView('line')}
+                      className={`px-3 py-1 text-sm rounded ${siteChartView === 'line' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
+                    >
+                      Line Chart
+                    </button>
+                    <button
+                      onClick={() => setSiteChartView('bar')}
+                      className={`px-3 py-1 text-sm rounded ${siteChartView === 'bar' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
+                    >
+                      Bar Chart
+                    </button>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -253,7 +321,16 @@ export function WebsitesDashboard({
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="date" 
-                      tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      tickFormatter={(date) => {
+                        const d = new Date(date)
+                        if (chartGroupBy === 'day') {
+                          return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        } else if (chartGroupBy === 'week') {
+                          return `Week of ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                        } else {
+                          return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                        }
+                      }}
                     />
                     <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
                     <Tooltip 

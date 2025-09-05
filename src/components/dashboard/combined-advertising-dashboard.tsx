@@ -61,6 +61,13 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
     }).format(value)
   }
 
+  const formatCurrencyAxis = (value: number) => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(0)}k`
+    }
+    return `$${Math.round(value)}`
+  }
+
   const formatNumber = (value: number) => {
     return new Intl.NumberFormat('en-US').format(Math.round(value))
   }
@@ -157,14 +164,6 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Advertising Performance</h2>
-          <p className="text-muted-foreground">
-            Combined Google Ads and Amazon Ads performance overview
-          </p>
-        </div>
-      </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="grid w-full max-w-[500px] grid-cols-3">
@@ -341,7 +340,7 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
                     dataKey="date" 
                     tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   />
-                  <YAxis tickFormatter={formatCurrency} />
+                  <YAxis tickFormatter={formatCurrencyAxis} />
                   <Tooltip 
                     formatter={(value: any) => formatCurrency(value)}
                     labelFormatter={(date) => new Date(date).toLocaleDateString('en-US', { 
