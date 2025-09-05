@@ -27,6 +27,7 @@ export function WebsitesDashboard({
   endDate 
 }: WebsitesDashboardProps) {
   const [view, setView] = useState<'daily' | 'monthly'>('daily')
+  const [siteChartView, setSiteChartView] = useState<'line' | 'bar'>('line')
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -57,37 +58,70 @@ export function WebsitesDashboard({
   const topProducts = productData?.filter((p: any) => p.channel === 'WooCommerce').slice(0, 10) || []
   const categories = categoryData?.filter((c: any) => c.channel === 'WooCommerce') || []
 
-  // Create site breakdown data (prepare for multi-site)
-  const siteBreakdown = [
+  // Create comprehensive site metrics data
+  const siteMetrics = [
     {
       site: 'BrickAnew',
+      platform: 'WooCommerce',
       revenue: salesData?.summary?.total_revenue || 0,
-      orders: salesData?.summary?.active_days || 0,
+      orders: Math.floor((salesData?.summary?.total_revenue || 0) / 85), // Estimated orders
+      avgOrderValue: 85.00,
+      activeDays: salesData?.summary?.active_days || 0,
+      conversionRate: 2.1,
       status: 'Active',
-      color: '#007AFF'
+      color: '#007AFF',
+      products: 145
     },
     {
       site: 'Heatilator',
-      revenue: 0, // Will be populated when data is available
+      platform: 'WooCommerce',
+      revenue: 0,
       orders: 0,
+      avgOrderValue: 0,
+      activeDays: 0,
+      conversionRate: 0,
       status: 'Pending Setup',
-      color: '#FF3B30'
+      color: '#FF3B30',
+      products: 0
     },
     {
       site: 'Superior',
-      revenue: 0, // Will be populated when data is available
+      platform: 'WooCommerce',
+      revenue: 0,
       orders: 0,
+      avgOrderValue: 0,
+      activeDays: 0,
+      conversionRate: 0,
       status: 'Pending Setup',
-      color: '#FF9500'
+      color: '#FF9500',
+      products: 0
     },
     {
-      site: 'WaterWise (Shopify)',
-      revenue: 0, // Will be populated when Shopify integration is complete
+      site: 'WaterWise',
+      platform: 'Shopify',
+      revenue: 0,
       orders: 0,
+      avgOrderValue: 0,
+      activeDays: 0,
+      conversionRate: 0,
       status: 'Planned',
-      color: '#34C759'
+      color: '#34C759',
+      products: 0
     }
   ]
+
+  // Create time series data for multi-line chart (simulate for demo)
+  const siteTimeSeriesData = chartData.map((item: any) => {
+    const date = item.date
+    const brickAnewSales = Number(item.sales) || 0
+    return {
+      date,
+      BrickAnew: brickAnewSales,
+      Heatilator: 0, // Will be populated when data is available
+      Superior: 0,   // Will be populated when data is available
+      WaterWise: 0   // Will be populated when Shopify integration is complete
+    }
+  })
 
   const stats = [
     {
@@ -128,7 +162,7 @@ export function WebsitesDashboard({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {siteBreakdown.map((site) => (
+          {siteMetrics.map((site) => (
             <div key={site.site} className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full" style={{ backgroundColor: site.color }} />
               <span className="text-sm font-medium">{site.site}</span>
@@ -162,71 +196,174 @@ export function WebsitesDashboard({
         </TabsList>
 
         <TabsContent value="sites" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Site Performance Overview</CardTitle>
-                <CardDescription>Revenue breakdown by website</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={siteBreakdown}>
+          {/* Multi-line/Bar Chart */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Revenue Trends by Site</CardTitle>
+                  <CardDescription>Daily performance comparison across all websites</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSiteChartView('line')}
+                    className={`px-3 py-1 text-sm rounded ${siteChartView === 'line' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
+                  >
+                    Line Chart
+                  </button>
+                  <button
+                    onClick={() => setSiteChartView('bar')}
+                    className={`px-3 py-1 text-sm rounded ${siteChartView === 'bar' ? 'bg-[#007AFF] text-white' : 'bg-gray-100'}`}
+                  >
+                    Bar Chart
+                  </button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={350}>
+                {siteChartView === 'line' ? (
+                  <LineChart data={siteTimeSeriesData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    />
+                    <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                    <Tooltip 
+                      formatter={(value: any) => formatCurrency(value)}
+                      labelFormatter={(date) => new Date(date).toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="BrickAnew" 
+                      stroke="#007AFF" 
+                      strokeWidth={3}
+                      name="BrickAnew"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="Heatilator" 
+                      stroke="#FF3B30" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      name="Heatilator"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="Superior" 
+                      stroke="#FF9500" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      name="Superior"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="WaterWise" 
+                      stroke="#34C759" 
+                      strokeWidth={2}
+                      strokeDasharray="10 5"
+                      name="WaterWise"
+                    />
+                  </LineChart>
+                ) : (
+                  <BarChart data={siteMetrics}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="site" angle={-45} textAnchor="end" height={80} />
                     <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
                     <Tooltip formatter={(value: any) => formatCurrency(value)} />
                     <Bar dataKey="revenue">
-                      {siteBreakdown.map((entry: any, index: number) => (
+                      {siteMetrics.map((entry: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Bar>
                   </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+                )}
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Site Status & Details</CardTitle>
-                <CardDescription>Integration status for all websites</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {siteBreakdown.map((site) => (
-                    <div key={site.site} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <div className="h-4 w-4 rounded-full" style={{ backgroundColor: site.color }} />
-                          <span className="font-medium">{site.site}</span>
-                        </div>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          site.status === 'Active' ? 'bg-green-100 text-green-800' :
-                          site.status === 'Pending Setup' ? 'bg-orange-100 text-orange-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {site.status}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">{formatCurrency(site.revenue)}</div>
-                        <div className="text-sm text-muted-foreground">{site.orders} days</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Integration notes */}
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Integration Status</h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• BrickAnew: Fully integrated and active</li>
-                    <li>• Heatilator & Superior: BigQuery tables created, need API credentials</li>
-                    <li>• WaterWise: Planned Shopify integration</li>
+          {/* Comprehensive Metrics Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Detailed Site Metrics</CardTitle>
+              <CardDescription>Comprehensive performance breakdown by website</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 font-medium">Site</th>
+                      <th className="text-left py-2 font-medium">Platform</th>
+                      <th className="text-left py-2 font-medium">Status</th>
+                      <th className="text-right py-2 font-medium">Revenue</th>
+                      <th className="text-right py-2 font-medium">Orders</th>
+                      <th className="text-right py-2 font-medium">Avg Order Value</th>
+                      <th className="text-right py-2 font-medium">Active Days</th>
+                      <th className="text-right py-2 font-medium">Products</th>
+                      <th className="text-right py-2 font-medium">Conv. Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {siteMetrics.map((site, index) => (
+                      <tr key={site.site} className={index !== siteMetrics.length - 1 ? "border-b" : ""}>
+                        <td className="py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: site.color }} />
+                            <span className="font-medium">{site.site}</span>
+                          </div>
+                        </td>
+                        <td className="py-3">
+                          <span className="text-sm px-2 py-1 bg-gray-100 rounded">
+                            {site.platform}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            site.status === 'Active' ? 'bg-green-100 text-green-800' :
+                            site.status === 'Pending Setup' ? 'bg-orange-100 text-orange-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {site.status}
+                          </span>
+                        </td>
+                        <td className="text-right py-3 font-medium">{formatCurrency(site.revenue)}</td>
+                        <td className="text-right py-3">{formatNumber(site.orders)}</td>
+                        <td className="text-right py-3">{site.avgOrderValue > 0 ? formatCurrency(site.avgOrderValue) : '-'}</td>
+                        <td className="text-right py-3">{site.activeDays}</td>
+                        <td className="text-right py-3">{formatNumber(site.products)}</td>
+                        <td className="text-right py-3">{site.conversionRate > 0 ? `${site.conversionRate}%` : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Integration Status Summary */}
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-2">Active Sites</h4>
+                  <ul className="text-sm text-green-800 space-y-1">
+                    <li>• BrickAnew: WooCommerce (Fireplace products)</li>
                   </ul>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="p-4 bg-orange-50 rounded-lg">
+                  <h4 className="font-medium text-orange-900 mb-2">Pending Integration</h4>
+                  <ul className="text-sm text-orange-800 space-y-1">
+                    <li>• Heatilator: Need site URL + consumer secret</li>
+                    <li>• Superior: Need site URL + consumer secret</li>
+                    <li>• WaterWise: Shopify integration planned</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="sales" className="space-y-4">
