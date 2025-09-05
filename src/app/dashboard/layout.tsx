@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { DateRange } from "react-day-picker"
 import { subDays } from "date-fns"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { LogOut } from "lucide-react"
 import { DateRangePicker } from "@/components/dashboard/date-range-picker"
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
-export default function DashboardLayout({
+function DashboardLayoutContent({
   children,
 }: {
   children: React.ReactNode
@@ -30,6 +30,25 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Initialize from URL parameters
+  useEffect(() => {
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+    const channel = searchParams.get('channel')
+
+    if (startDate && endDate) {
+      setDateRange({
+        from: new Date(startDate),
+        to: new Date(endDate),
+      })
+    }
+
+    if (channel) {
+      setSelectedChannel(channel)
+    }
+  }, [searchParams])
 
   // Map pathname to currentView for sidebar
   const getCurrentView = () => {
@@ -38,7 +57,60 @@ export default function DashboardLayout({
   }
 
   const handleViewChange = (view: string) => {
-    router.push(`/dashboard/${view}`)
+    // Preserve current date range and channel when navigating
+    const params = new URLSearchParams()
+    if (dateRange?.from) {
+      params.append('startDate', dateRange.from.toISOString().split('T')[0])
+    }
+    if (dateRange?.to) {
+      params.append('endDate', dateRange.to.toISOString().split('T')[0])
+    }
+    if (selectedChannel !== 'all') {
+      params.append('channel', selectedChannel)
+    }
+    
+    const url = params.toString() ? `/dashboard/${view}?${params.toString()}` : `/dashboard/${view}`
+    router.push(url)
+  }
+
+  const handleDateRangeChange = (newDateRange: DateRange | undefined) => {
+    setDateRange(newDateRange)
+    
+    // Update URL with new date range
+    const params = new URLSearchParams()
+    if (newDateRange?.from) {
+      params.append('startDate', newDateRange.from.toISOString().split('T')[0])
+    }
+    if (newDateRange?.to) {
+      params.append('endDate', newDateRange.to.toISOString().split('T')[0])
+    }
+    if (selectedChannel !== 'all') {
+      params.append('channel', selectedChannel)
+    }
+    
+    const currentPath = pathname
+    const url = params.toString() ? `${currentPath}?${params.toString()}` : currentPath
+    router.push(url)
+  }
+
+  const handleChannelChange = (newChannel: string) => {
+    setSelectedChannel(newChannel)
+    
+    // Update URL with new channel
+    const params = new URLSearchParams()
+    if (dateRange?.from) {
+      params.append('startDate', dateRange.from.toISOString().split('T')[0])
+    }
+    if (dateRange?.to) {
+      params.append('endDate', dateRange.to.toISOString().split('T')[0])
+    }
+    if (newChannel !== 'all') {
+      params.append('channel', newChannel)
+    }
+    
+    const currentPath = pathname
+    const url = params.toString() ? `${currentPath}?${params.toString()}` : currentPath
+    router.push(url)
   }
 
   // Get page title based on current path
@@ -79,8 +151,8 @@ export default function DashboardLayout({
               {getPageTitle()}
             </h2>
             <div className="flex items-center space-x-2">
-              <DateRangePicker date={dateRange} onDateChange={setDateRange} />
-              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+              <DateRangePicker date={dateRange} onDateChange={handleDateRangeChange} />
+              <Select value={selectedChannel} onValueChange={handleChannelChange}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Select channel" />
                 </SelectTrigger>
@@ -111,5 +183,17 @@ export default function DashboardLayout({
         </div>
       </main>
     </div>
+  )
+}
+
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </Suspense>
   )
 }
