@@ -1,36 +1,15 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
-import { DateRange } from "react-day-picker"
-import { subDays } from "date-fns"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
 import { WebsitesDashboard } from "@/components/dashboard/site-woocommerce"
+import { useDashboard } from "../dashboard-context"
 
-function SiteWooCommerceContent() {
+export default function SiteWooCommercePage() {
   const [siteData, setSiteData] = useState<any>(null)
   const [trafficData, setTrafficData] = useState<any>(null)
   const [searchConsoleData, setSearchConsoleData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const searchParams = useSearchParams()
-
-  const getDateRange = (): DateRange | undefined => {
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
-    
-    if (startDate && endDate) {
-      return {
-        from: new Date(startDate),
-        to: new Date(endDate),
-      }
-    }
-    
-    return {
-      from: subDays(new Date(), 7),
-      to: new Date(),
-    }
-  }
-
-  const [dateRange] = useState<DateRange | undefined>(getDateRange())
+  const { dateRange } = useDashboard()
 
   useEffect(() => {
     fetchSiteData()
@@ -83,13 +62,5 @@ function SiteWooCommerceContent() {
       startDate={dateRange?.from?.toISOString().split("T")[0] || ''}
       endDate={dateRange?.to?.toISOString().split("T")[0] || ''}
     />
-  )
-}
-
-export default function SiteWooCommercePage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
-      <SiteWooCommerceContent />
-    </Suspense>
   )
 }

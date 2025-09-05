@@ -1,41 +1,18 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
-import { DateRange } from "react-day-picker"
-import { subDays } from "date-fns"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { SalesChartWithToggle } from "@/components/dashboard/sales-chart-with-toggle"
 import { ChannelBreakdown } from "@/components/dashboard/channel-breakdown"
 import { ProductTable } from "@/components/dashboard/product-table"
+import { useDashboard } from "../dashboard-context"
 
-function OverviewContent() {
+export default function OverviewPage() {
   const [loading, setLoading] = useState(true)
   const [summary, setSummary] = useState<any>({})
   const [products, setProducts] = useState<any[]>([])
   const [adSpendData, setAdSpendData] = useState<any>({ metrics: {} })
-  const searchParams = useSearchParams()
-  
-  // Get date range from URL params or use defaults
-  const getDateRange = (): DateRange | undefined => {
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
-    
-    if (startDate && endDate) {
-      return {
-        from: new Date(startDate),
-        to: new Date(endDate),
-      }
-    }
-    
-    return {
-      from: subDays(new Date(), 7),
-      to: new Date(),
-    }
-  }
-
-  const [dateRange] = useState<DateRange | undefined>(getDateRange())
-  const selectedChannel = searchParams.get('channel') || 'all'
+  const { dateRange, selectedChannel } = useDashboard()
 
   useEffect(() => {
     fetchData()
@@ -126,13 +103,5 @@ function OverviewContent() {
       
       <ProductTable products={products} />
     </>
-  )
-}
-
-export default function OverviewPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64">Loading...</div>}>
-      <OverviewContent />
-    </Suspense>
   )
 }
