@@ -19,10 +19,10 @@ def amazon_data_sync(request):
     client = bigquery.Client(project=PROJECT_ID)
     
     try:
-        # Clear recent data (last 7 days)
+        # Clear ALL data for complete rebuild
         delete_query = f"""
         DELETE FROM `{PROJECT_ID}.amazon.daily_total_sales`
-        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+        WHERE date >= '2025-01-01'
         """
         
         delete_job = client.query(delete_query)
@@ -31,29 +31,23 @@ def amazon_data_sync(request):
         
         # Aggregate from orders table
         insert_query = f"""
-        INSERT INTO `{PROJECT_ID}.amazon.daily_total_sales` 
+        INSERT INTO `{PROJECT_ID}.amazon.daily_total_sales`
         (date, ordered_product_sales, imported_at, day_of_week, month, quarter)
-        SELECT 
-            purchase_date as date,
-            ordered_product_sales,
-            imported_at,
-            day_of_week,
-            month,
-            quarter
-        FROM (
-            SELECT 
-                DATE(Purchase_Date) as purchase_date,
-                SUM(Item_Price) as ordered_product_sales,
-                CURRENT_TIMESTAMP() as imported_at,
-                FORMAT_DATE('%A', DATE(Purchase_Date)) as day_of_week,
-                FORMAT_DATE('%B', DATE(Purchase_Date)) as month,
-                CONCAT('Q', CAST(EXTRACT(QUARTER FROM DATE(Purchase_Date)) AS STRING)) as quarter
-            FROM `{PROJECT_ID}.amazon_seller.amazon_orders_2025`
-            WHERE Purchase_Date IS NOT NULL
-                AND DATE(Purchase_Date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-                AND DATE(Purchase_Date) <= CURRENT_DATE()
-            GROUP BY DATE(Purchase_Date)
-        )
+        SELECT
+            DATE(Purchase_Date) as date,
+            SUM(Item_Price) as ordered_product_sales,
+            CURRENT_TIMESTAMP() as imported_at,
+            FORMAT_DATE('%A', DATE(Purchase_Date)) as day_of_week,
+            FORMAT_DATE('%B', DATE(Purchase_Date)) as month,
+            CONCAT('Q', CAST(EXTRACT(QUARTER FROM DATE(Purchase_Date)) AS STRING)) as quarter
+        FROM `{PROJECT_ID}.amazon_seller.amazon_orders_2025`
+        WHERE Purchase_Date IS NOT NULL
+            AND DATE(Purchase_Date) >= '2025-01-01'
+        GROUP BY
+            DATE(Purchase_Date),
+            FORMAT_DATE('%A', DATE(Purchase_Date)),
+            FORMAT_DATE('%B', DATE(Purchase_Date)),
+            CONCAT('Q', CAST(EXTRACT(QUARTER FROM DATE(Purchase_Date)) AS STRING))
         ORDER BY date DESC
         """
         
@@ -66,21 +60,24 @@ def amazon_data_sync(request):
             COUNT(*) as days_processed,
             SUM(ordered_product_sales) as total_sales
         FROM `{PROJECT_ID}.amazon.daily_total_sales`
-        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+        WHERE date >= '2025-01-01'
         """
         
         count_job = client.query(count_query)
         result = list(count_job.result())[0]
-        
-        print(f'Successfully processed {result.days_processed} days')
-        print(f'Total sales: ${result.total_sales:,.2f}')
-        
+
+        days_processed = result.days_processed or 0
+        total_sales = result.total_sales or 0.0
+
+        print(f'Successfully processed {days_processed} days')
+        print(f'Total sales: ${total_sales:,.2f}')
+
         return {
             'status': 'success',
-            'days_processed': int(result.days_processed),
-            'total_sales': float(result.total_sales),
+            'days_processed': int(days_processed),
+            'total_sales': float(total_sales),
             'timestamp': datetime.now().isoformat(),
-            'message': f'Amazon data sync completed - {result.days_processed} days processed'
+            'message': f'Amazon data sync completed - {days_processed} days processed'
         }
         
     except Exception as e:

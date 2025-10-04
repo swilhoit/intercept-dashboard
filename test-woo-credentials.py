@@ -7,8 +7,8 @@ import json
 SITES = {
     'heatilator': {
         'base_url': 'https://heatilatorfireplacedoors.com',
-        'consumer_key': 'ck_662b9b92b3ad56d4e6a8104368081f7de3fecd4e',
-        'consumer_secret': 'cs_b94be3803bacbf508eb774b1e414e3ed9cd21a85'
+        'consumer_key': 'ck_440a83e0aa324f7a0dcb10b07710239b1af741d0',
+        'consumer_secret': 'cs_893f884fb20e5bc9c2655188c18c08debebf7bb7'
     },
     'superior': {
         'base_url': 'https://superiorfireplacedoors.com',

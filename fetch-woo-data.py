@@ -17,14 +17,14 @@ WOOCOMMERCE_SITES = {
     },
     'heatilator': {
         'base_url': 'https://heatilatorfireplacedoors.com',
-        'consumer_key': 'ck_662b9b92b3ad56d4e6a8104368081f7de3fecd4e',
-        'consumer_secret': 'cs_b94be3803bacbf508eb774b1e414e3ed9cd21a85',
+        'consumer_key': 'ck_b7954d336fa5cbdc4981bb0dcdb3219b7af8cc90',
+        'consumer_secret': 'cs_need_to_get_this_from_admin',  # Need the secret
         'data_file': '/tmp/woo_recent_heatilator.json'
     },
     'superior': {
         'base_url': 'https://superiorfireplacedoors.com',
-        'consumer_key': 'ck_4e6e36da2bc12181bdfef39125fa3074630078b9',
-        'consumer_secret': 'cs_802ba938ebacf7e9af0f931403f554a134352ac1',
+        'consumer_key': 'ck_fa744f3de5885bbc8e0520e8bee27a8db36b8eff',
+        'consumer_secret': 'cs_need_to_get_this_from_admin',  # Need the secret
         'data_file': '/tmp/woo_recent_superior.json'
     },
     'majestic': {

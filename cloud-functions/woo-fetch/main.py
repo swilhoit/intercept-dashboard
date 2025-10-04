@@ -14,21 +14,21 @@ PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-25080611
 # WooCommerce site configurations - will need to be updated with actual credentials
 WOOCOMMERCE_SITES = {
     'brickanew': {
-        'base_url': os.environ.get('BRICKANEW_URL', 'https://brickanew.com'),
-        'consumer_key': os.environ.get('BRICKANEW_KEY', ''),
-        'consumer_secret': os.environ.get('BRICKANEW_SECRET', ''),
+        'base_url': 'https://brick-anew.com',
+        'consumer_key': 'ck_917c430be2a325d3ee74d809ca184726130d2fc2',
+        'consumer_secret': 'cs_261e146b6578faf1c644e6bf1c3da9a5042abf86',
         'table': 'brickanew_daily_product_sales'
     },
     'heatilator': {
-        'base_url': os.environ.get('HEATILATOR_URL', ''),
-        'consumer_key': 'ck_b7954d336fa5cbdc4981bb0dcdb3219b7af8cc90',
-        'consumer_secret': os.environ.get('HEATILATOR_SECRET', ''),
+        'base_url': 'https://heatilatorfireplacedoors.com',
+        'consumer_key': 'ck_440a83e0aa324f7a0dcb10b07710239b1af741d0',
+        'consumer_secret': 'cs_893f884fb20e5bc9c2655188c18c08debebf7bb7',
         'table': 'heatilator_daily_product_sales'
     },
     'superior': {
-        'base_url': os.environ.get('SUPERIOR_URL', ''),
-        'consumer_key': 'ck_fa744f3de5885bbc8e0520e8bee27a8db36b8eff',
-        'consumer_secret': os.environ.get('SUPERIOR_SECRET', ''),
+        'base_url': 'https://superiorfireplacedoors.com',
+        'consumer_key': 'ck_4e6e36da2bc12181bdfef39125fa3074630078b9',
+        'consumer_secret': 'cs_802ba938ebacf7e9af0f931403f554a134352ac1',
         'table': 'superior_daily_product_sales'
     }
 }
