@@ -18,12 +18,15 @@ export async function GET(request: NextRequest) {
       // Use both Amazon tables to get complete data coverage
       let amazonQuery = `
         WITH combined_amazon AS (
-          -- Recent data from amazon_seller table
-          SELECT 
+          -- Recent data from amazon_seller table (handle mixed date formats)
+          SELECT
             Product_Name as product_name,
             Item_Price as revenue,
             1 as item_quantity,
-            DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) as order_date
+            CASE
+              WHEN SAFE_CAST(Date AS INT64) IS NOT NULL THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+              ELSE PARSE_DATE('%Y-%m-%d', Date)
+            END as order_date
           FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
           WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
           
