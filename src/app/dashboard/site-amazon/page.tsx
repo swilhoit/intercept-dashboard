@@ -26,29 +26,47 @@ export default function SiteAmazonPage() {
 
     try {
       // Fetch data from Amazon APIs
-      const [dailySalesRes, productsRes, trafficRes] = await Promise.all([
+      const [dailySalesRes, productsRes, trafficRes, categoriesRes] = await Promise.all([
         fetch(`/api/amazon/daily-sales?${params}`),
         fetch(`/api/amazon/products?${params}`),
-        fetch(`/api/analytics/traffic?${params}`)
+        fetch(`/api/analytics/traffic?${params}`),
+        fetch(`/api/sales/category-products?${params}`)
       ])
 
       // Handle failed API responses gracefully
-      const [dailySales, products, trafficInfo] = await Promise.all([
+      const [dailySales, products, trafficInfo, categoriesData] = await Promise.all([
         dailySalesRes.ok ? dailySalesRes.json().catch(() => []) : [],
         productsRes.ok ? productsRes.json().catch(() => []) : [],
-        trafficRes.ok ? trafficRes.json().catch(() => ({})) : {}
+        trafficRes.ok ? trafficRes.json().catch(() => ({})) : {},
+        categoriesRes.ok ? categoriesRes.json().catch(() => ({ products: [] })) : { products: [] }
       ])
 
       // Ensure data arrays are valid before processing
       const validDailySales = Array.isArray(dailySales) ? dailySales : []
       const validProducts = Array.isArray(products) ? products : []
+      const validCategoriesData = categoriesData?.products || []
+
+      // Process category data for Amazon only
+      const amazonCategories = validCategoriesData
+        .filter((product: any) => product.channel === 'Amazon')
+        .reduce((acc: any, product: any) => {
+          const category = product.category || 'Other'
+          if (!acc[category]) {
+            acc[category] = { name: category, revenue: 0, quantity: 0, channel: 'Amazon' }
+          }
+          acc[category].revenue += product.total_sales || 0
+          acc[category].quantity += product.quantity || 0
+          return acc
+        }, {})
+
+      const categoryArray = Object.values(amazonCategories)
 
       // Transform data to match expected format
       const amazonSiteData = {
         summary: {
           total_revenue: validDailySales.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0),
           total_units: validDailySales.reduce((sum: number, day: any) => sum + (day.order_count || 0), 0),
-          avg_order_value: validDailySales.length > 0 
+          avg_order_value: validDailySales.length > 0
             ? validDailySales.reduce((sum: number, day: any) => sum + (day.avg_order_value || 0), 0) / validDailySales.length
             : 0
         },
@@ -62,7 +80,7 @@ export default function SiteAmazonPage() {
           quantity: product.order_count,
           channel: 'Amazon'
         })),
-        categories: []
+        categories: categoryArray
       }
 
       setSiteData(amazonSiteData)
