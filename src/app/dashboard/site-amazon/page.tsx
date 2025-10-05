@@ -46,20 +46,21 @@ export default function SiteAmazonPage() {
       const validProducts = Array.isArray(products) ? products : []
       const validCategoriesData = categoriesData?.products || []
 
-      // Process category data for Amazon only
-      const amazonCategories = validCategoriesData
-        .filter((product: any) => product.channel === 'Amazon')
+      // Process category data - include all channels so Amazon component can filter
+      const allCategoriesGrouped = validCategoriesData
         .reduce((acc: any, product: any) => {
           const category = product.category || 'Other'
-          if (!acc[category]) {
-            acc[category] = { name: category, revenue: 0, quantity: 0, channel: 'Amazon' }
+          const channel = product.channel || 'Unknown'
+          const key = `${category}-${channel}`
+          if (!acc[key]) {
+            acc[key] = { name: category, revenue: 0, quantity: 0, channel: channel }
           }
-          acc[category].revenue += product.total_sales || 0
-          acc[category].quantity += product.quantity || 0
+          acc[key].revenue += product.total_sales || 0
+          acc[key].quantity += product.quantity || 0
           return acc
         }, {})
 
-      const categoryArray = Object.values(amazonCategories)
+      const categoryArray = Object.values(allCategoriesGrouped)
 
       // Transform data to match expected format
       const amazonSiteData = {
@@ -70,10 +71,12 @@ export default function SiteAmazonPage() {
             ? validDailySales.reduce((sum: number, day: any) => sum + (day.avg_order_value || 0), 0) / validDailySales.length
             : 0
         },
-        daily: validDailySales.map((day: any) => ({
-          date: day.date?.value || day.date,
-          sales: day.total_sales || 0
-        })),
+        daily: validDailySales
+          .map((day: any) => ({
+            date: day.date?.value || day.date,
+            sales: day.total_sales || 0
+          }))
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
         products: validProducts.map((product: any) => ({
           product_name: product.product_name,
           total_sales: product.total_sales,
