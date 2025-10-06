@@ -77,6 +77,19 @@ export default function SiteAmazonPage() {
             sales: day.total_sales || 0
           }))
           .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+        monthly: Object.values(
+          validDailySales.reduce((acc: any, day: any) => {
+            const date = new Date(day.date?.value || day.date)
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+            const monthName = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+
+            if (!acc[monthKey]) {
+              acc[monthKey] = { date: monthName, sales: 0 }
+            }
+            acc[monthKey].sales += day.total_sales || 0
+            return acc
+          }, {})
+        ).sort((a: any, b: any) => new Date(a.date + ' 1').getTime() - new Date(b.date + ' 1').getTime()),
         products: validProducts.map((product: any) => ({
           product_name: product.product_name,
           total_sales: product.total_sales,
