@@ -11,33 +11,48 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    
-    let whereClause = 'WHERE Date IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0';
-    if (startDate && endDate) {
-      // Handle both Excel serial numbers and string dates
-      whereClause += ` AND (
-        (SAFE_CAST(Date AS INT64) IS NOT NULL AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) >= '${startDate}' AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) <= '${endDate}') OR
-        (SAFE_CAST(Date AS INT64) IS NULL AND Date >= '${startDate}' AND Date <= '${endDate}')
-      )`;
-    }
 
     const query = `
+      WITH combined_amazon AS (
+        -- Deduplicated data from both Amazon sources
+        SELECT DISTINCT
+          product_name,
+          revenue,
+          order_date
+        FROM (
+          -- Recent data from amazon_seller table
+          SELECT
+            Product_Name as product_name,
+            Item_Price as revenue,
+            CASE
+              WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date)
+              WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+              ELSE NULL
+            END as order_date
+          FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+          WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+
+          UNION ALL
+
+          -- Historical data from amazon orders table
+          SELECT
+            product_name,
+            revenue,
+            DATE(date) as order_date
+          FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+          WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+        )
+      )
       SELECT
-        CASE
-          WHEN SAFE_CAST(Date AS INT64) IS NOT NULL THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
-          ELSE PARSE_DATE('%Y-%m-%d', Date)
-        END as date,
+        order_date as date,
         COUNT(*) as order_count,
-        SUM(Item_Price) as total_sales,
-        ROUND(AVG(Item_Price), 2) as avg_order_value
-      FROM \`amazon_seller.amazon_orders_2025\`
-      ${whereClause}
-      GROUP BY
-        CASE
-          WHEN SAFE_CAST(Date AS INT64) IS NOT NULL THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
-          ELSE PARSE_DATE('%Y-%m-%d', Date)
-        END
-      ORDER BY date DESC
+        SUM(revenue) as total_sales,
+        ROUND(AVG(revenue), 2) as avg_order_value
+      FROM combined_amazon
+      WHERE order_date IS NOT NULL
+      ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+      GROUP BY order_date
+      ORDER BY order_date DESC
       LIMIT 100
     `;
 

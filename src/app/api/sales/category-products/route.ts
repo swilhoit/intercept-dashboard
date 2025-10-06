@@ -39,34 +39,42 @@ export async function GET(request: NextRequest) {
     
     caseStatement += `ELSE 'Other' END`;
     
-    // Query for Amazon products with categories - combine both data sources
+    // Query for Amazon products with categories - combine both data sources with deduplication
     let amazonQuery = `
       WITH combined_amazon AS (
-        -- Recent data from amazon_seller table
-        SELECT
-          Product_Name as product_name,
-          Item_Price as revenue,
-          1 as item_quantity,
-          CASE
-            WHEN REGEXP_CONTAINS(Date, r'^\d{4}-\d{2}-\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date)
-            WHEN REGEXP_CONTAINS(Date, r'^\d+$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
-            ELSE NULL
-          END as order_date
-        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
-        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
-        
-        UNION ALL
-        
-        -- Historical data from amazon orders table  
-        SELECT 
+        -- Deduplicated data from both Amazon sources
+        SELECT DISTINCT
           product_name,
           revenue,
           item_quantity,
-          DATE(date) as order_date
-        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+          order_date
+        FROM (
+          -- Recent data from amazon_seller table
+          SELECT
+            Product_Name as product_name,
+            Item_Price as revenue,
+            1 as item_quantity,
+            CASE
+              WHEN REGEXP_CONTAINS(Date, r'^\d{4}-\d{2}-\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date)
+              WHEN REGEXP_CONTAINS(Date, r'^\d+$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+              ELSE NULL
+            END as order_date
+          FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+          WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+
+          UNION ALL
+
+          -- Historical data from amazon orders table
+          SELECT
+            product_name,
+            revenue,
+            item_quantity,
+            DATE(date) as order_date
+          FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+          WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+        )
       )
-      SELECT 
+      SELECT
         product_name,
         ${caseStatement} as category,
         'Amazon' as channel,
