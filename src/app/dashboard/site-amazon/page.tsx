@@ -67,9 +67,11 @@ export default function SiteAmazonPage() {
         summary: {
           total_revenue: validDailySales.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0),
           total_units: validDailySales.reduce((sum: number, day: any) => sum + (day.order_count || 0), 0),
-          avg_order_value: validDailySales.length > 0
-            ? validDailySales.reduce((sum: number, day: any) => sum + (day.avg_order_value || 0), 0) / validDailySales.length
-            : 0
+          avg_order_value: (() => {
+            const totalRevenue = validDailySales.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0)
+            const totalUnits = validDailySales.reduce((sum: number, day: any) => sum + (day.order_count || 0), 0)
+            return totalUnits > 0 ? totalRevenue / totalUnits : 0
+          })()
         },
         daily: validDailySales
           .map((day: any) => ({
