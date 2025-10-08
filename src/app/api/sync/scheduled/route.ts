@@ -11,10 +11,11 @@ const SYNC_CONFIGS = [
     sheetName: 'Funnel data',
   },
   {
-    name: 'Amazon Ads Keywords',
-    oneDriveFileId: process.env.AMAZON_ADS_EXCEL_FILE_ID || '',
-    bigQueryTableId: 'amazon_ads.keywords',
+    name: 'Amazon Ads - Conversions & Orders (SharePoint)',
+    oneDriveFileId: '013DC5AD67544C02BD783714D80965FE',
+    bigQueryTableId: 'amazon_ads_sharepoint.conversions_orders',
     sheetName: 'Funnel data',
+    transformData: true,
   },
 ];
 

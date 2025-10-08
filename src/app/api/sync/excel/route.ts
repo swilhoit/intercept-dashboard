@@ -60,9 +60,8 @@ export async function GET(request: NextRequest) {
   );
 
   const hasBigQueryConfig = !!(
-    process.env.GOOGLE_CLOUD_PROJECT_ID &&
-    process.env.GOOGLE_CLOUD_CLIENT_EMAIL &&
-    process.env.GOOGLE_CLOUD_PRIVATE_KEY
+    process.env.GOOGLE_CLOUD_PROJECT_ID ||
+    process.env.GOOGLE_SERVICE_ACCOUNT_JSON
   );
 
   return NextResponse.json({
@@ -71,7 +70,7 @@ export async function GET(request: NextRequest) {
     bigQuery: hasBigQueryConfig,
     requiredEnvVars: {
       microsoft: ['MICROSOFT_CLIENT_ID', 'MICROSOFT_CLIENT_SECRET', 'MICROSOFT_TENANT_ID'],
-      bigQuery: ['GOOGLE_CLOUD_PROJECT_ID', 'GOOGLE_CLOUD_CLIENT_EMAIL', 'GOOGLE_CLOUD_PRIVATE_KEY'],
+      bigQuery: ['GOOGLE_CLOUD_PROJECT_ID', 'GOOGLE_SERVICE_ACCOUNT_JSON (or Application Default Credentials)'],
     },
   });
 }

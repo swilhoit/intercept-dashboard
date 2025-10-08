@@ -7,6 +7,7 @@ export interface ExcelSyncConfig {
   bigQueryTableId: string;
   sheetName?: string;
   primaryKeyColumn?: string;
+  transformData?: boolean;
 }
 
 export class ExcelSyncService {
@@ -25,7 +26,11 @@ export class ExcelSyncService {
         'ET27IzaEhPBOim8JgIJNepUBr38bFsOScEH4UCqiyidk_A': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/ET27IzaEhPBOim8JgIJNepUBr38bFsOScEH4UCqiyidk_A',
         'EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EecvZ9lz7j5BhEieh20X8boB897syk_YdkAfffmywq4i7Q',
         'EVVhQiD7dYdAqleBi6wfX04BdnHuCyhrzfK1-XxGvR11TQ': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EVVhQiD7dYdAqleBi6wfX04BdnHuCyhrzfK1-XxGvR11TQ',
-        'EYsjv8DaHP1HqWgIfueicnABjPhAL9ic6j1uiWs8EKTbXw': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EYsjv8DaHP1HqWgIfueicnABjPhAL9ic6j1uiWs8EKTbXw'
+        'EYsjv8DaHP1HqWgIfueicnABjPhAL9ic6j1uiWs8EKTbXw': 'https://tetrahedronglobal-my.sharepoint.com/:x:/g/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/EYsjv8DaHP1HqWgIfueicnABjPhAL9ic6j1uiWs8EKTbXw',
+        // Amazon Ads files
+        'CC188F9ABEE74538B3DF5577A3A500D8': 'https://tetrahedronglobal-my.sharepoint.com/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/_layouts/15/Doc.aspx?sourcedoc=%7BCC188F9A-BEE7-4538-B3DF-5577A3A500D8%7D&file=amazon%20ads.xlsx',
+        '013DC5AD67544C02BD783714D80965FE': 'https://tetrahedronglobal-my.sharepoint.com/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/_layouts/15/Doc.aspx?sourcedoc=%7B013DC5AD-6754-4C02-BD78-3714D80965FE%7D&file=amazon%20ads%20-%20conversions%20%26%20orders.xlsx',
+        'BDBC5289A91B4A2291BF21B443C1EE12': 'https://tetrahedronglobal-my.sharepoint.com/personal/swilhoit_tetrahedronglobal_onmicrosoft_com/_layouts/15/Doc.aspx?sourcedoc=%7BBDBC5289-A91B-4A22-91BF-21B443C1EE12%7D&file=amazon%20ads%20-%20daily%20keyword%20report.xlsx'
       };
       
       const shareUrl = shareUrlMap[this.config.oneDriveFileId];
@@ -72,16 +77,19 @@ export class ExcelSyncService {
   parseExcelData(buffer: Buffer): any[] {
     try {
       const workbook = XLSX.read(buffer, { type: 'buffer' });
+      console.log('Available sheet names:', workbook.SheetNames);
+
       const sheetName = this.config.sheetName || workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      
+
       if (!worksheet) {
-        throw new Error(`Sheet "${sheetName}" not found in Excel file`);
+        throw new Error(`Sheet "${sheetName}" not found in Excel file. Available sheets: ${workbook.SheetNames.join(', ')}`);
       }
 
       const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         header: 1,
         defval: null,
+        raw: false, // Convert dates to strings instead of numbers
       });
 
       if (jsonData.length === 0) {
@@ -96,7 +104,17 @@ export class ExcelSyncService {
       return rows.map(row => {
         const obj: any = {};
         headers.forEach((header, index) => {
-          obj[header] = row[index];
+          let value = row[index];
+
+          // Convert Excel date serial numbers to proper dates
+          if (header === 'Date' && typeof value === 'number' && value > 40000) {
+            // Excel serial date conversion
+            const excelEpoch = new Date(1899, 11, 30); // Excel's epoch
+            const date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+            value = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+          }
+
+          obj[header] = value;
         });
         return obj;
       }).filter(row => {
@@ -189,6 +207,77 @@ export class ExcelSyncService {
     }
   }
 
+  transformSharePointData(data: any[]): any[] {
+    // Transform SharePoint Amazon ads data to match expected schema
+    if (data.length === 0) return data;
+
+    console.log('Transforming SharePoint data to match database schema...');
+    console.log('Raw data columns:', Object.keys(data[0] || {}));
+
+    return data.map(row => {
+      // Convert Excel date serial numbers to proper dates
+      let date = null;
+      if (row.Date) {
+        if (typeof row.Date === 'number' && row.Date > 40000) {
+          const excelEpoch = new Date(1899, 11, 30);
+          date = new Date(excelEpoch.getTime() + row.Date * 24 * 60 * 60 * 1000);
+        } else if (typeof row.Date === 'string') {
+          date = new Date(row.Date);
+        }
+      }
+
+      // Map SharePoint columns to database schema
+      const transformed = {
+        date: date || new Date(),
+        campaign_id: row['Campaign ID'] || null,
+        campaign_name: row['Campaign Name'] || null,
+        campaign_status: row['Campaign Status'] || null,
+        ad_group_id: row['Ad Group ID'] || null,
+        ad_group_name: row['Ad Group Name'] || null,
+        portfolio_name: row['Portfolio Name'] || null,
+        clicks: parseInt(row['Clicks']) || 0,
+        cost: parseFloat(row['Cost (*)']) || 0,
+        impressions: parseInt(row['Impressions']) || 0,
+        conversions_1d_total: parseInt(row['1 Day Total Conversions']) || 0,
+        conversions_1d_sku: parseInt(row['1 Day Advertised SKU Conversions']) || 0,
+        conversions_7d_total: parseInt(row['7 Day Total Conversions']) || 0,
+        conversions_7d_sku: parseInt(row['7 Day Advertised SKU Conversions']) || 0,
+        conversions_14d_total: parseInt(row['14 Day Total Conversions']) || 0,
+        conversions_14d_sku: parseInt(row['14 Day Advertised SKU Conversions']) || 0,
+        conversions_30d_total: parseInt(row['30 Day Total Conversions']) || 0,
+        conversions_30d_sku: parseInt(row['30 Day Advertised SKU Conversions']) || 0,
+        units_1d_total: parseInt(row['1 Day Total Units']) || 0,
+        units_1d_sku: parseInt(row['1 Day Advertised SKU Units']) || 0,
+        units_7d_total: parseInt(row['7 Day Total Units']) || 0,
+        units_7d_sku: parseInt(row['7 Day Advertised SKU Units']) || 0,
+        units_14d_total: parseInt(row['14 Day Total Units']) || 0,
+        units_14d_sku: parseInt(row['14 Day Advertised SKU Units']) || 0,
+        units_30d_total: parseInt(row['30 Day Total Units']) || 0,
+        units_30d_sku: parseInt(row['30 Day Advertised SKU Units']) || 0,
+        sales_1d_total: parseFloat(row['1 Day Total Sales (*)']) || 0,
+        sales_1d_sku: parseFloat(row['1 Day Advertised SKU Sales (*)']) || 0,
+        sales_7d_total: parseFloat(row['7 Day Total Sales (*)']) || 0,
+        sales_7d_sku: parseFloat(row['7 Day Advertised SKU Sales (*)']) || 0,
+        sales_14d_total: parseFloat(row['14 Day Total Sales (*)']) || 0,
+        sales_14d_sku: parseFloat(row['14 Day Advertised SKU Sales (*)']) || 0,
+        sales_30d_total: parseFloat(row['30 Day Total Sales (*)']) || 0,
+        sales_30d_sku: parseFloat(row['30 Day Advertised SKU Sales (*)']) || 0,
+      };
+
+      return transformed;
+    }).filter(row => {
+      // Only include rows with valid campaign data and recent dates
+      const isValidCampaign = row.campaign_id;
+      const hasValidDate = row.date && row.date instanceof Date && !isNaN(row.date.getTime());
+      const isRecentDate = hasValidDate && row.date >= new Date('2025-09-05');
+      const hasActivity = (row.clicks > 0 || row.impressions > 0 || row.cost > 0);
+
+      console.log(`Filter check for campaign ${row.campaign_id}: valid=${isValidCampaign}, date=${hasValidDate}, recent=${isRecentDate}, activity=${hasActivity}`);
+
+      return isValidCampaign && hasValidDate && isRecentDate && hasActivity;
+    });
+  }
+
   async sync(): Promise<{ success: boolean; rowsProcessed: number; error?: string }> {
     try {
       console.log(`Starting sync for file ${this.config.oneDriveFileId} to table ${this.config.bigQueryTableId}`);
@@ -197,8 +286,17 @@ export class ExcelSyncService {
       const excelBuffer = await this.downloadExcelFromOneDrive();
       
       // Parse Excel data
-      const parsedData = this.parseExcelData(excelBuffer);
-      
+      let parsedData = this.parseExcelData(excelBuffer);
+
+      // Transform data if needed
+      if (this.config.transformData) {
+        console.log(`Transforming data: ${parsedData.length} raw rows`);
+        console.log('Sample raw row:', JSON.stringify(parsedData[0], null, 2));
+        parsedData = this.transformSharePointData(parsedData);
+        console.log(`After transformation: ${parsedData.length} rows`);
+        console.log('Sample transformed row:', JSON.stringify(parsedData[0], null, 2));
+      }
+
       // Update BigQuery table
       await this.updateBigQueryTable(parsedData);
       

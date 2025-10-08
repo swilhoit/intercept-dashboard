@@ -214,8 +214,17 @@ export async function GET(request: NextRequest) {
       matchTypePerformance: matchTypeRows,
       timeSeries: timeSeriesData,
       groupBy: groupBy,
-      dateRange: startDate && endDate ? { startDate, endDate } : null
-    }, CACHE_STRATEGIES.ANALYTICS);
+      dateRange: startDate && endDate ? { startDate, endDate } : null,
+      _timestamp: Date.now(), // Force cache invalidation
+      _debugInfo: {
+        message: "Data fix applied - browser cache invalidated",
+        actualTotalCost: summaryRows[0]?.total_cost || 0
+      }
+    }, {
+      maxAge: 0,
+      sMaxAge: 0,
+      staleWhileRevalidate: 0
+    });
   } catch (error) {
     return handleApiError(error);
   }
