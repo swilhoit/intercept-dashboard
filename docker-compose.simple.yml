@@ -1,0 +1,34 @@
+services:
+  sales-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.nextjs
+    ports:
+      - "3100:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/application_default_credentials.json
+    env_file:
+      - .env.local
+    volumes:
+      - ~/.config/gcloud/application_default_credentials.json:/app/credentials/application_default_credentials.json:ro
+    depends_on:
+      - playwright-mcp-lite
+    networks:
+      - app-network
+
+  playwright-mcp-lite:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright-mcp-lite
+    ports:
+      - "3010:3001"
+    environment:
+      - PORT=3001
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
