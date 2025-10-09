@@ -74,7 +74,18 @@ export async function GET(request: NextRequest) {
       has_comparison: startDate && endDate ? true : false
     };
     
-    return cachedResponse(response, CACHE_STRATEGIES.REALTIME);
+    return cachedResponse({
+      ...response,
+      _timestamp: Date.now(),
+      _debugInfo: {
+        message: "WooCommerce cache fix applied",
+        actualWooCommerceRevenue: currentData.woocommerce_revenue || 0
+      }
+    }, {
+      maxAge: 0,
+      sMaxAge: 0,
+      staleWhileRevalidate: 0
+    });
   } catch (error) {
     return handleApiError(error);
   }}
