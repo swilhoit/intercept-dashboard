@@ -29,7 +29,22 @@ export async function GET(request: NextRequest) {
     
     const [rows] = await bigquery.query(query);
     
-    return NextResponse.json(rows);
+    const response = {
+      data: rows,
+      _timestamp: Date.now(),
+      _debugInfo: {
+        message: "Daily sales cache fix applied",
+        recordCount: rows.length
+      }
+    };
+
+    return NextResponse.json(response.data, {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    });
   } catch (error) {
     return handleApiError(error);
   }}

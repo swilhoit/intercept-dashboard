@@ -171,7 +171,18 @@ export async function GET(request: NextRequest) {
       }
     };
     
-    return cachedResponse(response, CACHE_STRATEGIES.STANDARD);
+    return cachedResponse({
+      ...response,
+      _timestamp: Date.now(),
+      _debugInfo: {
+        message: "WooCommerce sites cache fix applied",
+        actualTotalRevenue: summaryRows[0]?.total_revenue || 0
+      }
+    }, {
+      maxAge: 0,
+      sMaxAge: 0,
+      staleWhileRevalidate: 0
+    });
   } catch (error) {
     return handleApiError(error);
   }
