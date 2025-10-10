@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Query for Amazon data
     let query = `
       WITH categorized_amazon AS (
-        SELECT 
+        SELECT
           DATE(date) as category_date,
           ${caseStatement} as category,
           product_name,
@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
           'Amazon' as channel
         FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
         WHERE product_name IS NOT NULL
+        AND DATE(date) >= '2025-01-01'
     `;
     
     if (startDate && endDate) {
@@ -125,8 +126,17 @@ export async function GET(request: NextRequest) {
       ORDER BY aggregation_date ASC, category
     `;
     
-    console.log('Categories Query:', query);
-    const [rows] = await bigquery.query(query);
+    console.log('Categories Query - Date Range:', { startDate, endDate, aggregation });
+    console.log('Executing main categories query...');
+
+    let rows = [];
+    try {
+      [rows] = await bigquery.query(query);
+      console.log('Main query returned', rows.length, 'rows');
+    } catch (error) {
+      console.error('Error in main categories query:', error);
+      throw error;
+    }
     
     // Get channel breakdown per category
     const channelBreakdownQuery = `
@@ -162,7 +172,15 @@ export async function GET(request: NextRequest) {
       ORDER BY category, channel
     `;
     
-    const [channelRows] = await bigquery.query(channelBreakdownQuery);
+    console.log('Executing channel breakdown query...');
+    let channelRows = [];
+    try {
+      [channelRows] = await bigquery.query(channelBreakdownQuery);
+      console.log('Channel breakdown query returned', channelRows.length, 'rows');
+    } catch (error) {
+      console.error('Error in channel breakdown query:', error);
+      channelRows = [];
+    }
     
     // Add channel time series query
     const channelTimeSeriesQuery = `
@@ -201,7 +219,15 @@ export async function GET(request: NextRequest) {
       ORDER BY period ASC, category, channel
     `;
 
-    const [channelTimeRows] = await bigquery.query(channelTimeSeriesQuery);
+    console.log('Executing channel time series query...');
+    let channelTimeRows = [];
+    try {
+      [channelTimeRows] = await bigquery.query(channelTimeSeriesQuery);
+      console.log('Channel time series query returned', channelTimeRows.length, 'rows');
+    } catch (error) {
+      console.error('Error in channel time series query:', error);
+      channelTimeRows = [];
+    }
 
     // Add unique products query
     const uniqueProductsQuery = `
@@ -233,7 +259,15 @@ export async function GET(request: NextRequest) {
       GROUP BY category
     `;
 
-    const [uniqueRows] = await bigquery.query(uniqueProductsQuery);
+    console.log('Executing unique products query...');
+    let uniqueRows = [];
+    try {
+      [uniqueRows] = await bigquery.query(uniqueProductsQuery);
+      console.log('Unique products query returned', uniqueRows.length, 'rows');
+    } catch (error) {
+      console.error('Error in unique products query:', error);
+      uniqueRows = [];
+    }
     
     // Transform data for response
     const categoryData: any = {};
@@ -383,11 +417,28 @@ export async function GET(request: NextRequest) {
       };
     });
     
-    return NextResponse.json({
+    const response = {
       categories: categoryData,
       aggregated: aggregatedData,
-      dates: sortedDates
+      dates: sortedDates,
+      debug: {
+        rowCount: rows.length,
+        channelRowCount: channelRows.length,
+        categoryCount: Object.keys(categoryData).length,
+        dateRange: { startDate, endDate },
+        aggregation
+      }
+    };
+
+    console.log('Categories API Response:', {
+      categoriesCount: Object.keys(categoryData).length,
+      categories: Object.keys(categoryData),
+      datesCount: sortedDates.length,
+      firstDate: sortedDates[0],
+      lastDate: sortedDates[sortedDates.length - 1]
     });
+
+    return NextResponse.json(response);
   } catch (error) {
     return handleApiError(error);
   }

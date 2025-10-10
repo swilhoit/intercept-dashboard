@@ -1,0 +1,797 @@
+customer_identifier,customer_email,lead_source,total_orders,total_spent,total_quantity,avg_order_value,first_order_date,last_order_date,days_since_last_order,years_active,customer_segment,products_purchased_list,states_shipped_to_list,data_source
+Shop Tiny House,Shop Tiny House,Shop Tiny House,298,146859.0,311,492.82,2016-11-27,2024-03-10,576,9,VIP - Lapsed,['GWDD' 'Gravity'],"['AL' 'AZ' 'CA' 'CO' 'DE' 'FL' 'GA' 'IL' 'IN' 'IO' 'KS' 'KY' 'LA' 'MA'
+ 'MD' 'ME' 'MI' 'MN' 'MO' 'MT' 'NC' 'ND' 'NE' 'NH' 'NJ' 'NM' 'NV' 'NY'
+ 'OH' 'OK' 'OR' 'PA' 'SC' 'SD' 'TN' 'TX' 'UT' 'VA' 'VT' 'WA' 'WI' 'WV'
+ 'WY']",pre_shopify
+Rain Harvest,Rain Harvest,Rain Harvest,68,123224.0,247,1812.12,2011-04-18,2024-02-06,609,10,VIP - Lapsed,['GWDD'],"['AR' 'AZ' 'CA' 'GA' 'MI' 'MN' 'NH' 'NJ' 'NM' 'NY' 'PA' 'TN' 'TX' 'UT'
+ 'VA' 'WA']",pre_shopify
+Therapure,Therapure,Therapure,21,65665.0,135,3126.9,2013-05-24,2016-07-13,3373,4,VIP - Dormant,['GWDD'],['CA'],pre_shopify
+Rain Harvest Systems,Rain Harvest Systems,Rain Harvest Systems,61,43952.0,82,732.53,2012-01-05,2015-07-14,3738,4,High Value - Dormant,['GWDD'],['AZ' 'CA' 'CO' 'Canada' 'FL' 'HI' 'IN' 'MT' 'NJ' 'NM' 'NY' 'SC' 'TX' 'VT'],pre_shopify
+Pace Supply,Pace Supply,Pace Supply,4,19998.0,42,4999.5,2015-07-01,2017-05-10,3072,3,High Value - Dormant,['GWDD'],['CA'],pre_shopify
+jeff@jbchisum.com,jeff@jbchisum.com,jeff@jbchisum.com,1,10384.0,16,10384.0,2023-11-10,2023-11-10,697,1,High Value - Lapsed,['GWDD'],['TX'],pre_shopify
+Web,Web,Web,17,9463.0,17,556.65,2010-05-14,2010-12-16,5409,1,Medium Value - Dormant,['GWDD'],['AR' 'AZ' 'CA' 'MI' 'MS' 'NJ' 'NY' 'WA'],pre_shopify
+Golden Love,Golden Love,Golden Love,8,5501.0,10,687.63,2011-03-21,2019-08-07,2253,5,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Tank Depot,Tank Depot,Tank Depot,9,5161.0,9,573.44,2013-06-05,2018-07-05,2651,4,Medium Value - Dormant,['GWDD'],['AZ' 'CA' 'NM' 'TX'],pre_shopify
+TheraPure,TheraPure,TheraPure,4,4788.0,6,1197.0,2011-09-30,2012-06-22,4855,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+minttinyhomes@gmail.com,minttinyhomes@gmail.com,minttinyhomes@gmail.com,6,4194.0,6,699.0,2016-11-17,2018-09-13,2581,2,Medium Value - Dormant,['GWDD'],['Canada'],pre_shopify
+Trade Show,Trade Show,Trade Show,8,4192.0,9,524.0,2010-05-24,2010-12-30,5395,1,Medium Value - Dormant,['GWDD' 'Gravity'],['CA'],pre_shopify
+US HydroTech,US HydroTech,US HydroTech,1,3990.0,10,3990.0,2011-07-21,2011-07-21,5192,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+chetel@seah2otreatment.com,chetel@seah2otreatment.com,chetel@seah2otreatment.com,3,3969.0,11,1323.0,2016-02-22,2016-08-31,3324,1,Medium Value - Dormant,['GWDD' 'Gravity'],['CA'],pre_shopify
+goldenlove@lovesgardens.com,goldenlove@lovesgardens.com,goldenlove@lovesgardens.com,4,3943.0,7,985.75,2020-04-10,2021-06-17,1573,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Call,Call,Call,7,3692.0,8,527.43,2010-05-27,2010-09-22,5494,1,Medium Value - Dormant,['GWDD'],['AZ' 'CA' 'GA' 'TX'],pre_shopify
+jason@siouxymca.org,jason@siouxymca.org,jason@siouxymca.org,1,3645.0,5,3645.0,2022-04-28,2022-04-28,1258,1,Medium Value - Dormant,['GWDD'],['UT'],pre_shopify
+wesparks@gmail.com,wesparks@gmail.com,wesparks@gmail.com,5,3624.0,6,724.8,2015-01-14,2023-02-12,968,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+donovanfc3@mac.com,donovanfc3@mac.com,donovanfc3@mac.com,5,3621.0,4,724.2,2014-09-01,2015-07-24,3728,2,Medium Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+VLANDRY@HOMECOMFORTUSA.COM,VLANDRY@HOMECOMFORTUSA.COM,VLANDRY@HOMECOMFORTUSA.COM,5,3495.0,5,699.0,2015-11-27,2016-02-22,3515,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Tiny Life Supply,Tiny Life Supply,Tiny Life Supply,6,3284.0,6,547.33,2017-09-14,2019-10-21,2178,2,Medium Value - Dormant,['GWDD' 'Gravity'],['Canada' 'SC' 'VA'],pre_shopify
+Sierra Water,Sierra Water,Sierra Water,3,3104.0,4,1034.67,2011-11-02,2012-02-29,4969,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Tiny Houses,Tiny Houses,Tiny Houses,5,2895.0,5,579.0,2016-03-16,2016-09-19,3305,1,Medium Value - Dormant,['GWDD'],['CA' 'GA'],pre_shopify
+fazelaya@me.com,fazelaya@me.com,fazelaya@me.com,1,2796.0,4,2796.0,2018-12-27,2018-12-27,2476,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+The Cast Water Corporation,The Cast Water Corporation,The Cast Water Corporation,1,2495.0,5,2495.0,2014-08-26,2014-08-26,4060,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+mtnhomeinn@windstream.net,mtnhomeinn@windstream.net,mtnhomeinn@windstream.net,5,2375.0,5,475.0,2013-03-21,2014-05-31,4147,2,Medium Value - Dormant,['GWDD'],['CA' 'CO' 'TX'],pre_shopify
+wefarmcalifornia@gmail.com,wefarmcalifornia@gmail.com,wefarmcalifornia@gmail.com,4,2356.0,4,589.0,2016-09-20,2016-10-20,3274,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+General Plumbing Supply,General Plumbing Supply,General Plumbing Supply,1,2316.0,4,2316.0,2014-11-22,2014-11-22,3972,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Loves Garden,Loves Garden,Loves Garden,4,2236.0,4,559.0,2013-03-28,2014-04-23,4185,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+minttinyhomes@gmail.com ,minttinyhomes@gmail.com ,minttinyhomes@gmail.com ,3,2097.0,3,699.0,2017-04-10,2017-08-18,2972,1,Medium Value - Dormant,['GWDD'],['Canada'],pre_shopify
+jennidobson@gmail.com,jennidobson@gmail.com,jennidobson@gmail.com,1,2097.0,3,2097.0,2015-09-17,2015-09-17,3673,1,Medium Value - Dormant,['GWDD'],['AK'],pre_shopify
+rayclamons@gmail.com,rayclamons@gmail.com,rayclamons@gmail.com,2,2047.0,3,1023.5,2015-12-11,2024-01-24,622,2,Medium Value - Lapsed,['GWDD'],['AZ'],pre_shopify
+info@dpexclusive.com,info@dpexclusive.com,info@dpexclusive.com,3,1977.0,3,659.0,2015-01-23,2015-11-23,3606,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Blue Gold for Life,Blue Gold for Life,Blue Gold for Life,3,1847.0,3,615.67,2015-04-24,2015-09-22,3668,1,Medium Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+pollymanset@icloud.com,pollymanset@icloud.com,pollymanset@icloud.com,2,1797.0,3,898.5,2020-08-15,2020-08-15,1879,1,Medium Value - Dormant,['GWDD' 'Gravity'],['CA'],pre_shopify
+tinyhousesandsolar@gmail.com,tinyhousesandsolar@gmail.com,tinyhousesandsolar@gmail.com,2,1767.0,3,883.5,2020-06-15,2020-09-07,1856,1,Medium Value - Dormant,['GWDD'],['NC' 'TN'],pre_shopify
+Cedar House Inn,Cedar House Inn,Cedar House Inn,3,1737.0,3,579.0,2015-07-21,2015-09-28,3662,1,Medium Value - Dormant,['GWDD'],['CA' 'CO'],pre_shopify
+Tank-Depot,Tank-Depot,Tank-Depot,3,1737.0,3,579.0,2015-05-18,2015-07-13,3739,1,Medium Value - Dormant,['GWDD'],['CA' 'WV'],pre_shopify
+RainThanks & Greywater,RainThanks & Greywater,RainThanks & Greywater,3,1737.0,3,579.0,2014-03-10,2014-08-13,4073,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+www.greywater-systems.com,www.greywater-systems.com,www.greywater-systems.com,4,1696.0,4,424.0,2011-01-13,2012-07-29,4818,2,Medium Value - Dormant,['GWDD'],['CA' 'MA'],pre_shopify
+Loomis,Loomis,Loomis,2,1626.0,4,813.0,2011-03-11,2011-03-23,5312,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Green Earth Materials,Green Earth Materials,Green Earth Materials,4,1606.0,4,401.5,2018-09-10,2021-03-04,1678,2,Medium Value - Dormant,['GWDD' 'Gravity'],['CA' 'PA'],pre_shopify
+rickwoody@gmail.com,rickwoody@gmail.com,rickwoody@gmail.com,2,1587.0,3,793.5,2023-06-05,2024-02-06,609,2,Medium Value - Lapsed,['GWDD' 'Gravity'],['TN'],pre_shopify
+US Hydro,US Hydro,US Hydro,1,1587.0,3,1587.0,2013-07-25,2013-07-25,4457,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Aquabank,Aquabank,Aquabank,2,1587.0,3,793.5,2013-05-24,2013-08-12,4439,1,Medium Value - Dormant,['GWDD'],['TX'],pre_shopify
+premierplumbing@bellsouth.net,premierplumbing@bellsouth.net,premierplumbing@bellsouth.net,1,1458.0,2,1458.0,2023-03-16,2023-03-16,936,1,Medium Value - Dormant,['GWDD'],['AL'],pre_shopify
+dessirre@lorallandscaping.com,dessirre@lorallandscaping.com,dessirre@lorallandscaping.com,1,1458.0,2,1458.0,2021-10-19,2021-10-19,1449,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+parksplumbinginc@gmail.com,parksplumbinginc@gmail.com,parksplumbinginc@gmail.com,2,1458.0,2,729.0,2022-06-07,2022-08-20,1144,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+nwearing@mac.com,nwearing@mac.com,nwearing@mac.com,1,1458.0,2,1458.0,2021-06-04,2021-06-04,1586,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Candice Vanderhoff,Candice Vanderhoff,Candice Vanderhoff,3,1457.0,4,485.67,2012-06-06,2012-12-09,4685,1,Medium Value - Dormant,['GWDD' 'GWDD Gravity'],['CA'],pre_shopify
+peter@peronegroup.com,peter@peronegroup.com,peter@peronegroup.com,2,1428.0,2,714.0,2016-11-30,2021-12-17,1390,2,Medium Value - Dormant,['GWDD'],['TX'],pre_shopify
+nbmckeever@comcast.net,nbmckeever@comcast.net,nbmckeever@comcast.net,2,1428.0,2,714.0,2014-10-25,2023-09-18,750,2,Medium Value - Dormant,['GWDD'],['MD'],pre_shopify
+jvlboland@verizon.net,jvlboland@verizon.net,jvlboland@verizon.net,2,1428.0,2,714.0,2020-04-04,2024-01-19,627,2,Medium Value - Lapsed,['GWDD'],['CA'],pre_shopify
+Nautilus Explorer,Nautilus Explorer,Nautilus Explorer,1,1398.0,2,1398.0,2020-10-29,2020-10-29,1804,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+marywikstrom@gmail.com,marywikstrom@gmail.com,marywikstrom@gmail.com,1,1398.0,2,1398.0,2016-01-12,2016-01-12,3556,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+mb.screenprint@gmail.com,mb.screenprint@gmail.com,mb.screenprint@gmail.com,2,1398.0,2,699.0,2016-02-25,2018-02-24,2782,2,Medium Value - Dormant,['GWDD'],['TN' 'TX'],pre_shopify
+ddelardi@aol.com,ddelardi@aol.com,ddelardi@aol.com,2,1398.0,2,699.0,2015-08-07,2015-09-17,3673,1,Medium Value - Dormant,['GWDD'],['NY'],pre_shopify
+MESPARZA@NCBUILDERS.US,MESPARZA@NCBUILDERS.US,MESPARZA@NCBUILDERS.US,1,1398.0,2,1398.0,2020-07-27,2020-07-27,1898,1,Medium Value - Dormant,['GWDD'],['WA'],pre_shopify
+jorgegarzagarza@gmail.com,jorgegarzagarza@gmail.com,jorgegarzagarza@gmail.com,1,1398.0,2,1398.0,2014-10-13,2014-10-13,4012,1,Medium Value - Dormant,['GWDD'],['TX'],pre_shopify
+vince@sbhb.com,vince@sbhb.com,vince@sbhb.com,1,1398.0,2,1398.0,2019-10-03,2019-10-03,2196,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+salyafei@hotmail.com,salyafei@hotmail.com,salyafei@hotmail.com,1,1398.0,2,1398.0,2020-05-24,2020-05-24,1962,1,Medium Value - Dormant,['GWDD'],['NY'],pre_shopify
+achplumbing@comcast.net,achplumbing@comcast.net,achplumbing@comcast.net,1,1398.0,2,1398.0,2015-10-26,2015-10-26,3634,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+19rlf67@gmail.com,19rlf67@gmail.com,19rlf67@gmail.com,1,1398.0,2,1398.0,2014-11-25,2014-11-25,3969,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+lbreitsprecher@okanagan.bc.ca,lbreitsprecher@okanagan.bc.ca,lbreitsprecher@okanagan.bc.ca,1,1398.0,2,1398.0,2015-03-12,2015-03-12,3862,1,Medium Value - Dormant,['GWDD'],['Canada'],pre_shopify
+Elite Hope Construction,Elite Hope Construction,Elite Hope Construction,1,1398.0,2,1398.0,2015-08-25,2015-08-25,3696,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+tsmsstitt@comcast.net,tsmsstitt@comcast.net,tsmsstitt@comcast.net,2,1348.0,2,674.0,2012-04-04,2015-07-26,3726,2,Medium Value - Dormant,['GWDD' 'GWDD + Irrigray'],['GA'],pre_shopify
+scocoh@gmail.com,scocoh@gmail.com,scocoh@gmail.com,2,1348.0,2,674.0,2012-12-31,2014-04-11,4197,2,Medium Value - Dormant,['GWDD' 'GWDD + Irrigray'],['ME'],pre_shopify
+bssmith@eatel.net,bssmith@eatel.net,bssmith@eatel.net,1,1298.0,5,1298.0,2012-07-03,2012-07-03,4844,1,Medium Value - Dormant,['GWDD'],['LA'],pre_shopify
+Klaus & Sons,Klaus & Sons,Klaus & Sons,1,1298.0,1,1298.0,2012-01-05,2012-01-05,5024,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Freytech,Freytech,Freytech,2,1217.0,3,608.5,2012-05-24,2012-05-24,4884,1,Medium Value - Dormant,['GWDD' 'GWDD Gravity'],['TX'],pre_shopify
+allphaserios@cox.net,allphaserios@cox.net,allphaserios@cox.net,2,1178.0,2,589.0,2019-10-30,2020-06-11,1944,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+WaterMark H2O,WaterMark H2O,WaterMark H2O,1,1178.0,2,1178.0,2020-09-14,2020-09-14,1849,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Mountain Feed,Mountain Feed,Mountain Feed,1,1178.0,2,1178.0,2016-03-28,2016-03-28,3480,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+bryon@lelandconstruction.com,bryon@lelandconstruction.com,bryon@lelandconstruction.com,1,1158.0,2,1158.0,2014-09-23,2014-09-23,4032,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+sales@2gwater.com,sales@2gwater.com,sales@2gwater.com,1,1158.0,2,1158.0,2015-06-17,2015-06-17,3765,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+thomas@captivefuel.com,thomas@captivefuel.com,thomas@captivefuel.com,1,1158.0,2,1158.0,2015-05-04,2015-05-04,3809,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Summit Consulting,Summit Consulting,Summit Consulting,2,1158.0,2,579.0,2016-03-17,2018-05-21,2696,2,Medium Value - Dormant,['GWDD'],['AK' 'Alaska'],pre_shopify
+lonzo@alphaplumbingcorp.com,lonzo@alphaplumbingcorp.com,lonzo@alphaplumbingcorp.com,2,1158.0,2,579.0,2015-06-17,2015-07-13,3739,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+mjungers@homecomfortusa.com,mjungers@homecomfortusa.com,mjungers@homecomfortusa.com,2,1158.0,2,579.0,2015-08-17,2015-09-01,3689,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+j.remley@sbcglobal.net,j.remley@sbcglobal.net,j.remley@sbcglobal.net,2,1158.0,2,579.0,2014-07-29,2014-08-28,4058,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Cedar House,Cedar House,Cedar House,2,1158.0,2,579.0,2014-04-25,2014-10-30,3995,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+droughtsmart@gmail.com,droughtsmart@gmail.com,droughtsmart@gmail.com,2,1158.0,2,579.0,2015-10-15,2016-11-21,3242,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+eldercaves@gmail.com,eldercaves@gmail.com,eldercaves@gmail.com,2,1158.0,2,579.0,2015-08-13,2016-09-18,3306,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+mabryplumbing1@gmail.com,mabryplumbing1@gmail.com,mabryplumbing1@gmail.com,2,1158.0,2,579.0,2016-05-26,2016-06-02,3414,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+killsaw@mchsi.com,killsaw@mchsi.com,killsaw@mchsi.com,2,1108.0,2,554.0,2013-04-26,2014-12-03,3961,2,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+wcrang@gmail.com,wcrang@gmail.com,wcrang@gmail.com,2,1098.0,2,549.0,2015-05-13,2015-05-18,3795,1,Medium Value - Dormant,['GWDD' 'Gravity'],['CA'],pre_shopify
+vikilea@yahoo.com,vikilea@yahoo.com,vikilea@yahoo.com,2,1098.0,2,549.0,2019-08-19,2019-08-19,2241,1,Medium Value - Dormant,['GWDD' 'Gravity'],['CA'],pre_shopify
+patrickmoyer@yahoo.com,patrickmoyer@yahoo.com,patrickmoyer@yahoo.com,2,1098.0,2,549.0,2020-04-22,2020-07-05,1920,1,Medium Value - Dormant,['GWDD' 'Gravity'],['FL'],pre_shopify
+Inhabiture Build,Inhabiture Build,Inhabiture Build,2,1098.0,2,549.0,2014-04-29,2014-04-29,4179,1,Medium Value - Dormant,['GWDD' 'Gravity'],['CA'],pre_shopify
+Danny@bluegoldforlife.com,Danny@bluegoldforlife.com,Danny@bluegoldforlife.com,1,1058.0,2,1058.0,2016-07-05,2016-07-05,3381,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Watermark H2O,Watermark H2O,Watermark H2O,1,1018.0,2,1018.0,2016-10-26,2016-10-26,3268,1,Medium Value - Dormant,['GWDD'],['CA'],pre_shopify
+Farm Supply,Farm Supply,Farm Supply,1,998.0,1,998.0,2012-06-05,2012-06-05,4872,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Greywater Corps,Greywater Corps,Greywater Corps,2,958.0,2,479.0,2011-03-08,2011-07-29,5184,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+zog44@msn.com,zog44@msn.com,zog44@msn.com,2,944.0,1,472.0,2014-10-29,2014-10-29,3996,1,Low Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+simon@dpr.com,simon@dpr.com,simon@dpr.com,2,944.0,1,472.0,2015-07-07,2015-07-07,3745,1,Low Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+maxl.kroschel@gmail.com,maxl.kroschel@gmail.com,maxl.kroschel@gmail.com,2,944.0,1,472.0,2015-06-25,2015-06-25,3757,1,Low Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+bwhite+usd@hypractv.net,bwhite+usd@hypractv.net,bwhite+usd@hypractv.net,2,924.0,1,462.0,2014-03-02,2014-03-02,4237,1,Low Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+scott.menke@gmail.com,scott.menke@gmail.com,scott.menke@gmail.com,2,924.0,1,462.0,2014-03-02,2014-03-02,4237,1,Low Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+M3nygaard@comcast.net,M3nygaard@comcast.net,M3nygaard@comcast.net,2,924.0,1,462.0,2015-06-25,2015-06-25,3757,1,Low Value - Dormant,['GWDD' 'Irrigray'],['CA'],pre_shopify
+joe.g.mccready@gmail.com,joe.g.mccready@gmail.com,joe.g.mccready@gmail.com,2,924.0,1,462.0,2014-02-13,2014-02-14,4253,1,Low Value - Dormant,['GWDD' 'Irrigray'],['NC'],pre_shopify
+CHRISTINA.RUBEN@GMAIL.COM,CHRISTINA.RUBEN@GMAIL.COM,CHRISTINA.RUBEN@GMAIL.COM,2,924.0,1,462.0,2015-02-10,2015-02-10,3892,1,Low Value - Dormant,['GWDD' 'Irrigray'],['TX'],pre_shopify
+paul@justwatersaversusa.com,paul@justwatersaversusa.com,paul@justwatersaversusa.com,2,918.0,2,459.0,2014-10-20,2016-02-05,3532,2,Low Value - Dormant,['GWDD' 'Gravity'],['CA' 'NJ'],pre_shopify
+San Diego Drums & Totes,San Diego Drums & Totes,San Diego Drums & Totes,2,918.0,2,459.0,2015-05-08,2015-05-08,3805,1,Low Value - Dormant,['GWDD' 'Gravity'],['CA'],pre_shopify
+Tank-depot.com,Tank-depot.com,Tank-depot.com,2,898.0,2,449.0,2012-01-05,2012-05-04,4904,1,Low Value - Dormant,['GWDD'],['FL' 'NH'],pre_shopify
+thomasspande@gmail.com,thomasspande@gmail.com,thomasspande@gmail.com,1,858.0,2,858.0,2023-02-04,2023-02-04,976,1,Low Value - Dormant,['Gravity'],['MD'],pre_shopify
+edmundo@costas.us,edmundo@costas.us,edmundo@costas.us,1,858.0,2,858.0,2023-09-20,2023-09-20,748,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+Pref Inst,Pref Inst,Pref Inst,2,798.0,2,399.0,2010-06-17,2010-10-08,5478,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+eyaz@netvision.net.il,eyaz@netvision.net.il,eyaz@netvision.net.il,1,798.0,2,798.0,2011-06-27,2011-06-27,5216,1,Low Value - Dormant,['GWDD Gravity'],['Israel'],pre_shopify
+jmfg@soyacht.us,jmfg@soyacht.us,jmfg@soyacht.us,1,798.0,2,798.0,2020-11-13,2020-11-13,1789,1,Low Value - Dormant,['Gravity'],['NC'],pre_shopify
+marcoa@seah2otreatment.com,marcoa@seah2otreatment.com,marcoa@seah2otreatment.com,1,798.0,2,798.0,2013-09-27,2013-09-27,4393,1,Low Value - Dormant,['Gravity'],['Mexico'],pre_shopify
+steven_sabol@nps.gov,steven_sabol@nps.gov,steven_sabol@nps.gov,1,798.0,2,798.0,2018-06-06,2018-06-06,2680,1,Low Value - Dormant,['Gravity'],['NC'],pre_shopify
+Jamaica Drip,Jamaica Drip,Jamaica Drip,1,798.0,2,798.0,2018-10-18,2018-10-18,2546,1,Low Value - Dormant,['Gravity'],['FL'],pre_shopify
+rusldavid@gmail.com,rusldavid@gmail.com,rusldavid@gmail.com,1,729.0,1,729.0,2022-09-05,2022-09-05,1128,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+broyal8@gmail.com,broyal8@gmail.com,broyal8@gmail.com,1,729.0,1,729.0,2024-02-25,2024-02-25,590,1,Low Value - Lapsed,['GWDD'],['TX'],pre_shopify
+david_ortiz57@yahoo.com,david_ortiz57@yahoo.com,david_ortiz57@yahoo.com,1,729.0,1,729.0,2023-03-31,2023-03-31,921,1,Low Value - Dormant,['GWDD'],['CO'],pre_shopify
+lonniegarmon@gmail.com,lonniegarmon@gmail.com,lonniegarmon@gmail.com,1,729.0,1,729.0,2023-04-13,2023-04-13,908,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+signenova@gmail.com,signenova@gmail.com,signenova@gmail.com,1,729.0,1,729.0,2023-08-20,2023-08-20,779,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+jimmiy05@yahoo.com,jimmiy05@yahoo.com,jimmiy05@yahoo.com,1,729.0,1,729.0,2023-09-12,2023-09-12,756,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+nisjimnorris@gmail.com,nisjimnorris@gmail.com,nisjimnorris@gmail.com,1,729.0,1,729.0,2023-10-27,2023-10-27,711,1,Low Value - Lapsed,['GWDD'],['TX'],pre_shopify
+CONTACT@ZAINIRANCH.COM,CONTACT@ZAINIRANCH.COM,CONTACT@ZAINIRANCH.COM,1,729.0,1,729.0,2023-10-31,2023-10-31,707,1,Low Value - Lapsed,['GWDD'],['WA'],pre_shopify
+les.laas@icloud.com,les.laas@icloud.com,les.laas@icloud.com,1,729.0,1,729.0,2023-11-05,2023-11-05,702,1,Low Value - Lapsed,['GWDD'],['WA'],pre_shopify
+rj@maverick-construction.net,rj@maverick-construction.net,rj@maverick-construction.net,1,729.0,1,729.0,2023-11-27,2023-11-27,680,1,Low Value - Lapsed,['GWDD'],['WA'],pre_shopify
+cards1211@comcast.net,cards1211@comcast.net,cards1211@comcast.net,1,729.0,1,729.0,2022-02-27,2022-02-27,1318,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+cadrian99@yahoo.com,cadrian99@yahoo.com,cadrian99@yahoo.com,1,729.0,1,729.0,2022-10-26,2022-10-26,1077,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+billing@adambloomston.com,billing@adambloomston.com,billing@adambloomston.com,1,729.0,1,729.0,2021-05-15,2021-05-15,1606,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+nikki.myers@nwtrek.org,nikki.myers@nwtrek.org,nikki.myers@nwtrek.org,1,729.0,1,729.0,2022-12-02,2022-12-02,1040,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+JACKIE.KOEN@POWERLP.COM,JACKIE.KOEN@POWERLP.COM,JACKIE.KOEN@POWERLP.COM,1,729.0,1,729.0,2022-12-13,2022-12-13,1029,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+jeffreyhedstrom@yahoo.com,jeffreyhedstrom@yahoo.com,jeffreyhedstrom@yahoo.com,1,729.0,1,729.0,2021-03-30,2021-03-30,1652,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+tekanoid@gmail.com,tekanoid@gmail.com,tekanoid@gmail.com,1,729.0,1,729.0,2021-04-02,2021-04-02,1649,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+harborherbalist@gmail.com,harborherbalist@gmail.com,harborherbalist@gmail.com,1,729.0,1,729.0,2021-04-07,2021-04-07,1644,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+DNBLACKBURN@HOTMAIL.COM,DNBLACKBURN@HOTMAIL.COM,DNBLACKBURN@HOTMAIL.COM,1,729.0,1,729.0,2021-05-14,2021-05-14,1607,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+hometours@realtor.com,hometours@realtor.com,hometours@realtor.com,1,729.0,1,729.0,2021-09-01,2021-09-01,1497,1,Low Value - Dormant,['GWDD'],['MN'],pre_shopify
+bwmhvac17@gmail.com,bwmhvac17@gmail.com,bwmhvac17@gmail.com,1,729.0,1,729.0,2021-09-15,2021-09-15,1483,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+fitzpat@peak.org,fitzpat@peak.org,fitzpat@peak.org,1,729.0,1,729.0,2021-10-06,2021-10-06,1462,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+jjandjbbright@yahoo.com,jjandjbbright@yahoo.com,jjandjbbright@yahoo.com,1,729.0,1,729.0,2021-06-29,2021-06-29,1561,1,Low Value - Dormant,['GWDD'],['CO'],pre_shopify
+jeffrey600@aol.com,jeffrey600@aol.com,jeffrey600@aol.com,1,729.0,1,729.0,2021-06-19,2021-06-19,1571,1,Low Value - Dormant,['GWDD'],['CO'],pre_shopify
+jaylivran@gmail.com,jaylivran@gmail.com,jaylivran@gmail.com,1,729.0,1,729.0,2024-02-06,2024-02-06,609,1,Low Value - Lapsed,['GWDD'],['CO'],pre_shopify
+crosseyed316@hotmail.com,crosseyed316@hotmail.com,crosseyed316@hotmail.com,1,729.0,1,729.0,2022-04-08,2022-04-08,1278,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bourgeoisshawn@gmail.com,bourgeoisshawn@gmail.com,bourgeoisshawn@gmail.com,1,729.0,1,729.0,2021-03-19,2021-03-19,1663,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+kevinpwe@gmail.com,kevinpwe@gmail.com,kevinpwe@gmail.com,1,729.0,1,729.0,2021-01-13,2021-01-13,1728,1,Low Value - Dormant,['GWDD'],['UT'],pre_shopify
+greenjim@live.com,greenjim@live.com,greenjim@live.com,1,729.0,1,729.0,2022-04-25,2022-04-25,1261,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tonynobull@msn.com,tonynobull@msn.com,tonynobull@msn.com,1,729.0,1,729.0,2022-01-20,2022-01-20,1356,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+Billing@hilcodevelopment.com,Billing@hilcodevelopment.com,Billing@hilcodevelopment.com,1,729.0,1,729.0,2022-03-30,2022-03-30,1287,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+pkelly9@hotmail.com,pkelly9@hotmail.com,pkelly9@hotmail.com,1,729.0,1,729.0,2021-05-07,2021-05-07,1614,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+ktaylor061@gmail.com,ktaylor061@gmail.com,ktaylor061@gmail.com,1,729.0,1,729.0,2021-05-28,2021-05-28,1593,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+lone77eagle@yahoo.com,lone77eagle@yahoo.com,lone77eagle@yahoo.com,1,729.0,1,729.0,2022-05-22,2022-05-22,1234,1,Low Value - Dormant,['GWDD'],['KY'],pre_shopify
+maheaakau@gmail.com,maheaakau@gmail.com,maheaakau@gmail.com,1,729.0,1,729.0,2023-04-03,2023-04-03,918,1,Low Value - Dormant,['GWDD'],['HI'],pre_shopify
+pgolovko@golovko.org,pgolovko@golovko.org,pgolovko@golovko.org,1,729.0,1,729.0,2022-03-25,2022-03-25,1292,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bhanu.marwaha@gmail.com,bhanu.marwaha@gmail.com,bhanu.marwaha@gmail.com,1,729.0,1,729.0,2022-03-02,2022-03-02,1315,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+albertjimenez530@gmail.com,albertjimenez530@gmail.com,albertjimenez530@gmail.com,1,729.0,1,729.0,2021-10-10,2021-10-10,1458,1,Low Value - Dormant,['GWDD'],['HI'],pre_shopify
+chris@shookandwaller.com,chris@shookandwaller.com,chris@shookandwaller.com,1,729.0,1,729.0,2022-02-27,2022-02-27,1318,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+atiyagoodin@gmail.com,atiyagoodin@gmail.com,atiyagoodin@gmail.com,1,729.0,1,729.0,2021-12-08,2021-12-08,1399,1,Low Value - Dormant,['GWDD'],['FL'],pre_shopify
+midtowntireauto@gmail.com,midtowntireauto@gmail.com,midtowntireauto@gmail.com,1,729.0,1,729.0,2022-04-08,2022-04-08,1278,1,Low Value - Dormant,['GWDD'],['UT'],pre_shopify
+teriparker@mvdsl.com,teriparker@mvdsl.com,teriparker@mvdsl.com,1,729.0,1,729.0,2021-03-29,2021-03-29,1653,1,Low Value - Dormant,['GWDD'],['NV'],pre_shopify
+jvanwave@asu.edu,jvanwave@asu.edu,jvanwave@asu.edu,1,729.0,1,729.0,2022-09-04,2022-09-04,1129,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+josetq@gmail.com,josetq@gmail.com,josetq@gmail.com,1,729.0,1,729.0,2021-04-20,2021-04-20,1631,1,Low Value - Dormant,['GWDD'],['FL/PR'],pre_shopify
+z_ezra@hotmail.com,z_ezra@hotmail.com,z_ezra@hotmail.com,1,729.0,1,729.0,2022-08-14,2022-08-14,1150,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+adriantea125@gmail.com,adriantea125@gmail.com,adriantea125@gmail.com,1,729.0,1,729.0,2024-03-05,2024-03-05,581,1,Low Value - Lapsed,['GWDD'],['OR'],pre_shopify
+avella.classes@yahoo.com,avella.classes@yahoo.com,avella.classes@yahoo.com,1,729.0,1,729.0,2023-04-25,2023-04-25,896,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+leeawood@mac.com,leeawood@mac.com,leeawood@mac.com,1,729.0,1,729.0,2023-08-13,2023-08-13,786,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+lucyholland@me.com,lucyholland@me.com,lucyholland@me.com,1,729.0,1,729.0,2023-08-15,2023-08-15,784,1,Low Value - Dormant,['GWDD'],['MA'],pre_shopify
+info@michael-lovelightlaughter.org,info@michael-lovelightlaughter.org,info@michael-lovelightlaughter.org,1,729.0,1,729.0,2023-08-29,2023-08-29,770,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+bee.macrae@gmail.com,bee.macrae@gmail.com,bee.macrae@gmail.com,1,729.0,1,729.0,2022-04-09,2022-04-09,1277,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jamesfaganconstruction@gmail.com,jamesfaganconstruction@gmail.com,jamesfaganconstruction@gmail.com,1,729.0,1,729.0,2023-12-14,2023-12-14,663,1,Low Value - Lapsed,['GWDD'],['OR'],pre_shopify
+raa04@yahoo.com,raa04@yahoo.com,raa04@yahoo.com,1,729.0,1,729.0,2022-02-27,2022-02-27,1318,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+backpackeroven@yahoo.com,backpackeroven@yahoo.com,backpackeroven@yahoo.com,1,729.0,1,729.0,2022-06-02,2022-06-02,1223,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+jocelynhewitt@yahoo.com,jocelynhewitt@yahoo.com,jocelynhewitt@yahoo.com,1,729.0,1,729.0,2022-06-04,2022-06-04,1221,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+genomicdoc@gmail.com,genomicdoc@gmail.com,genomicdoc@gmail.com,1,729.0,1,729.0,2022-06-04,2022-06-04,1221,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+jmurray@formulationsintl.com,jmurray@formulationsintl.com,jmurray@formulationsintl.com,1,729.0,1,729.0,2023-09-13,2023-09-13,755,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+joyharbin2@gmail.com,joyharbin2@gmail.com,joyharbin2@gmail.com,1,729.0,1,729.0,2021-05-08,2021-05-08,1613,1,Low Value - Dormant,['GWDD'],['GA'],pre_shopify
+bkblades20@gmail.com,bkblades20@gmail.com,bkblades20@gmail.com,1,729.0,1,729.0,2021-06-30,2021-06-30,1560,1,Low Value - Dormant,['GWDD'],['CO'],pre_shopify
+patticut@yahoo.com,patticut@yahoo.com,patticut@yahoo.com,1,729.0,1,729.0,2021-07-05,2021-07-05,1555,1,Low Value - Dormant,['GWDD'],['KY'],pre_shopify
+818allterrain@gmail.com,818allterrain@gmail.com,818allterrain@gmail.com,1,729.0,1,729.0,2021-10-23,2021-10-23,1445,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dave@sunlightandtrees.com,dave@sunlightandtrees.com,dave@sunlightandtrees.com,1,729.0,1,729.0,2021-10-19,2021-10-19,1449,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+storyconstruction@sbcglobal.net,storyconstruction@sbcglobal.net,storyconstruction@sbcglobal.net,1,729.0,1,729.0,2021-10-04,2021-10-04,1464,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+larrycrismond@yahoo.com,larrycrismond@yahoo.com,larrycrismond@yahoo.com,1,729.0,1,729.0,2021-10-01,2021-10-01,1467,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+stefan@etiennesky.com,stefan@etiennesky.com,stefan@etiennesky.com,1,729.0,1,729.0,2021-09-26,2021-09-26,1472,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+btran222@yahoo.com,btran222@yahoo.com,btran222@yahoo.com,1,729.0,1,729.0,2021-09-07,2021-09-07,1491,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+kunals143@yahoo.com,kunals143@yahoo.com,kunals143@yahoo.com,1,729.0,1,729.0,2021-09-02,2021-09-02,1496,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+ryancanepa@gmail.com,ryancanepa@gmail.com,ryancanepa@gmail.com,1,729.0,1,729.0,2021-08-30,2021-08-30,1499,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+alexahmadian@gmail.com,alexahmadian@gmail.com,alexahmadian@gmail.com,1,729.0,1,729.0,2021-08-16,2021-08-16,1513,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+erincro@gmail.com,erincro@gmail.com,erincro@gmail.com,1,729.0,1,729.0,2021-08-12,2021-08-12,1517,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+njcingle@gmail.com,njcingle@gmail.com,njcingle@gmail.com,1,729.0,1,729.0,2021-08-08,2021-08-08,1521,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+vsandovalclc@yahoo.com,vsandovalclc@yahoo.com,vsandovalclc@yahoo.com,1,729.0,1,729.0,2021-08-04,2021-08-04,1525,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bluejay.monahan@gmail.com,bluejay.monahan@gmail.com,bluejay.monahan@gmail.com,1,729.0,1,729.0,2021-07-25,2021-07-25,1535,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Travis.Hinkle@me.com,Travis.Hinkle@me.com,Travis.Hinkle@me.com,1,729.0,1,729.0,2021-07-20,2021-07-20,1540,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+pkthegreat1@gmail.com,pkthegreat1@gmail.com,pkthegreat1@gmail.com,1,729.0,1,729.0,2021-07-19,2021-07-19,1541,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+john@ware-associates.com,john@ware-associates.com,john@ware-associates.com,1,729.0,1,729.0,2021-07-11,2021-07-11,1549,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+kane@inius.com,kane@inius.com,kane@inius.com,1,729.0,1,729.0,2021-07-09,2021-07-09,1551,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mickhastie@gmail.com,mickhastie@gmail.com,mickhastie@gmail.com,1,729.0,1,729.0,2021-07-05,2021-07-05,1555,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sesserjohnson@aol.com,sesserjohnson@aol.com,sesserjohnson@aol.com,1,729.0,1,729.0,2021-07-01,2021-07-01,1559,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+crystalyn.hoffman@gmail.com,crystalyn.hoffman@gmail.com,crystalyn.hoffman@gmail.com,1,729.0,1,729.0,2021-06-10,2021-06-10,1580,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+fh@halperinandchrist.com,fh@halperinandchrist.com,fh@halperinandchrist.com,1,729.0,1,729.0,2021-05-25,2021-05-25,1596,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+RaeJean1968@gmail.com,RaeJean1968@gmail.com,RaeJean1968@gmail.com,1,729.0,1,729.0,2021-05-21,2021-05-21,1600,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+denikedesign@gmail.com,denikedesign@gmail.com,denikedesign@gmail.com,1,729.0,1,729.0,2021-05-19,2021-05-19,1602,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jakfranz@sbcglobal.net,jakfranz@sbcglobal.net,jakfranz@sbcglobal.net,1,729.0,1,729.0,2021-05-15,2021-05-15,1606,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bilbao49@hotmail.fr,bilbao49@hotmail.fr,bilbao49@hotmail.fr,1,729.0,1,729.0,2021-05-11,2021-05-11,1610,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+elizabeth.schwark@gmail.com,elizabeth.schwark@gmail.com,elizabeth.schwark@gmail.com,1,729.0,1,729.0,2021-11-30,2021-11-30,1407,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+billar50@aol.com,billar50@aol.com,billar50@aol.com,1,729.0,1,729.0,2021-12-15,2021-12-15,1392,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dan.ajdbuilders@gmail.com,dan.ajdbuilders@gmail.com,dan.ajdbuilders@gmail.com,1,729.0,1,729.0,2021-12-20,2021-12-20,1387,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+aghousingllc@gmail.com ,aghousingllc@gmail.com ,aghousingllc@gmail.com ,1,729.0,1,729.0,2022-05-17,2022-05-17,1239,1,Low Value - Dormant,['GWDD'],['MI'],pre_shopify
+smithmountainlakerealestate@gmail.com,smithmountainlakerealestate@gmail.com,smithmountainlakerealestate@gmail.com,1,729.0,1,729.0,2021-04-16,2021-04-16,1635,1,Low Value - Dormant,['GWDD'],['ME'],pre_shopify
+vonverth1@me.com,vonverth1@me.com,vonverth1@me.com,1,729.0,1,729.0,2021-02-14,2021-02-14,1696,1,Low Value - Dormant,['GWDD'],['UT'],pre_shopify
+njbills@me.com,njbills@me.com,njbills@me.com,1,729.0,1,729.0,2021-05-19,2021-05-19,1602,1,Low Value - Dormant,['GWDD'],['ID'],pre_shopify
+vinema@me.com,vinema@me.com,vinema@me.com,1,729.0,1,729.0,2021-06-16,2021-06-16,1574,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+cmrichard45@gmail.com,cmrichard45@gmail.com,cmrichard45@gmail.com,1,729.0,1,729.0,2021-06-18,2021-06-18,1572,1,Low Value - Dormant,['GWDD'],['MD'],pre_shopify
+buyingagent911@gmail.com,buyingagent911@gmail.com,buyingagent911@gmail.com,1,729.0,1,729.0,2022-10-02,2022-10-02,1101,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+powenhsu@neweramedicine.org,powenhsu@neweramedicine.org,powenhsu@neweramedicine.org,1,729.0,1,729.0,2022-09-29,2022-09-29,1104,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+bethaostrander@gmail.com,bethaostrander@gmail.com,bethaostrander@gmail.com,1,729.0,1,729.0,2022-09-19,2022-09-19,1114,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+jr@aspctr.com,jr@aspctr.com,jr@aspctr.com,1,729.0,1,729.0,2022-09-01,2022-09-01,1132,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+sandymhoyte@gmail.com,sandymhoyte@gmail.com,sandymhoyte@gmail.com,1,729.0,1,729.0,2022-08-19,2022-08-19,1145,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+dustinc.spam@gmail.com,dustinc.spam@gmail.com,dustinc.spam@gmail.com,1,729.0,1,729.0,2022-07-03,2022-07-03,1192,1,Low Value - Dormant,['GWDD'],['WI'],pre_shopify
+dsche65905@aol.com,dsche65905@aol.com,dsche65905@aol.com,1,729.0,1,729.0,2022-03-03,2022-03-03,1314,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+joy.joy321@yahoo.com,joy.joy321@yahoo.com,joy.joy321@yahoo.com,1,729.0,1,729.0,2024-01-04,2024-01-04,642,1,Low Value - Lapsed,['GWDD'],['NC'],pre_shopify
+mike@allsourceexport.com,mike@allsourceexport.com,mike@allsourceexport.com,1,729.0,1,729.0,2023-10-17,2023-10-17,721,1,Low Value - Lapsed,['GWDD'],['FL'],pre_shopify
+arlenjones@gmail.com,arlenjones@gmail.com,arlenjones@gmail.com,1,729.0,1,729.0,2023-09-05,2023-09-05,763,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+bmanthey@me.com,bmanthey@me.com,bmanthey@me.com,1,729.0,1,729.0,2023-07-06,2023-07-06,824,1,Low Value - Dormant,['GWDD'],['VA'],pre_shopify
+brendan.j.walters@hotmail.com,brendan.j.walters@hotmail.com,brendan.j.walters@hotmail.com,1,729.0,1,729.0,2023-07-01,2023-07-01,829,1,Low Value - Dormant,['GWDD'],['FL'],pre_shopify
+tlfeeley21@gmail.com,tlfeeley21@gmail.com,tlfeeley21@gmail.com,1,729.0,1,729.0,2023-06-23,2023-06-23,837,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+dgbrian33@gmail.com,dgbrian33@gmail.com,dgbrian33@gmail.com,1,729.0,1,729.0,2023-06-03,2023-06-03,857,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+kball6223@gmail.com,kball6223@gmail.com,kball6223@gmail.com,1,729.0,1,729.0,2023-04-28,2023-04-28,893,1,Low Value - Dormant,['GWDD'],['IN'],pre_shopify
+datsun7278@gmail.com,datsun7278@gmail.com,datsun7278@gmail.com,1,729.0,1,729.0,2023-01-26,2023-01-26,985,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+dnewman0507@me.com,dnewman0507@me.com,dnewman0507@me.com,1,729.0,1,729.0,2023-01-14,2023-01-14,997,1,Low Value - Dormant,['GWDD'],['FL'],pre_shopify
+jay@dndmarine.net,jay@dndmarine.net,jay@dndmarine.net,1,729.0,1,729.0,2024-03-07,2024-03-07,579,1,Low Value - Lapsed,['GWDD'],['MI'],pre_shopify
+msherman1745@gmail.com,msherman1745@gmail.com,msherman1745@gmail.com,1,729.0,1,729.0,2024-02-10,2024-02-10,605,1,Low Value - Lapsed,['GWDD'],['CO'],pre_shopify
+haggyhog@gmail.com,haggyhog@gmail.com,haggyhog@gmail.com,1,729.0,1,729.0,2021-05-03,2021-05-03,1618,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+justinhubmauldin@gmail.com,justinhubmauldin@gmail.com,justinhubmauldin@gmail.com,1,729.0,1,729.0,2021-05-02,2021-05-02,1619,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+luvinfatherhood@hotmail.com,luvinfatherhood@hotmail.com,luvinfatherhood@hotmail.com,1,729.0,1,729.0,2021-07-09,2021-07-09,1551,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+Romansplumbing@gmail.com,Romansplumbing@gmail.com,Romansplumbing@gmail.com,1,729.0,1,729.0,2021-04-27,2021-04-27,1624,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+littlevero91@yahoo.com,littlevero91@yahoo.com,littlevero91@yahoo.com,1,729.0,1,729.0,2022-05-14,2022-05-14,1242,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sierracharlie23@hotmail.com,sierracharlie23@hotmail.com,sierracharlie23@hotmail.com,1,729.0,1,729.0,2023-12-31,2023-12-31,646,1,Low Value - Lapsed,['GWDD'],['CA'],pre_shopify
+spanglishkings@yahoo.com,spanglishkings@yahoo.com,spanglishkings@yahoo.com,1,729.0,1,729.0,2023-12-26,2023-12-26,651,1,Low Value - Lapsed,['GWDD'],['CA'],pre_shopify
+dpalafoxsvt@gmail.com,dpalafoxsvt@gmail.com,dpalafoxsvt@gmail.com,1,729.0,1,729.0,2023-12-04,2023-12-04,673,1,Low Value - Lapsed,['GWDD'],['CA'],pre_shopify
+jrhtwo@gmail.com,jrhtwo@gmail.com,jrhtwo@gmail.com,1,729.0,1,729.0,2023-10-31,2023-10-31,707,1,Low Value - Lapsed,['GWDD'],['CA'],pre_shopify
+SMCGAUGHY@PACESUPPLY.COM,SMCGAUGHY@PACESUPPLY.COM,SMCGAUGHY@PACESUPPLY.COM,1,729.0,1,729.0,2023-10-04,2023-10-04,734,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tplbrown@gmail.com,tplbrown@gmail.com,tplbrown@gmail.com,1,729.0,1,729.0,2023-09-28,2023-09-28,740,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mduffy9011@aol.com,mduffy9011@aol.com,mduffy9011@aol.com,1,729.0,1,729.0,2023-09-25,2023-09-25,743,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sveronneau@gmail.com,sveronneau@gmail.com,sveronneau@gmail.com,1,729.0,1,729.0,2023-09-11,2023-09-11,757,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mrskimberlee@gmail.com,mrskimberlee@gmail.com,mrskimberlee@gmail.com,1,729.0,1,729.0,2023-08-31,2023-08-31,768,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+kevinsi@fullerton.edu,kevinsi@fullerton.edu,kevinsi@fullerton.edu,1,729.0,1,729.0,2023-08-30,2023-08-30,769,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jcrocker@oneworkplace.com,jcrocker@oneworkplace.com,jcrocker@oneworkplace.com,1,729.0,1,729.0,2023-08-09,2023-08-09,790,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+1rthaman@gmail.com,1rthaman@gmail.com,1rthaman@gmail.com,1,729.0,1,729.0,2023-08-04,2023-08-04,795,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+javier@jcengineering.us,javier@jcengineering.us,javier@jcengineering.us,1,729.0,1,729.0,2023-07-10,2023-07-10,820,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+customercare@theholisticscienceco.com,customercare@theholisticscienceco.com,customercare@theholisticscienceco.com,1,729.0,1,729.0,2023-06-25,2023-06-25,835,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+scott-g@roadrunner.com,scott-g@roadrunner.com,scott-g@roadrunner.com,1,729.0,1,729.0,2023-06-02,2023-06-02,858,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+swami@swami.org,swami@swami.org,swami@swami.org,1,729.0,1,729.0,2023-04-25,2023-04-25,896,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+farfango@hotmail.com,farfango@hotmail.com,farfango@hotmail.com,1,729.0,1,729.0,2023-04-07,2023-04-07,914,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+info@alternativehydro.com,info@alternativehydro.com,info@alternativehydro.com,1,729.0,1,729.0,2023-03-02,2023-03-02,950,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+joesplumbing2009@live.com,joesplumbing2009@live.com,joesplumbing2009@live.com,1,729.0,1,729.0,2023-02-15,2023-02-15,965,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+rosa_feria@live.com,rosa_feria@live.com,rosa_feria@live.com,1,729.0,1,729.0,2023-02-07,2023-02-07,973,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+ryanandrewarnold00@gmail.com,ryanandrewarnold00@gmail.com,ryanandrewarnold00@gmail.com,1,729.0,1,729.0,2023-02-02,2023-02-02,978,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jason@fuchsfamily.com,jason@fuchsfamily.com,jason@fuchsfamily.com,1,729.0,1,729.0,2023-01-16,2023-01-16,995,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+robinannberg@gmail.com,robinannberg@gmail.com,robinannberg@gmail.com,1,729.0,1,729.0,2024-01-26,2024-01-26,620,1,Low Value - Lapsed,['GWDD'],['CA'],pre_shopify
+kasfarahani@gmail.com,kasfarahani@gmail.com,kasfarahani@gmail.com,1,729.0,1,729.0,2024-01-12,2024-01-12,634,1,Low Value - Lapsed,['GWDD'],['CA'],pre_shopify
+matt@mosaicnetworx.com,matt@mosaicnetworx.com,matt@mosaicnetworx.com,1,729.0,1,729.0,2022-05-18,2022-05-18,1238,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jay.p.prescott@gmail.com,jay.p.prescott@gmail.com,jay.p.prescott@gmail.com,1,729.0,1,729.0,2022-05-30,2022-05-30,1226,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+TrDarling@gmail.com,TrDarling@gmail.com,TrDarling@gmail.com,1,729.0,1,729.0,2022-06-01,2022-06-01,1224,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+erik.drinkward@gmail.com,erik.drinkward@gmail.com,erik.drinkward@gmail.com,1,729.0,1,729.0,2022-09-16,2022-09-16,1117,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Office@rbcpainting.com,Office@rbcpainting.com,Office@rbcpainting.com,1,729.0,1,729.0,2021-04-18,2021-04-18,1633,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+markus@tinyhead.net,markus@tinyhead.net,markus@tinyhead.net,1,729.0,1,729.0,2021-04-16,2021-04-16,1635,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+rattlesnakegulch@yahoo.com,rattlesnakegulch@yahoo.com,rattlesnakegulch@yahoo.com,1,729.0,1,729.0,2021-01-22,2021-01-22,1719,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+raymondergarcia@gmail.com,raymondergarcia@gmail.com,raymondergarcia@gmail.com,1,729.0,1,729.0,2021-01-15,2021-01-15,1726,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+milnakojnok@yahoo.com,milnakojnok@yahoo.com,milnakojnok@yahoo.com,1,729.0,1,729.0,2022-12-08,2022-12-08,1034,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+milankojnok@yahoo.com,milankojnok@yahoo.com,milankojnok@yahoo.com,1,729.0,1,729.0,2022-11-29,2022-11-29,1043,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+chadkimball@mac.com,chadkimball@mac.com,chadkimball@mac.com,1,729.0,1,729.0,2022-10-28,2022-10-28,1075,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+yveslermusiaux@gmail.com,yveslermusiaux@gmail.com,yveslermusiaux@gmail.com,1,729.0,1,729.0,2022-10-19,2022-10-19,1084,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sanjayintcs@yahoo.com,sanjayintcs@yahoo.com,sanjayintcs@yahoo.com,1,729.0,1,729.0,2022-10-02,2022-10-02,1101,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dgonzales98@gmail.com,dgonzales98@gmail.com,dgonzales98@gmail.com,1,729.0,1,729.0,2022-09-30,2022-09-30,1103,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+fdaftary@earthlink.net,fdaftary@earthlink.net,fdaftary@earthlink.net,1,729.0,1,729.0,2022-09-26,2022-09-26,1107,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jaystevenrivera@gmail.com,jaystevenrivera@gmail.com,jaystevenrivera@gmail.com,1,729.0,1,729.0,2022-09-07,2022-09-07,1126,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dejokobac@hotmail.com,dejokobac@hotmail.com,dejokobac@hotmail.com,1,729.0,1,729.0,2022-06-01,2022-06-01,1224,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+santiago@angelplumbers.net,santiago@angelplumbers.net,santiago@angelplumbers.net,1,729.0,1,729.0,2022-09-06,2022-09-06,1127,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jasonviloria@me.com,jasonviloria@me.com,jasonviloria@me.com,1,729.0,1,729.0,2022-08-29,2022-08-29,1135,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jon.c.volkmann@gmail.com,jon.c.volkmann@gmail.com,jon.c.volkmann@gmail.com,1,729.0,1,729.0,2022-08-16,2022-08-16,1148,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mayashimoguchi@gmail.com,mayashimoguchi@gmail.com,mayashimoguchi@gmail.com,1,729.0,1,729.0,2022-08-14,2022-08-14,1150,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+rehtaeh424@gmail.com,rehtaeh424@gmail.com,rehtaeh424@gmail.com,1,729.0,1,729.0,2022-08-13,2022-08-13,1151,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tapley@homedoctors.com,tapley@homedoctors.com,tapley@homedoctors.com,1,729.0,1,729.0,2022-08-04,2022-08-04,1160,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+JOHN.ROSSI@BENFRANKLINPLUMBING.COM,JOHN.ROSSI@BENFRANKLINPLUMBING.COM,JOHN.ROSSI@BENFRANKLINPLUMBING.COM,1,729.0,1,729.0,2022-07-24,2022-07-24,1171,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tjreilly1953@outlook.com,tjreilly1953@outlook.com,tjreilly1953@outlook.com,1,729.0,1,729.0,2022-06-27,2022-06-27,1198,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+k_umashankari@hotmail.com,k_umashankari@hotmail.com,k_umashankari@hotmail.com,1,729.0,1,729.0,2022-06-25,2022-06-25,1200,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+REACHSATK@GMAIL.COM,REACHSATK@GMAIL.COM,REACHSATK@GMAIL.COM,1,729.0,1,729.0,2022-06-04,2022-06-04,1221,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+rjamt1@gmail.com,rjamt1@gmail.com,rjamt1@gmail.com,1,729.0,1,729.0,2022-06-02,2022-06-02,1223,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+adam@Sparksflow.com,adam@Sparksflow.com,adam@Sparksflow.com,1,729.0,1,729.0,2021-09-09,2021-09-09,1489,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+d.garcia357@gmail.com,d.garcia357@gmail.com,d.garcia357@gmail.com,2,729.0,1,729.0,2023-08-14,2023-08-24,775,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+brucrchfrd@hotmail.com,brucrchfrd@hotmail.com,brucrchfrd@hotmail.com,1,718.0,2,718.0,2016-08-04,2016-08-04,3351,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+marcelo@marka-qolor.com,marcelo@marka-qolor.com,marcelo@marka-qolor.com,1,699.0,1,699.0,2015-05-07,2015-05-07,3806,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mellsworth121@gmail.com,mellsworth121@gmail.com,mellsworth121@gmail.com,1,699.0,1,699.0,2016-12-02,2016-12-02,3231,1,Low Value - Dormant,['GWDD'],['MN'],pre_shopify
+dmoonyeen@hotmail.com,dmoonyeen@hotmail.com,dmoonyeen@hotmail.com,1,699.0,1,699.0,2018-05-21,2018-05-21,2696,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dheinzerling@gmail.com ,dheinzerling@gmail.com ,dheinzerling@gmail.com ,1,699.0,1,699.0,2018-04-28,2018-04-28,2719,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+cantelmi3@gmail.com,cantelmi3@gmail.com,cantelmi3@gmail.com,1,699.0,1,699.0,2018-04-16,2018-04-16,2731,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Hanko@kiessner.org,Hanko@kiessner.org,Hanko@kiessner.org,1,699.0,1,699.0,2020-12-04,2020-12-04,1768,1,Low Value - Dormant,['GWDD'],['UT'],pre_shopify
+mitchheather123@gmail.com,mitchheather123@gmail.com,mitchheather123@gmail.com,1,699.0,1,699.0,2019-02-12,2019-02-12,2429,1,Low Value - Dormant,['GWDD'],['UT'],pre_shopify
+nmmanabe@gmail.com,nmmanabe@gmail.com,nmmanabe@gmail.com,1,699.0,1,699.0,2019-04-11,2019-04-11,2371,1,Low Value - Dormant,['GWDD'],['NJ'],pre_shopify
+lscisland@gmail.com,lscisland@gmail.com,lscisland@gmail.com,1,699.0,1,699.0,2019-09-10,2019-09-10,2219,1,Low Value - Dormant,['GWDD'],['VT'],pre_shopify
+jstevens@newvistas.com,jstevens@newvistas.com,jstevens@newvistas.com,1,699.0,1,699.0,2018-02-12,2018-02-12,2794,1,Low Value - Dormant,['GWDD'],['UT'],pre_shopify
+sales@frontierranchtack.com,sales@frontierranchtack.com,sales@frontierranchtack.com,1,699.0,1,699.0,2018-07-02,2018-07-02,2654,1,Low Value - Dormant,['GWDD'],['NV'],pre_shopify
+sigibentham@hotmail.com,sigibentham@hotmail.com,sigibentham@hotmail.com,1,699.0,1,699.0,2014-10-19,2014-10-19,4006,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+etienne.grignon@gmail.com,etienne.grignon@gmail.com,etienne.grignon@gmail.com,1,699.0,1,699.0,2018-11-02,2018-11-02,2531,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+paypal@inkbear.com,paypal@inkbear.com,paypal@inkbear.com,1,699.0,1,699.0,2018-03-19,2018-03-19,2759,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+christophorus59@yahoo.com,christophorus59@yahoo.com,christophorus59@yahoo.com,1,699.0,1,699.0,2019-07-10,2019-07-10,2281,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+hhardieh@gmail.com,hhardieh@gmail.com,hhardieh@gmail.com,1,699.0,1,699.0,2019-07-21,2019-07-21,2270,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+jconk1965@hotmail.com,jconk1965@hotmail.com,jconk1965@hotmail.com,1,699.0,1,699.0,2016-11-30,2016-11-30,3233,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+garryjday@aol.com,garryjday@aol.com,garryjday@aol.com,1,699.0,1,699.0,2015-05-26,2015-05-26,3787,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+krowan10@mchsi.com,krowan10@mchsi.com,krowan10@mchsi.com,1,699.0,1,699.0,2015-06-13,2015-06-13,3769,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+dwarnerkent@gmail.com,dwarnerkent@gmail.com,dwarnerkent@gmail.com,1,699.0,1,699.0,2017-02-13,2017-02-13,3158,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+eddiesapien@yahoo.com,eddiesapien@yahoo.com,eddiesapien@yahoo.com,1,699.0,1,699.0,2015-01-05,2015-01-05,3928,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+pamclark@obispo.com,pamclark@obispo.com,pamclark@obispo.com,1,699.0,1,699.0,2015-09-17,2015-09-17,3673,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+t.edwards@vedwards.com,t.edwards@vedwards.com,t.edwards@vedwards.com,1,699.0,1,699.0,2018-05-23,2018-05-23,2694,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jjjgasjjj@yahoo.com,jjjgasjjj@yahoo.com,jjjgasjjj@yahoo.com,1,699.0,1,699.0,2018-11-04,2018-11-04,2529,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+billwilsonwater@gmail.com,billwilsonwater@gmail.com,billwilsonwater@gmail.com,1,699.0,1,699.0,2020-08-17,2020-08-17,1877,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+ramlah.nehring@gmail.com ,ramlah.nehring@gmail.com ,ramlah.nehring@gmail.com ,1,699.0,1,699.0,2018-11-29,2018-11-29,2504,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+cgaidano@yahoo.com,cgaidano@yahoo.com,cgaidano@yahoo.com,1,699.0,1,699.0,2020-04-30,2020-04-30,1986,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tuckergorman@gmail.com,tuckergorman@gmail.com,tuckergorman@gmail.com,1,699.0,1,699.0,2020-04-15,2020-04-15,2001,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+frank@brillianthomes.com,frank@brillianthomes.com,frank@brillianthomes.com,1,699.0,1,699.0,2020-03-04,2020-03-04,2043,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sliu_6@yahoo.com,sliu_6@yahoo.com,sliu_6@yahoo.com,1,699.0,1,699.0,2020-02-21,2020-02-21,2055,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+supermarioplumbing@yahoo.com,supermarioplumbing@yahoo.com,supermarioplumbing@yahoo.com,1,699.0,1,699.0,2021-01-03,2021-01-03,1738,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bigericmoll@gmail.com,bigericmoll@gmail.com,bigericmoll@gmail.com,1,699.0,1,699.0,2016-10-11,2016-10-11,3283,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+betsykehoe@me.com,betsykehoe@me.com,betsykehoe@me.com,1,699.0,1,699.0,2016-09-07,2016-09-07,3317,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+frankviola3@gmail.com,frankviola3@gmail.com,frankviola3@gmail.com,1,699.0,1,699.0,2017-06-21,2017-06-21,3030,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+stevelarow@gmail.com,stevelarow@gmail.com,stevelarow@gmail.com,1,699.0,1,699.0,2017-06-06,2017-06-06,3045,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+BULENT@FASTMAIL.COM,BULENT@FASTMAIL.COM,BULENT@FASTMAIL.COM,1,699.0,1,699.0,2017-05-10,2017-05-10,3072,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+ahmartin@charter.net,ahmartin@charter.net,ahmartin@charter.net,1,699.0,1,699.0,2017-03-28,2017-03-28,3115,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tom@hometek.org,tom@hometek.org,tom@hometek.org,1,699.0,1,699.0,2017-03-03,2017-03-03,3140,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+saul.carrillo@aol.com,saul.carrillo@aol.com,saul.carrillo@aol.com,1,699.0,1,699.0,2017-02-28,2017-02-28,3143,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jdlinc@sbcglobal.net,jdlinc@sbcglobal.net,jdlinc@sbcglobal.net,1,699.0,1,699.0,2014-11-10,2014-11-10,3984,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+chicagobill77@gmail.com,chicagobill77@gmail.com,chicagobill77@gmail.com,1,699.0,1,699.0,2017-12-01,2017-12-01,2867,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+david-palafox@att.net ,david-palafox@att.net ,david-palafox@att.net ,1,699.0,1,699.0,2017-11-05,2017-11-05,2893,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+peter.f.hamilton@gmail.com ,peter.f.hamilton@gmail.com ,peter.f.hamilton@gmail.com ,1,699.0,1,699.0,2017-10-29,2017-10-29,2900,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+lckoptn4@gmail.com ,lckoptn4@gmail.com ,lckoptn4@gmail.com ,1,699.0,1,699.0,2017-10-17,2017-10-17,2912,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+production.manager@dpexclusive.com,production.manager@dpexclusive.com,production.manager@dpexclusive.com,1,699.0,1,699.0,2018-12-26,2018-12-26,2477,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+costelow@att.net,costelow@att.net,costelow@att.net,1,699.0,1,699.0,2013-12-02,2013-12-02,4327,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+greeneptg@gmail.com,greeneptg@gmail.com,greeneptg@gmail.com,1,699.0,1,699.0,2020-08-23,2020-08-23,1871,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+adbiddle10@aol.com,adbiddle10@aol.com,adbiddle10@aol.com,1,699.0,1,699.0,2020-07-28,2020-07-28,1897,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+ronleo1@swbell.net ,ronleo1@swbell.net ,ronleo1@swbell.net ,1,699.0,1,699.0,2017-12-02,2017-12-02,2866,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+rasadevi@verizon.net ,rasadevi@verizon.net ,rasadevi@verizon.net ,1,699.0,1,699.0,2017-12-08,2017-12-08,2860,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+dj_fischer@yahoo.com ,dj_fischer@yahoo.com ,dj_fischer@yahoo.com ,1,699.0,1,699.0,2019-04-24,2019-04-24,2358,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+calktm3@gmail.com,calktm3@gmail.com,calktm3@gmail.com,1,699.0,1,699.0,2017-06-05,2017-06-05,3046,1,Low Value - Dormant,['GWDD'],['GA'],pre_shopify
+bronson53w@gmail.com,bronson53w@gmail.com,bronson53w@gmail.com,1,699.0,1,699.0,2016-05-12,2016-05-12,3435,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+info@nextlevelrealty.com,info@nextlevelrealty.com,info@nextlevelrealty.com,1,699.0,1,699.0,2016-07-24,2016-07-24,3362,1,Low Value - Dormant,['GWDD'],['MA'],pre_shopify
+tristan@candw.ky,tristan@candw.ky,tristan@candw.ky,1,699.0,1,699.0,2016-11-17,2016-11-17,3246,1,Low Value - Dormant,['GWDD'],['FL'],pre_shopify
+FMINORMAJOR@AOL.COM,FMINORMAJOR@AOL.COM,FMINORMAJOR@AOL.COM,1,699.0,1,699.0,2016-12-04,2016-12-04,3229,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+msample@hwconstruction.com,msample@hwconstruction.com,msample@hwconstruction.com,1,699.0,1,699.0,2015-01-21,2015-01-21,3912,1,Low Value - Dormant,['GWDD'],['MD'],pre_shopify
+Priestley Louison,Priestley Louison,Priestley Louison,1,699.0,1,699.0,2015-03-03,2015-03-03,3871,1,Low Value - Dormant,['GWDD'],['GA'],pre_shopify
+riganaga@cableone.net,riganaga@cableone.net,riganaga@cableone.net,1,699.0,1,699.0,2015-05-04,2015-05-04,3809,1,Low Value - Dormant,['GWDD'],['ID'],pre_shopify
+dotsmall10@gmail.com,dotsmall10@gmail.com,dotsmall10@gmail.com,1,699.0,1,699.0,2015-05-12,2015-05-12,3801,1,Low Value - Dormant,['GWDD'],['ID'],pre_shopify
+mcnepharm@aol.com,mcnepharm@aol.com,mcnepharm@aol.com,1,699.0,1,699.0,2015-06-09,2015-06-09,3773,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+chriscalcotte@hotmail.com,chriscalcotte@hotmail.com,chriscalcotte@hotmail.com,1,699.0,1,699.0,2019-02-28,2019-02-28,2413,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+scad.edu,scad.edu,scad.edu,1,699.0,1,699.0,2014-03-14,2014-03-14,4225,1,Low Value - Dormant,['GWDD'],['GA'],pre_shopify
+nuthut1@bellsouth.net,nuthut1@bellsouth.net,nuthut1@bellsouth.net,1,699.0,1,699.0,2014-04-11,2014-04-11,4197,1,Low Value - Dormant,['GWDD'],['AL'],pre_shopify
+craig@lindsayconstructiontahoe.com,craig@lindsayconstructiontahoe.com,craig@lindsayconstructiontahoe.com,1,699.0,1,699.0,2019-02-04,2019-02-04,2437,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jklass@capmec.com,jklass@capmec.com,jklass@capmec.com,1,699.0,1,699.0,2014-12-19,2014-12-19,3945,1,Low Value - Dormant,['GWDD'],['VA'],pre_shopify
+chuck@lu25.org,chuck@lu25.org,chuck@lu25.org,1,699.0,1,699.0,2013-11-20,2013-11-20,4339,1,Low Value - Dormant,['GWDD'],['IL'],pre_shopify
+bayareadentfree@gmail.com,bayareadentfree@gmail.com,bayareadentfree@gmail.com,1,699.0,1,699.0,2014-01-27,2014-01-27,4271,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sjwhyte@gmail.com,sjwhyte@gmail.com,sjwhyte@gmail.com,1,699.0,1,699.0,2017-12-07,2017-12-07,2861,1,Low Value - Dormant,['GWDD'],['CO'],pre_shopify
+stanr@bertschi.org,stanr@bertschi.org,stanr@bertschi.org,1,699.0,1,699.0,2018-11-22,2018-11-22,2511,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+codegreendev@gmail.com,codegreendev@gmail.com,codegreendev@gmail.com,1,699.0,1,699.0,2019-07-10,2019-07-10,2281,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+princessmonse.v@gmail.com ,princessmonse.v@gmail.com ,princessmonse.v@gmail.com ,1,699.0,1,699.0,2018-05-24,2018-05-24,2693,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+ndraju@gmail.com,ndraju@gmail.com,ndraju@gmail.com,1,699.0,1,699.0,2019-08-14,2019-08-14,2246,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tina.moore@ccc.ca.gov,tina.moore@ccc.ca.gov,tina.moore@ccc.ca.gov,1,699.0,1,699.0,2016-07-06,2016-07-06,3380,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+stephallingham@yahoo.ca,stephallingham@yahoo.ca,stephallingham@yahoo.ca,1,699.0,1,699.0,2016-02-22,2016-02-22,3515,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+calico@kookz.net,calico@kookz.net,calico@kookz.net,1,699.0,1,699.0,2016-06-06,2016-06-06,3410,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+letchkat@hotmail.com,letchkat@hotmail.com,letchkat@hotmail.com,1,699.0,1,699.0,2015-05-06,2015-05-06,3807,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+kent.winchester@gmail.com,kent.winchester@gmail.com,kent.winchester@gmail.com,1,699.0,1,699.0,2015-07-07,2015-07-07,3745,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+pmpdenver@gmail.com,pmpdenver@gmail.com,pmpdenver@gmail.com,1,699.0,1,699.0,2015-08-19,2015-08-19,3702,1,Low Value - Dormant,['GWDD'],['CO'],pre_shopify
+cactus5921@hotmail.com,cactus5921@hotmail.com,cactus5921@hotmail.com,1,699.0,1,699.0,2014-04-21,2014-04-21,4187,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+melonie@vancouveryogacenter.com,melonie@vancouveryogacenter.com,melonie@vancouveryogacenter.com,1,699.0,1,699.0,2020-03-03,2020-03-03,2044,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+igamu@comcast.net,igamu@comcast.net,igamu@comcast.net,1,699.0,1,699.0,2020-04-29,2020-04-29,1987,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+dennisfking@gmail.com,dennisfking@gmail.com,dennisfking@gmail.com,1,699.0,1,699.0,2020-05-14,2020-05-14,1972,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+mmutzel@gmail.com,mmutzel@gmail.com,mmutzel@gmail.com,1,699.0,1,699.0,2020-07-12,2020-07-12,1913,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+hjkrans@gmail.com,hjkrans@gmail.com,hjkrans@gmail.com,1,699.0,1,699.0,2020-10-09,2020-10-09,1824,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+jarret.griesemer@gmail.com,jarret.griesemer@gmail.com,jarret.griesemer@gmail.com,1,699.0,1,699.0,2020-10-16,2020-10-16,1817,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+randy.robertson@sbcglobal.net,randy.robertson@sbcglobal.net,randy.robertson@sbcglobal.net,1,699.0,1,699.0,2019-02-08,2019-02-08,2433,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+ssgplumbing@gmail.com,ssgplumbing@gmail.com,ssgplumbing@gmail.com,1,699.0,1,699.0,2018-02-15,2018-02-15,2791,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+timnorian@gmail.com,timnorian@gmail.com,timnorian@gmail.com,1,699.0,1,699.0,2018-03-12,2018-03-12,2766,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+pd514mt@me.com,pd514mt@me.com,pd514mt@me.com,1,699.0,1,699.0,2018-03-17,2018-03-17,2761,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+arturo@amax.com.mx ,arturo@amax.com.mx ,arturo@amax.com.mx ,1,699.0,1,699.0,2018-04-29,2018-04-29,2718,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+smijarez@hotmail.com,smijarez@hotmail.com,smijarez@hotmail.com,1,699.0,1,699.0,2020-06-11,2020-06-11,1944,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+cfarrer@stewart.com,cfarrer@stewart.com,cfarrer@stewart.com,1,699.0,1,699.0,2020-08-13,2020-08-13,1881,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Scottm@meracon.com,Scottm@meracon.com,Scottm@meracon.com,1,699.0,1,699.0,2014-02-04,2014-02-04,4263,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+cmaverlinden@gmail.com,cmaverlinden@gmail.com,cmaverlinden@gmail.com,1,699.0,1,699.0,2020-07-31,2020-07-31,1894,1,Low Value - Dormant,['GWDD'],['MD'],pre_shopify
+jrconstruction_3@hotmail.com,jrconstruction_3@hotmail.com,jrconstruction_3@hotmail.com,1,699.0,1,699.0,2019-05-02,2019-05-02,2350,1,Low Value - Dormant,['GWDD'],['MI'],pre_shopify
+djill1961@yahoo.com,djill1961@yahoo.com,djill1961@yahoo.com,1,699.0,1,699.0,2019-04-29,2019-04-29,2353,1,Low Value - Dormant,['GWDD'],['VT'],pre_shopify
+kimmitros@yahoo.com,kimmitros@yahoo.com,kimmitros@yahoo.com,1,699.0,1,699.0,2019-04-20,2019-04-20,2362,1,Low Value - Dormant,['GWDD'],['NJ'],pre_shopify
+elizabeth.deangelo@gmail.com,elizabeth.deangelo@gmail.com,elizabeth.deangelo@gmail.com,1,699.0,1,699.0,2019-02-01,2019-02-01,2440,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+bbatt17@twc.com,bbatt17@twc.com,bbatt17@twc.com,1,699.0,1,699.0,2020-11-21,2020-11-21,1781,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+tuba91@comcast.net,tuba91@comcast.net,tuba91@comcast.net,1,699.0,1,699.0,2020-10-20,2020-10-20,1813,1,Low Value - Dormant,['GWDD'],['IL'],pre_shopify
+oversized.espressobean@gmail.com,oversized.espressobean@gmail.com,oversized.espressobean@gmail.com,1,699.0,1,699.0,2020-09-15,2020-09-15,1848,1,Low Value - Dormant,['GWDD'],['VA'],pre_shopify
+Dagamble6698@comcast.net,Dagamble6698@comcast.net,Dagamble6698@comcast.net,1,699.0,1,699.0,2020-08-15,2020-08-15,1879,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+ron_e_baker@yahoo.com,ron_e_baker@yahoo.com,ron_e_baker@yahoo.com,1,699.0,1,699.0,2020-08-14,2020-08-14,1880,1,Low Value - Dormant,['GWDD'],['NC'],pre_shopify
+jamieh143@yahoo.com,jamieh143@yahoo.com,jamieh143@yahoo.com,1,699.0,1,699.0,2020-05-07,2020-05-07,1979,1,Low Value - Dormant,['GWDD'],['OH'],pre_shopify
+chuangsu@pacbell.net,chuangsu@pacbell.net,chuangsu@pacbell.net,1,699.0,1,699.0,2020-09-06,2020-09-06,1857,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bestpricedealz@gmail.com,bestpricedealz@gmail.com,bestpricedealz@gmail.com,1,699.0,1,699.0,2020-03-24,2020-03-24,2023,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+bennytse@sungreensystems.com,bennytse@sungreensystems.com,bennytse@sungreensystems.com,1,699.0,1,699.0,2014-09-25,2014-09-25,4030,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mcdurney@gmail.com,mcdurney@gmail.com,mcdurney@gmail.com,1,699.0,1,699.0,2014-09-24,2014-09-24,4031,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mtlaff80@yahoo.com,mtlaff80@yahoo.com,mtlaff80@yahoo.com,1,699.0,1,699.0,2014-08-22,2014-08-22,4064,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Timwood79@yahoo.com,Timwood79@yahoo.com,Timwood79@yahoo.com,1,699.0,1,699.0,2014-08-05,2014-08-05,4081,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+a.foletta@comcast.net,a.foletta@comcast.net,a.foletta@comcast.net,1,699.0,1,699.0,2014-07-11,2014-07-11,4106,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+lederhosen1@live.com,lederhosen1@live.com,lederhosen1@live.com,1,699.0,1,699.0,2014-06-19,2014-06-19,4128,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+brent@sabbatiniplumbing.com,brent@sabbatiniplumbing.com,brent@sabbatiniplumbing.com,1,699.0,1,699.0,2014-06-10,2014-06-10,4137,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+suzbaker99@me.com,suzbaker99@me.com,suzbaker99@me.com,1,699.0,1,699.0,2014-06-09,2014-06-09,4138,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+blawrence@blvisuals.com,blawrence@blvisuals.com,blawrence@blvisuals.com,1,699.0,1,699.0,2019-05-19,2019-05-19,2333,1,Low Value - Dormant,['GWDD'],['MI'],pre_shopify
+happyacrespaducah@gmail.com,happyacrespaducah@gmail.com,happyacrespaducah@gmail.com,1,699.0,1,699.0,2019-07-28,2019-07-28,2263,1,Low Value - Dormant,['GWDD'],['KY'],pre_shopify
+todd@loverskeyadventures.com,todd@loverskeyadventures.com,todd@loverskeyadventures.com,1,699.0,1,699.0,2019-08-25,2019-08-25,2235,1,Low Value - Dormant,['GWDD'],['FL'],pre_shopify
+victorspoils447@gmail.com,victorspoils447@gmail.com,victorspoils447@gmail.com,1,699.0,1,699.0,2019-10-13,2019-10-13,2186,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+Mint Tiny Homes,Mint Tiny Homes,Mint Tiny Homes,1,699.0,1,699.0,2019-05-28,2019-05-28,2324,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+gammin101@yahoo.ca,gammin101@yahoo.ca,gammin101@yahoo.ca,1,699.0,1,699.0,2020-03-08,2020-03-08,2039,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+blair@blairburke.net ,blair@blairburke.net ,blair@blairburke.net ,1,699.0,1,699.0,2018-06-18,2018-06-18,2668,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+norm@asbex.net,norm@asbex.net,norm@asbex.net,1,699.0,1,699.0,2014-05-26,2014-05-26,4152,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+ctsurfer@gmail.com ,ctsurfer@gmail.com ,ctsurfer@gmail.com ,1,699.0,1,699.0,2018-01-22,2018-01-22,2815,1,Low Value - Dormant,['GWDD'],['HI'],pre_shopify
+russelljfriesen@gmail.com,russelljfriesen@gmail.com,russelljfriesen@gmail.com,1,699.0,1,699.0,2018-05-21,2018-05-21,2696,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+Tiny Living Supply,Tiny Living Supply,Tiny Living Supply,1,699.0,1,699.0,2019-04-03,2019-04-03,2379,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+david@harperandassociates.ca,david@harperandassociates.ca,david@harperandassociates.ca,1,699.0,1,699.0,2020-07-06,2020-07-06,1919,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+lmcmahon@telus.net,lmcmahon@telus.net,lmcmahon@telus.net,1,699.0,1,699.0,2020-06-29,2020-06-29,1926,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+clawmatt87@gmail.com,clawmatt87@gmail.com,clawmatt87@gmail.com,1,699.0,1,699.0,2016-09-15,2016-09-15,3309,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+tony@growbioplastics.co,tony@growbioplastics.co,tony@growbioplastics.co,1,699.0,1,699.0,2017-11-29,2017-11-29,2869,1,Low Value - Dormant,['GWDD'],['TN'],pre_shopify
+beckwithbt@gmail.com ,beckwithbt@gmail.com ,beckwithbt@gmail.com ,1,699.0,1,699.0,2017-11-05,2017-11-05,2893,1,Low Value - Dormant,['GWDD'],['NJ'],pre_shopify
+kaylaallen@mac.com ,kaylaallen@mac.com ,kaylaallen@mac.com ,1,699.0,1,699.0,2018-11-05,2018-11-05,2528,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+Ian@watermanind.com,Ian@watermanind.com,Ian@watermanind.com,1,699.0,1,699.0,2018-08-20,2018-08-20,2605,1,Low Value - Dormant,['GWDD'],['NE'],pre_shopify
+stegen.peter@gmail.com ,stegen.peter@gmail.com ,stegen.peter@gmail.com ,1,699.0,1,699.0,2018-08-07,2018-08-07,2618,1,Low Value - Dormant,['GWDD'],['NE'],pre_shopify
+kpeterson39@comcast.net,kpeterson39@comcast.net,kpeterson39@comcast.net,1,699.0,1,699.0,2018-05-25,2018-05-25,2692,1,Low Value - Dormant,['GWDD'],['CT'],pre_shopify
+bonnee65@yahoo.com,bonnee65@yahoo.com,bonnee65@yahoo.com,1,699.0,1,699.0,2018-05-04,2018-05-04,2713,1,Low Value - Dormant,['GWDD'],['VA'],pre_shopify
+josebrwn@yahoo.com,josebrwn@yahoo.com,josebrwn@yahoo.com,1,699.0,1,699.0,2019-12-18,2019-12-18,2120,1,Low Value - Dormant,['GWDD'],['VA'],pre_shopify
+toby.c.reed@gmail.com,toby.c.reed@gmail.com,toby.c.reed@gmail.com,1,699.0,1,699.0,2019-10-24,2019-10-24,2175,1,Low Value - Dormant,['GWDD'],['MI'],pre_shopify
+standard@jps.net,standard@jps.net,standard@jps.net,1,699.0,1,699.0,2014-05-29,2014-05-29,4149,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+rodgooch1@sbcglobal.net,rodgooch1@sbcglobal.net,rodgooch1@sbcglobal.net,1,699.0,1,699.0,2014-05-28,2014-05-28,4150,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jjlebell@hotmail.com,jjlebell@hotmail.com,jjlebell@hotmail.com,1,699.0,1,699.0,2014-04-23,2014-04-23,4185,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+kelly_michels@yahoo.com,kelly_michels@yahoo.com,kelly_michels@yahoo.com,1,699.0,1,699.0,2015-02-24,2015-02-24,3878,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+fox635@att.net,fox635@att.net,fox635@att.net,1,699.0,1,699.0,2015-01-06,2015-01-06,3927,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+everett.hurst@gmail.com,everett.hurst@gmail.com,everett.hurst@gmail.com,1,699.0,1,699.0,2016-07-31,2016-07-31,3355,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+ramirobahamon@gmail.com,ramirobahamon@gmail.com,ramirobahamon@gmail.com,1,699.0,1,699.0,2016-06-28,2016-06-28,3388,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+wbradfield@gmail.com,wbradfield@gmail.com,wbradfield@gmail.com,1,699.0,1,699.0,2016-06-27,2016-06-27,3389,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dcgallacher@gmail.com,dcgallacher@gmail.com,dcgallacher@gmail.com,1,699.0,1,699.0,2016-05-26,2016-05-26,3421,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+g.elfman@att.net,g.elfman@att.net,g.elfman@att.net,1,699.0,1,699.0,2016-04-19,2016-04-19,3458,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+drburnsed@aol.com,drburnsed@aol.com,drburnsed@aol.com,1,699.0,1,699.0,2016-04-13,2016-04-13,3464,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+cc1570@yahoo.com,cc1570@yahoo.com,cc1570@yahoo.com,1,699.0,1,699.0,2016-03-13,2016-03-13,3495,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+david@upisf.com,david@upisf.com,david@upisf.com,1,699.0,1,699.0,2016-01-15,2016-01-15,3553,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bxkregg@gmail.com,bxkregg@gmail.com,bxkregg@gmail.com,1,699.0,1,699.0,2019-10-23,2019-10-23,2176,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+andreasb13@hotmail.com,andreasb13@hotmail.com,andreasb13@hotmail.com,1,699.0,1,699.0,2019-10-08,2019-10-08,2191,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+madeluna1011@yahoo.com,madeluna1011@yahoo.com,madeluna1011@yahoo.com,1,699.0,1,699.0,2019-06-21,2019-06-21,2300,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sara@commongardencollective.com,sara@commongardencollective.com,sara@commongardencollective.com,1,699.0,1,699.0,2019-06-04,2019-06-04,2317,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+gard500@gmail.com,gard500@gmail.com,gard500@gmail.com,1,699.0,1,699.0,2019-05-23,2019-05-23,2329,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+tampsu@hotmail.com,tampsu@hotmail.com,tampsu@hotmail.com,1,699.0,1,699.0,2020-12-29,2020-12-29,1743,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+marantonio51@hotmail.com,marantonio51@hotmail.com,marantonio51@hotmail.com,1,699.0,1,699.0,2020-11-10,2020-11-10,1792,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+chris.gutridge@gmail.com,chris.gutridge@gmail.com,chris.gutridge@gmail.com,1,699.0,1,699.0,2020-11-13,2020-11-13,1789,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+stavzas@gmail.com,stavzas@gmail.com,stavzas@gmail.com,1,699.0,1,699.0,2020-10-12,2020-10-12,1821,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+m_nick_cool@hotmail.com,m_nick_cool@hotmail.com,m_nick_cool@hotmail.com,1,699.0,1,699.0,2020-09-19,2020-09-19,1844,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+arlene-lee@cox.net,arlene-lee@cox.net,arlene-lee@cox.net,1,699.0,1,699.0,2015-01-07,2015-01-07,3926,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Lavarock@comcast.net,Lavarock@comcast.net,Lavarock@comcast.net,1,699.0,1,699.0,2015-04-02,2015-04-02,3841,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+alan@baymaples.com,alan@baymaples.com,alan@baymaples.com,1,699.0,1,699.0,2014-04-22,2014-04-22,4186,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+woodhorse@comcast.net,woodhorse@comcast.net,woodhorse@comcast.net,1,699.0,1,699.0,2015-04-08,2015-04-08,3835,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+miriamhoff@aol.com,miriamhoff@aol.com,miriamhoff@aol.com,1,699.0,1,699.0,2014-04-21,2014-04-21,4187,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+joshua.krafchin@gmail.com,joshua.krafchin@gmail.com,joshua.krafchin@gmail.com,1,699.0,1,699.0,2015-09-21,2015-09-21,3669,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+scolsen@att.net,scolsen@att.net,scolsen@att.net,1,699.0,1,699.0,2015-08-31,2015-08-31,3690,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mpjalapeno@gmail.com,mpjalapeno@gmail.com,mpjalapeno@gmail.com,1,699.0,1,699.0,2015-08-18,2015-08-18,3703,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jcmjrt@yahoo.com,jcmjrt@yahoo.com,jcmjrt@yahoo.com,1,699.0,1,699.0,2015-08-17,2015-08-17,3704,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+gpmarchal@sbcglobal.net,gpmarchal@sbcglobal.net,gpmarchal@sbcglobal.net,1,699.0,1,699.0,2015-08-03,2015-08-03,3718,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+info@allterraenv.com,info@allterraenv.com,info@allterraenv.com,1,699.0,1,699.0,2015-07-17,2015-07-17,3735,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mcgeough.barry@gmail.com,mcgeough.barry@gmail.com,mcgeough.barry@gmail.com,1,699.0,1,699.0,2015-07-04,2015-07-04,3748,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+maberry50@yahoo.com,maberry50@yahoo.com,maberry50@yahoo.com,1,699.0,1,699.0,2015-07-01,2015-07-01,3751,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+eric-nunez@live.com,eric-nunez@live.com,eric-nunez@live.com,1,699.0,1,699.0,2015-06-20,2015-06-20,3762,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Jamesstuartduffy@gmail.com,Jamesstuartduffy@gmail.com,Jamesstuartduffy@gmail.com,1,699.0,1,699.0,2015-06-08,2015-06-08,3774,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bulent997@gmail.com,bulent997@gmail.com,bulent997@gmail.com,1,699.0,1,699.0,2015-05-13,2015-05-13,3800,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Marks910.ms@gmail.com,Marks910.ms@gmail.com,Marks910.ms@gmail.com,1,699.0,1,699.0,2015-05-13,2015-05-13,3800,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+gnoori@yahoo.com,gnoori@yahoo.com,gnoori@yahoo.com,1,699.0,1,699.0,2015-05-08,2015-05-08,3805,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+srb_ranchworks@yahoo.com,srb_ranchworks@yahoo.com,srb_ranchworks@yahoo.com,1,699.0,1,699.0,2015-05-07,2015-05-07,3806,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+fred@fredballerini.com,fred@fredballerini.com,fred@fredballerini.com,1,699.0,1,699.0,2015-04-29,2015-04-29,3814,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+leonard.ramirez@yahoo.com,leonard.ramirez@yahoo.com,leonard.ramirez@yahoo.com,1,699.0,1,699.0,2015-04-24,2015-04-24,3819,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+shultzjk@msn.com,shultzjk@msn.com,shultzjk@msn.com,1,699.0,1,699.0,2015-04-20,2015-04-20,3823,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dgward56@gmail.com,dgward56@gmail.com,dgward56@gmail.com,1,699.0,1,699.0,2015-04-09,2015-04-09,3834,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+wood.baja@gmail.com,wood.baja@gmail.com,wood.baja@gmail.com,1,699.0,1,699.0,2014-01-27,2014-01-27,4271,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+andreacullinen@gmail.com,andreacullinen@gmail.com,andreacullinen@gmail.com,1,649.0,1,649.0,2011-06-15,2011-06-15,5228,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+timhuang50@gmail.com,timhuang50@gmail.com,timhuang50@gmail.com,1,649.0,1,649.0,2011-07-06,2011-07-06,5207,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+Chere Johnson,Chere Johnson,Chere Johnson,1,649.0,1,649.0,2012-04-23,2012-04-23,4915,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+flanigan.debbie@epa.gov,flanigan.debbie@epa.gov,flanigan.debbie@epa.gov,1,649.0,1,649.0,2013-09-19,2013-09-19,4401,1,Low Value - Dormant,['GWDD'],['OH'],pre_shopify
+contact@updatesmallbusiness.com,contact@updatesmallbusiness.com,contact@updatesmallbusiness.com,1,649.0,1,649.0,2013-03-24,2013-03-24,4580,1,Low Value - Dormant,['GWDD + Irrigray'],['FL'],pre_shopify
+pietrina333@gmail.com,pietrina333@gmail.com,pietrina333@gmail.com,1,649.0,1,649.0,2013-01-25,2013-01-25,4638,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+david.m.lantz@gmail.com,david.m.lantz@gmail.com,david.m.lantz@gmail.com,1,649.0,1,649.0,2011-10-19,2011-10-19,5102,1,Low Value - Dormant,['GWDD'],['MA'],pre_shopify
+jbazf@suddenlink.net,jbazf@suddenlink.net,jbazf@suddenlink.net,1,649.0,1,649.0,2011-10-08,2011-10-08,5113,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+sylvie.gr@gmail.com,sylvie.gr@gmail.com,sylvie.gr@gmail.com,1,649.0,1,649.0,2011-09-30,2011-09-30,5121,1,Low Value - Dormant,['GWDD'],['FL'],pre_shopify
+texascollier@me.com,texascollier@me.com,texascollier@me.com,1,649.0,1,649.0,2011-08-30,2011-08-30,5152,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+Ribco Supply,Ribco Supply,Ribco Supply,1,649.0,1,649.0,2011-04-13,2011-04-13,5291,1,Low Value - Dormant,['GWDD'],['MA'],pre_shopify
+michele.jones@hydronicsystems.com,michele.jones@hydronicsystems.com,michele.jones@hydronicsystems.com,1,649.0,1,649.0,2012-12-21,2012-12-21,4673,1,Low Value - Dormant,['GWDD'],['OK'],pre_shopify
+kelt1949@yahoo.com,kelt1949@yahoo.com,kelt1949@yahoo.com,1,649.0,1,649.0,2012-12-12,2012-12-12,4682,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+toddvitaz@gmail.com,toddvitaz@gmail.com,toddvitaz@gmail.com,1,649.0,1,649.0,2012-07-13,2012-07-13,4834,1,Low Value - Dormant,['GWDD + Irrigray'],['GA'],pre_shopify
+kstack@twcny.rr.com,kstack@twcny.rr.com,kstack@twcny.rr.com,1,649.0,1,649.0,2012-04-16,2012-04-16,4922,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+stevenlipson@comcast.net,stevenlipson@comcast.net,stevenlipson@comcast.net,1,649.0,1,649.0,2012-11-30,2012-11-30,4694,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sandyrogen@mail.com,sandyrogen@mail.com,sandyrogen@mail.com,1,649.0,1,649.0,2013-08-22,2013-08-22,4429,1,Low Value - Dormant,['GWDD + Irrigray'],['WA'],pre_shopify
+jmasalmon@yahoo.com,jmasalmon@yahoo.com,jmasalmon@yahoo.com,1,649.0,1,649.0,2013-05-09,2013-05-09,4534,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+Eric A Bernard,Eric A Bernard,Eric A Bernard,1,649.0,1,649.0,2013-01-05,2013-01-05,4658,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+Finn Plumbing SLO,Finn Plumbing SLO,Finn Plumbing SLO,1,649.0,1,649.0,2012-11-07,2012-11-07,4717,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+gboyle05@gmail.com,gboyle05@gmail.com,gboyle05@gmail.com,1,649.0,1,649.0,2013-01-25,2013-01-25,4638,1,Low Value - Dormant,['GWDD + Irrigray'],['Canada'],pre_shopify
+gilberry@comcast.net,gilberry@comcast.net,gilberry@comcast.net,1,649.0,1,649.0,2012-02-22,2012-02-22,4976,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+becky@methodhomes.net,becky@methodhomes.net,becky@methodhomes.net,1,649.0,1,649.0,2013-04-29,2013-04-29,4544,1,Low Value - Dormant,['GWDD'],['WA'],pre_shopify
+haushage@communitynet.org,haushage@communitynet.org,haushage@communitynet.org,1,649.0,1,649.0,2012-12-11,2012-12-11,4683,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+evan@hcnaz.com,evan@hcnaz.com,evan@hcnaz.com,1,649.0,1,649.0,2013-10-30,2013-10-30,4360,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+Scott Fitch,Scott Fitch,Scott Fitch,1,649.0,1,649.0,2013-02-28,2013-02-28,4604,1,Low Value - Dormant,['GWDD'],['OR'],pre_shopify
+sales@pacificpurification.com,sales@pacificpurification.com,sales@pacificpurification.com,1,649.0,1,649.0,2013-11-26,2013-11-26,4333,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+timteach@pacbell.net,timteach@pacbell.net,timteach@pacbell.net,1,649.0,1,649.0,2012-09-24,2012-09-24,4761,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+brandontjenner@mac.com,brandontjenner@mac.com,brandontjenner@mac.com,1,649.0,1,649.0,2013-09-24,2013-09-24,4396,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+dontol@verizon.net,dontol@verizon.net,dontol@verizon.net,1,649.0,1,649.0,2011-08-31,2011-08-31,5151,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jtmdev@sbcglobal.net,jtmdev@sbcglobal.net,jtmdev@sbcglobal.net,1,649.0,1,649.0,2012-10-06,2012-10-06,4749,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+imoreno@probise.com,imoreno@probise.com,imoreno@probise.com,1,649.0,1,649.0,2013-03-12,2013-03-12,4592,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+tom@doubletaps.net,tom@doubletaps.net,tom@doubletaps.net,1,649.0,1,649.0,2013-03-13,2013-03-13,4591,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+rduquet@harbourltd.com,rduquet@harbourltd.com,rduquet@harbourltd.com,1,649.0,1,649.0,2013-05-15,2013-05-15,4528,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+swlsr3b@gmail.com,swlsr3b@gmail.com,swlsr3b@gmail.com,1,649.0,1,649.0,2012-04-16,2012-04-16,4922,1,Low Value - Dormant,['GWDD'],['HI'],pre_shopify
+ski2ways@gmail.com,ski2ways@gmail.com,ski2ways@gmail.com,1,649.0,1,649.0,2013-07-17,2013-07-17,4465,1,Low Value - Dormant,['GWDD + Irrigray'],['CA'],pre_shopify
+easyed@post.com,easyed@post.com,easyed@post.com,1,649.0,1,649.0,2013-06-05,2013-06-05,4507,1,Low Value - Dormant,['GWDD + Irrigray'],['CA'],pre_shopify
+vix.steele@gmail.com,vix.steele@gmail.com,vix.steele@gmail.com,1,649.0,1,649.0,2011-09-16,2011-09-16,5135,1,Low Value - Dormant,['GWDD + Irrigray'],['CA'],pre_shopify
+lisa@lisakeith.com,lisa@lisakeith.com,lisa@lisakeith.com,1,649.0,1,649.0,2011-06-21,2011-06-21,5222,1,Low Value - Dormant,['GWDD + Irrigray'],['CA'],pre_shopify
+ok.kt@hotmail.com,ok.kt@hotmail.com,ok.kt@hotmail.com,1,649.0,1,649.0,2012-12-26,2012-12-26,4668,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jagraf_x@att.net,jagraf_x@att.net,jagraf_x@att.net,1,649.0,1,649.0,2011-08-08,2011-08-08,5174,1,Low Value - Dormant,['GWDD + Irrigray'],['CA'],pre_shopify
+monayana@hotmail.com,monayana@hotmail.com,monayana@hotmail.com,1,649.0,1,649.0,2013-04-30,2013-04-30,4543,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sanford@sanford-ponder.com,sanford@sanford-ponder.com,sanford@sanford-ponder.com,1,649.0,1,649.0,2012-03-31,2012-03-31,4938,1,Low Value - Dormant,['GWDD + Irrigray'],['CA'],pre_shopify
+michaeljprucha@sbcglobal.net,michaeljprucha@sbcglobal.net,michaeljprucha@sbcglobal.net,1,649.0,1,649.0,2011-10-01,2011-10-01,5120,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+naneedham@gmail.com,naneedham@gmail.com,naneedham@gmail.com,1,649.0,1,649.0,2013-04-29,2013-04-29,4544,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+megaweb@comcast.net,megaweb@comcast.net,megaweb@comcast.net,1,649.0,1,649.0,2013-06-14,2013-06-14,4498,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+liamwelham@ymail.com,liamwelham@ymail.com,liamwelham@ymail.com,1,649.0,1,649.0,2013-05-18,2013-05-18,4525,1,Low Value - Dormant,['GWDD + Irrigray'],['UK'],pre_shopify
+samherb158@gmail.com,samherb158@gmail.com,samherb158@gmail.com,1,649.0,1,649.0,2012-05-25,2012-05-25,4883,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+hakim@svminerals.com,hakim@svminerals.com,hakim@svminerals.com,1,649.0,1,649.0,2012-08-16,2012-08-16,4800,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jgviolante@comcast.net,jgviolante@comcast.net,jgviolante@comcast.net,1,629.0,1,629.0,2016-02-01,2016-02-01,3536,1,Low Value - Dormant,['GWDD'],['NJ'],pre_shopify
+joshua.larson100@gmail.com,joshua.larson100@gmail.com,joshua.larson100@gmail.com,1,629.0,1,629.0,2015-11-29,2015-11-29,3600,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+taylorjust@gmail.com,taylorjust@gmail.com,taylorjust@gmail.com,1,599.0,1,599.0,2017-03-06,2017-03-06,3137,1,Low Value - Dormant,['GWDD'],['Canada'],pre_shopify
+garcia_aron76@yahoo.com,garcia_aron76@yahoo.com,garcia_aron76@yahoo.com,1,599.0,1,599.0,2019-08-29,2019-08-29,2231,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+jesse.lammi@nextdoorhousing.com,jesse.lammi@nextdoorhousing.com,jesse.lammi@nextdoorhousing.com,1,599.0,1,599.0,2015-05-14,2015-05-14,3799,1,Low Value - Dormant,['GWDD'],['MN'],pre_shopify
+PR,PR,PR,1,599.0,1,599.0,2010-07-09,2010-07-09,5569,1,Low Value - Dormant,['GWDD'],['AZ'],pre_shopify
+bsilk@socal.rr.com,bsilk@socal.rr.com,bsilk@socal.rr.com,1,599.0,1,599.0,2012-02-24,2012-02-24,4974,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+abelstouch@aol.com,abelstouch@aol.com,abelstouch@aol.com,1,599.0,1,599.0,2017-10-01,2017-10-01,2928,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Tradeshow,Tradeshow,Tradeshow,2,598.0,2,299.0,2017-10-29,2017-10-29,2900,1,Low Value - Dormant,['Gravity'],['MD'],pre_shopify
+tleahy@twcny.rr.com,tleahy@twcny.rr.com,tleahy@twcny.rr.com,1,589.0,1,589.0,2017-04-24,2017-04-24,3088,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+josh@ecohistorical.com,josh@ecohistorical.com,josh@ecohistorical.com,1,589.0,1,589.0,2017-03-24,2017-03-24,3119,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Dreamscapesantabarbara@gmail.com,Dreamscapesantabarbara@gmail.com,Dreamscapesantabarbara@gmail.com,1,589.0,1,589.0,2016-06-27,2016-06-27,3389,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+contact@greenearthmaterials.com,contact@greenearthmaterials.com,contact@greenearthmaterials.com,1,589.0,1,589.0,2021-07-15,2021-07-15,1545,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+accounting@dpexclusive.com,accounting@dpexclusive.com,accounting@dpexclusive.com,1,589.0,1,589.0,2020-03-17,2020-03-17,2030,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Small Homes Solar,Small Homes Solar,Small Homes Solar,1,589.0,1,589.0,2021-08-10,2021-08-10,1519,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+robinsonplumbing@sbcglobal.net,robinsonplumbing@sbcglobal.net,robinsonplumbing@sbcglobal.net,1,579.0,1,579.0,2015-06-01,2015-06-01,3781,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Water Sprout,Water Sprout,Water Sprout,1,579.0,1,579.0,2014-11-20,2014-11-20,3974,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+voji_oba@yahoo.com,voji_oba@yahoo.com,voji_oba@yahoo.com,1,579.0,1,579.0,2014-10-22,2014-10-22,4003,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+rod@absoluteplumbinganddrain.com,rod@absoluteplumbinganddrain.com,rod@absoluteplumbinganddrain.com,1,579.0,1,579.0,2014-05-13,2014-05-13,4165,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Bayshore Plumbers,Bayshore Plumbers,Bayshore Plumbers,1,579.0,1,579.0,2014-08-07,2014-08-07,4079,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sales@duncanplumbing.us,sales@duncanplumbing.us,sales@duncanplumbing.us,1,579.0,1,579.0,2014-07-29,2014-07-29,4088,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+john@jmcassoc.com,john@jmcassoc.com,john@jmcassoc.com,1,579.0,1,579.0,2015-10-15,2015-10-15,3645,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Jon Ramsey,Jon Ramsey,Jon Ramsey,1,579.0,1,579.0,2014-02-26,2014-02-26,4241,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Loves Gardens,Loves Gardens,Loves Gardens,1,579.0,1,579.0,2015-02-19,2015-02-19,3883,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+waterwisehomes@gmail.com,waterwisehomes@gmail.com,waterwisehomes@gmail.com,1,579.0,1,579.0,2015-09-17,2015-09-17,3673,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+terronesplumbing@yahoo.com,terronesplumbing@yahoo.com,terronesplumbing@yahoo.com,1,579.0,1,579.0,2015-04-28,2015-04-28,3815,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Ronen Simonpur / Yaniv Shmelzer,Ronen Simonpur / Yaniv Shmelzer,Ronen Simonpur / Yaniv Shmelzer,1,579.0,1,579.0,2014-08-11,2014-08-11,4075,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jmwoodworks@pcfreemail.com,jmwoodworks@pcfreemail.com,jmwoodworks@pcfreemail.com,1,579.0,1,579.0,2014-05-23,2014-05-23,4155,1,Low Value - Dormant,['GWDD'],['PA'],pre_shopify
+yo@sergioiturbide.com,yo@sergioiturbide.com,yo@sergioiturbide.com,1,579.0,1,579.0,2017-06-02,2017-06-02,3049,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+j.p.mcq@hotmail.com,j.p.mcq@hotmail.com,j.p.mcq@hotmail.com,1,579.0,1,579.0,2015-12-23,2015-12-23,3576,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+mikemix7@gmail.com,mikemix7@gmail.com,mikemix7@gmail.com,1,579.0,1,579.0,2015-05-20,2015-05-20,3793,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Kiwi Plumbing,Kiwi Plumbing,Kiwi Plumbing,1,579.0,1,579.0,2014-07-14,2014-07-14,4103,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+contact@snowdenonsite.com,contact@snowdenonsite.com,contact@snowdenonsite.com,1,579.0,1,579.0,2015-05-14,2015-05-14,3799,1,Low Value - Dormant,['GWDD'],['TX'],pre_shopify
+stephen@housewatersaver.com,stephen@housewatersaver.com,stephen@housewatersaver.com,1,579.0,1,579.0,2015-05-18,2015-05-18,3795,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+xcelplumbing@yahoo.com,xcelplumbing@yahoo.com,xcelplumbing@yahoo.com,1,579.0,1,579.0,2016-01-18,2016-01-18,3550,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+jonbuxer@strategicla.com,jonbuxer@strategicla.com,jonbuxer@strategicla.com,1,579.0,1,579.0,2015-02-20,2015-02-20,3882,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Paul James,Paul James,Paul James,1,579.0,1,579.0,2015-04-20,2015-04-20,3823,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Sistemas Especializados para Agua,Sistemas Especializados para Agua,Sistemas Especializados para Agua,1,579.0,1,579.0,2015-04-21,2015-04-21,3822,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+WVU LCSEE,WVU LCSEE,WVU LCSEE,1,559.0,1,559.0,2015-08-24,2015-08-24,3697,1,Low Value - Dormant,['GWDD'],['WV'],pre_shopify
+RainHarvest,RainHarvest,RainHarvest,1,559.0,1,559.0,2019-04-09,2019-04-09,2373,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+glob8@hotmail.com,glob8@hotmail.com,glob8@hotmail.com,2,558.0,1,279.0,2014-05-19,2014-05-19,4159,1,Low Value - Dormant,['Filters' 'Gravity'],['FL'],pre_shopify
+xxx,xxx,xxx,1,549.0,5,549.0,2012-03-05,2012-03-05,4964,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+maduenanm@aol.com,maduenanm@aol.com,maduenanm@aol.com,1,549.0,1,549.0,2012-11-13,2012-11-13,4711,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+lorena.chavez@lmu.edu,lorena.chavez@lmu.edu,lorena.chavez@lmu.edu,1,529.0,1,529.0,2013-04-04,2013-04-04,4569,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+receiving@bradcokitchen.com,receiving@bradcokitchen.com,receiving@bradcokitchen.com,1,529.0,1,529.0,2013-04-04,2013-04-04,4569,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+plumbing3d@yahoo.com,plumbing3d@yahoo.com,plumbing3d@yahoo.com,1,529.0,2,529.0,2012-07-06,2012-07-06,4841,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+cyberhuts@gmail.com,cyberhuts@gmail.com,cyberhuts@gmail.com,1,529.0,1,529.0,2013-09-24,2013-09-24,4396,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+stephane_giraudie@me.com,stephane_giraudie@me.com,stephane_giraudie@me.com,1,529.0,1,529.0,2021-09-19,2021-09-19,1479,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+gcberry28@yahoo.com,gcberry28@yahoo.com,gcberry28@yahoo.com,1,529.0,1,529.0,2012-12-06,2012-12-06,4688,1,Low Value - Dormant,['GWDD'],['NM'],pre_shopify
+john@cleanwatercomponents.com,john@cleanwatercomponents.com,john@cleanwatercomponents.com,1,529.0,1,529.0,2011-07-11,2011-07-11,5202,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Seven Directions,Seven Directions,Seven Directions,1,528.0,1,528.0,2013-10-07,2013-10-07,4383,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Stanford Solar Decathlon,Stanford Solar Decathlon,Stanford Solar Decathlon,1,519.0,1,519.0,2013-02-21,2013-02-21,4611,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+svhoof@themotownmovement.com,svhoof@themotownmovement.com,svhoof@themotownmovement.com,1,499.0,1,499.0,2017-05-15,2017-05-15,3067,1,Low Value - Dormant,['GWDD'],['MI'],pre_shopify
+Pond and Garden Wholesalers,Pond and Garden Wholesalers,Pond and Garden Wholesalers,1,499.0,1,499.0,2013-11-04,2013-11-04,4355,1,Low Value - Dormant,['GWDD'],['OH'],pre_shopify
+David Hayes – TBI,David Hayes – TBI,David Hayes – TBI,1,499.0,1,499.0,2012-05-24,2012-05-24,4884,1,Low Value - Dormant,['GWDD'],['FL'],pre_shopify
+CCC,CCC,CCC,1,499.0,1,499.0,2011-05-26,2011-05-26,5248,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+annieppk@yahoo.com,annieppk@yahoo.com,annieppk@yahoo.com,1,499.0,1,499.0,2017-04-05,2017-04-05,3107,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+JustwaterSavers,JustwaterSavers,JustwaterSavers,1,449.0,1,449.0,2011-09-06,2011-09-06,5145,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Richard Bartett,Richard Bartett,Richard Bartett,1,434.31,1,434.31,2011-03-09,2011-03-09,5326,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Habitat Gardens,Habitat Gardens,Habitat Gardens,1,429.0,1,429.0,2011-05-09,2011-05-09,5265,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+arturodominguez7@gmail.com,arturodominguez7@gmail.com,arturodominguez7@gmail.com,1,429.0,1,429.0,2021-08-26,2021-08-26,1503,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+New reseller - erick@contain.ca,New reseller - erick@contain.ca,New reseller - erick@contain.ca,1,429.0,1,429.0,2011-06-06,2011-06-06,5237,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+bassboat505@yahoo.com,bassboat505@yahoo.com,bassboat505@yahoo.com,1,429.0,1,429.0,2022-05-22,2022-05-22,1234,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+johnrowland@laurelgroup.org,johnrowland@laurelgroup.org,johnrowland@laurelgroup.org,1,429.0,1,429.0,2021-02-03,2021-02-03,1707,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+rthayer@ecsabox.com,rthayer@ecsabox.com,rthayer@ecsabox.com,1,429.0,1,429.0,2022-05-15,2022-05-15,1241,1,Low Value - Dormant,['Gravity'],['FL'],pre_shopify
+avauymillare@yahoo.com,avauymillare@yahoo.com,avauymillare@yahoo.com,1,429.0,1,429.0,2021-03-29,2021-03-29,1653,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+dywest12@gmail.com,dywest12@gmail.com,dywest12@gmail.com,1,429.0,1,429.0,2021-05-24,2021-05-24,1597,1,Low Value - Dormant,['Gravity'],['CO'],pre_shopify
+kirk@pictureappeal.com,kirk@pictureappeal.com,kirk@pictureappeal.com,1,429.0,1,429.0,2024-01-10,2024-01-10,636,1,Low Value - Lapsed,['Gravity'],['CA'],pre_shopify
+jimmikegall@comcast.net,jimmikegall@comcast.net,jimmikegall@comcast.net,1,429.0,1,429.0,2023-10-01,2023-10-01,737,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+jameslandry14@hotmail.com,jameslandry14@hotmail.com,jameslandry14@hotmail.com,1,429.0,1,429.0,2024-03-11,2024-03-11,575,1,Low Value - Lapsed,['Gravity'],['CA'],pre_shopify
+bridgettshank@gmail.com,bridgettshank@gmail.com,bridgettshank@gmail.com,1,429.0,1,429.0,2024-03-15,2024-03-15,571,1,Low Value - Lapsed,['Gravity'],['CA'],pre_shopify
+Breckenridge.david@gmail.com,Breckenridge.david@gmail.com,Breckenridge.david@gmail.com,1,429.0,1,429.0,2023-04-30,2023-04-30,891,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+stefbertozzi@gmail.com,stefbertozzi@gmail.com,stefbertozzi@gmail.com,1,429.0,1,429.0,2023-05-12,2023-05-12,879,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+cerissa_steele@yahoo.com,cerissa_steele@yahoo.com,cerissa_steele@yahoo.com,1,429.0,1,429.0,2023-09-11,2023-09-11,757,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+alexbabaeian@yahoo.com,alexbabaeian@yahoo.com,alexbabaeian@yahoo.com,1,429.0,1,429.0,2023-09-14,2023-09-14,754,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+ThyraRT@gmail.com,ThyraRT@gmail.com,ThyraRT@gmail.com,1,429.0,1,429.0,2023-09-20,2023-09-20,748,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+christina@lastmaskcenter.org,christina@lastmaskcenter.org,christina@lastmaskcenter.org,1,429.0,1,429.0,2023-08-21,2023-08-21,778,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+parcomm@gmail.com,parcomm@gmail.com,parcomm@gmail.com,1,429.0,1,429.0,2023-11-14,2023-11-14,693,1,Low Value - Lapsed,['Gravity'],['AZ'],pre_shopify
+kerstaaron@yahoo.com,kerstaaron@yahoo.com,kerstaaron@yahoo.com,1,429.0,1,429.0,2024-03-03,2024-03-03,583,1,Low Value - Lapsed,['Gravity'],['CO'],pre_shopify
+tylerc@bandon.k12.or.us,tylerc@bandon.k12.or.us,tylerc@bandon.k12.or.us,1,429.0,1,429.0,2022-02-04,2022-02-04,1341,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+michaelwilkinson1007@gmail.com,michaelwilkinson1007@gmail.com,michaelwilkinson1007@gmail.com,1,429.0,1,429.0,2023-02-22,2023-02-22,958,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+New reseller - kiwiplumbing@aol.com,New reseller - kiwiplumbing@aol.com,New reseller - kiwiplumbing@aol.com,1,429.0,1,429.0,2011-07-06,2011-07-06,5207,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+New reseller - ryan.s.harber@gmail.com,New reseller - ryan.s.harber@gmail.com,New reseller - ryan.s.harber@gmail.com,1,429.0,1,429.0,2011-06-03,2011-06-03,5240,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+davidsonbrett.bd@gmail.com,davidsonbrett.bd@gmail.com,davidsonbrett.bd@gmail.com,1,429.0,1,429.0,2023-04-14,2023-04-14,907,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+Kerry Gold Plumbing,Kerry Gold Plumbing,Kerry Gold Plumbing,1,429.0,1,429.0,2011-03-31,2011-03-31,5304,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Tim Leahy,Tim Leahy,Tim Leahy,1,429.0,1,429.0,2011-05-02,2011-05-02,5272,1,Low Value - Dormant,['GWDD'],['NY'],pre_shopify
+yanamcclinton@gmail.com,yanamcclinton@gmail.com,yanamcclinton@gmail.com,1,429.0,1,429.0,2021-12-10,2021-12-10,1397,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+haroutm82@gmail.com,haroutm82@gmail.com,haroutm82@gmail.com,1,429.0,1,429.0,2022-06-29,2022-06-29,1196,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+adam.auden@gmail.com,adam.auden@gmail.com,adam.auden@gmail.com,1,429.0,1,429.0,2023-05-04,2023-05-04,887,1,Low Value - Dormant,['Gravity'],['NM'],pre_shopify
+natashawrae@gmail.com,natashawrae@gmail.com,natashawrae@gmail.com,1,429.0,1,429.0,2021-09-20,2021-09-20,1478,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+marabilesky@gmail.com,marabilesky@gmail.com,marabilesky@gmail.com,1,429.0,1,429.0,2022-04-12,2022-04-12,1274,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+nicholasaluotto@gmail.com,nicholasaluotto@gmail.com,nicholasaluotto@gmail.com,1,429.0,1,429.0,2022-04-29,2022-04-29,1257,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+kunz@iainsure.com,kunz@iainsure.com,kunz@iainsure.com,1,429.0,1,429.0,2021-08-05,2021-08-05,1524,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+Shogell@aol.com,Shogell@aol.com,Shogell@aol.com,1,429.0,1,429.0,2021-04-26,2021-04-26,1625,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+easygoer77@gmail.com,easygoer77@gmail.com,easygoer77@gmail.com,1,429.0,1,429.0,2022-03-31,2022-03-31,1286,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+aaronjfalls@gmail.com,aaronjfalls@gmail.com,aaronjfalls@gmail.com,1,429.0,1,429.0,2023-11-13,2023-11-13,694,1,Low Value - Lapsed,['Gravity'],['CA'],pre_shopify
+bdubaholic@gmail.com,bdubaholic@gmail.com,bdubaholic@gmail.com,1,429.0,1,429.0,2023-11-02,2023-11-02,705,1,Low Value - Lapsed,['Gravity'],['NC'],pre_shopify
+DieterBruehlPhD@aol.com,DieterBruehlPhD@aol.com,DieterBruehlPhD@aol.com,1,429.0,1,429.0,2022-12-15,2022-12-15,1027,1,Low Value - Dormant,['GRavity'],['CA'],pre_shopify
+keleigh.provost@gmail.com,keleigh.provost@gmail.com,keleigh.provost@gmail.com,1,429.0,1,429.0,2021-05-25,2021-05-25,1596,1,Low Value - Dormant,['Gravity'],['NY'],pre_shopify
+jimprice987@hotmail.com,jimprice987@hotmail.com,jimprice987@hotmail.com,1,429.0,1,429.0,2022-02-10,2022-02-10,1335,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+timmoray@yahoo.com,timmoray@yahoo.com,timmoray@yahoo.com,1,429.0,1,429.0,2021-12-28,2021-12-28,1379,1,Low Value - Dormant,['Gravity'],['LA'],pre_shopify
+mrondeau1217@hotmail.com,mrondeau1217@hotmail.com,mrondeau1217@hotmail.com,1,429.0,1,429.0,2021-09-28,2021-09-28,1470,1,Low Value - Dormant,['Gravity'],['MA'],pre_shopify
+jbell@normalonline.com,jbell@normalonline.com,jbell@normalonline.com,1,429.0,1,429.0,2021-08-21,2021-08-21,1508,1,Low Value - Dormant,['Gravity'],['TN'],pre_shopify
+rachelstubblefield@gmail.com,rachelstubblefield@gmail.com,rachelstubblefield@gmail.com,1,429.0,1,429.0,2021-08-12,2021-08-12,1517,1,Low Value - Dormant,['Gravity'],['GA'],pre_shopify
+dr.honeydo2020@gmail.com,dr.honeydo2020@gmail.com,dr.honeydo2020@gmail.com,1,429.0,1,429.0,2021-07-15,2021-07-15,1545,1,Low Value - Dormant,['Gravity'],['NJ'],pre_shopify
+tkfittro@hotmail.com,tkfittro@hotmail.com,tkfittro@hotmail.com,1,429.0,1,429.0,2021-05-24,2021-05-24,1597,1,Low Value - Dormant,['Gravity'],['AL'],pre_shopify
+terrimurray19@gmail.com,terrimurray19@gmail.com,terrimurray19@gmail.com,1,429.0,1,429.0,2023-08-01,2023-08-01,798,1,Low Value - Dormant,['Gravity'],['IA'],pre_shopify
+dpuricelli7@gmail.com,dpuricelli7@gmail.com,dpuricelli7@gmail.com,1,429.0,1,429.0,2021-05-24,2021-05-24,1597,1,Low Value - Dormant,['Gravity'],['NY'],pre_shopify
+v.mineault@hotmail.com,v.mineault@hotmail.com,v.mineault@hotmail.com,1,429.0,1,429.0,2021-04-29,2021-04-29,1622,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+Hilsonragas@gmail.com,Hilsonragas@gmail.com,Hilsonragas@gmail.com,1,429.0,1,429.0,2023-11-02,2023-11-02,705,1,Low Value - Lapsed,['Gravity'],['FL'],pre_shopify
+jakehholm@gmail.com,jakehholm@gmail.com,jakehholm@gmail.com,2,429.0,1,429.0,2021-05-07,2021-10-04,1464,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+dspicher@srmsllc.net,dspicher@srmsllc.net,dspicher@srmsllc.net,1,429.0,1,429.0,2021-04-11,2021-04-11,1640,1,Low Value - Dormant,['Gravity'],['PA'],pre_shopify
+Danielweaver44@icloud.com,Danielweaver44@icloud.com,Danielweaver44@icloud.com,1,429.0,1,429.0,2021-04-08,2021-04-08,1643,1,Low Value - Dormant,['Gravity'],['PA'],pre_shopify
+andy@msisurfaces.com,andy@msisurfaces.com,andy@msisurfaces.com,1,429.0,1,429.0,2022-01-21,2022-01-21,1355,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+johnjkreuz@gmail.com,johnjkreuz@gmail.com,johnjkreuz@gmail.com,1,429.0,1,429.0,2021-02-24,2021-02-24,1686,1,Low Value - Dormant,['Gravity'],['OH'],pre_shopify
+pyoung@luparellogroup.com,pyoung@luparellogroup.com,pyoung@luparellogroup.com,1,429.0,1,429.0,2022-12-22,2022-12-22,1020,1,Low Value - Dormant,['GRavity'],['LA'],pre_shopify
+dholle@trussway.com,dholle@trussway.com,dholle@trussway.com,1,429.0,1,429.0,2022-08-01,2022-08-01,1163,1,Low Value - Dormant,['Gravity'],['GA'],pre_shopify
+keithpower1@gmail.com,keithpower1@gmail.com,keithpower1@gmail.com,1,429.0,1,429.0,2022-07-29,2022-07-29,1166,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+cwosco@yahoo.com,cwosco@yahoo.com,cwosco@yahoo.com,1,429.0,1,429.0,2021-02-22,2021-02-22,1688,1,Low Value - Dormant,['Gravity'],['CO'],pre_shopify
+chad@spurconstruction.com,chad@spurconstruction.com,chad@spurconstruction.com,1,429.0,1,429.0,2021-08-11,2021-08-11,1518,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+eileenchu718@gmail.com,eileenchu718@gmail.com,eileenchu718@gmail.com,1,429.0,1,429.0,2021-10-12,2021-10-12,1456,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+noyitz@gmail.com,noyitz@gmail.com,noyitz@gmail.com,1,429.0,1,429.0,2021-08-10,2021-08-10,1519,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+billmorrisiv@gmail.com,billmorrisiv@gmail.com,billmorrisiv@gmail.com,1,429.0,1,429.0,2023-01-21,2023-01-21,990,1,Low Value - Dormant,['Gravity'],['VA'],pre_shopify
+robert@thewiggers.com,robert@thewiggers.com,robert@thewiggers.com,1,429.0,1,429.0,2021-05-02,2021-05-02,1619,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+tommy@tntsimmonds.com,tommy@tntsimmonds.com,tommy@tntsimmonds.com,1,429.0,1,429.0,2021-08-31,2021-08-31,1498,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+otienodr@gmail.com,otienodr@gmail.com,otienodr@gmail.com,1,429.0,1,429.0,2021-12-03,2021-12-03,1404,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+goukas@gmail.com,goukas@gmail.com,goukas@gmail.com,1,429.0,1,429.0,2022-04-25,2022-04-25,1261,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+mb.ca@outlook.com,mb.ca@outlook.com,mb.ca@outlook.com,1,429.0,1,429.0,2022-05-01,2022-05-01,1255,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+greasybus@gmail.com,greasybus@gmail.com,greasybus@gmail.com,1,429.0,1,429.0,2021-01-18,2021-01-18,1723,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+dale@nap-us.com,dale@nap-us.com,dale@nap-us.com,1,429.0,1,429.0,2024-02-06,2024-02-06,609,1,Low Value - Lapsed,['Gravity'],['VA'],pre_shopify
+lazzwaldo@mac.com,lazzwaldo@mac.com,lazzwaldo@mac.com,1,429.0,1,429.0,2022-02-08,2022-02-08,1337,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+jrf1135@gmail.com,jrf1135@gmail.com,jrf1135@gmail.com,1,429.0,1,429.0,2024-03-03,2024-03-03,583,1,Low Value - Lapsed,['Gravity'],['PA'],pre_shopify
+psychotropic28@yahoo.com,psychotropic28@yahoo.com,psychotropic28@yahoo.com,1,429.0,1,429.0,2023-01-23,2023-01-23,988,1,Low Value - Dormant,['Gravity'],['FL'],pre_shopify
+mroussel2015@gmail.com,mroussel2015@gmail.com,mroussel2015@gmail.com,1,429.0,1,429.0,2023-03-07,2023-03-07,945,1,Low Value - Dormant,['Gravity'],['FL'],pre_shopify
+JG19027@yahoo.com,JG19027@yahoo.com,JG19027@yahoo.com,1,429.0,1,429.0,2023-03-24,2023-03-24,928,1,Low Value - Dormant,['Gravity'],['PA'],pre_shopify
+arocc2@verizon.net,arocc2@verizon.net,arocc2@verizon.net,1,429.0,1,429.0,2023-03-27,2023-03-27,925,1,Low Value - Dormant,['Gravity'],['NC'],pre_shopify
+mydogwoodhollow@gmail.com,mydogwoodhollow@gmail.com,mydogwoodhollow@gmail.com,1,429.0,1,429.0,2024-02-22,2024-02-22,593,1,Low Value - Lapsed,['Gravity'],['TN'],pre_shopify
+mkt@aquajaker.com,mkt@aquajaker.com,mkt@aquajaker.com,1,399.0,1,399.0,2020-10-26,2020-10-26,1807,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+christopherdevinny@gmail.com,christopherdevinny@gmail.com,christopherdevinny@gmail.com,1,399.0,1,399.0,2020-10-18,2020-10-18,1815,1,Low Value - Dormant,['Gravity'],['CO'],pre_shopify
+simmons.jesse@rocketmail.com,simmons.jesse@rocketmail.com,simmons.jesse@rocketmail.com,1,399.0,1,399.0,2020-05-25,2020-05-25,1961,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+willbob67@me.com,willbob67@me.com,willbob67@me.com,1,399.0,1,399.0,2020-04-20,2020-04-20,1996,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+jclough325@comcast.net,jclough325@comcast.net,jclough325@comcast.net,1,399.0,1,399.0,2020-04-17,2020-04-17,1999,1,Low Value - Dormant,['Gravity'],['NH'],pre_shopify
+rvigliano@yahoo.com,rvigliano@yahoo.com,rvigliano@yahoo.com,1,399.0,1,399.0,2020-01-06,2020-01-06,2101,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+wstawarczik@hotmail.com,wstawarczik@hotmail.com,wstawarczik@hotmail.com,1,399.0,1,399.0,2020-04-04,2020-04-04,2012,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+kelleybarrow@gmail.com,kelleybarrow@gmail.com,kelleybarrow@gmail.com,1,399.0,1,399.0,2020-03-20,2020-03-20,2027,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+(movielover.beth@verizon.net,(movielover.beth@verizon.net,(movielover.beth@verizon.net,1,399.0,1,399.0,2017-06-27,2017-06-27,3024,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+blrank@twc.com,blrank@twc.com,blrank@twc.com,1,399.0,1,399.0,2017-06-26,2017-06-26,3025,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+travis.hendershott@nextstepministries.com,travis.hendershott@nextstepministries.com,travis.hendershott@nextstepministries.com,1,399.0,1,399.0,2019-06-05,2019-06-05,2316,1,Low Value - Dormant,['Gravity'],['CO'],pre_shopify
+Rebecca.A.Wetherington@gmail.com,Rebecca.A.Wetherington@gmail.com,Rebecca.A.Wetherington@gmail.com,1,399.0,1,399.0,2019-01-06,2019-01-06,2466,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+heidi@jroderick.net,heidi@jroderick.net,heidi@jroderick.net,1,399.0,1,399.0,2020-01-16,2020-01-16,2091,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+bvarre@earthwisepet.com,bvarre@earthwisepet.com,bvarre@earthwisepet.com,1,399.0,1,399.0,2019-07-12,2019-07-12,2279,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+h.r.goldsmith@gmail.com,h.r.goldsmith@gmail.com,h.r.goldsmith@gmail.com,1,399.0,1,399.0,2019-08-04,2019-08-04,2256,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+jana@lakecityplumbing.com,jana@lakecityplumbing.com,jana@lakecityplumbing.com,1,399.0,1,399.0,2019-08-20,2019-08-20,2240,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+kfink9@gmail.com,kfink9@gmail.com,kfink9@gmail.com,1,399.0,1,399.0,2018-05-30,2018-05-30,2687,1,Low Value - Dormant,['Gravity'],['CO'],pre_shopify
+tonia.qrs@gmail.com,tonia.qrs@gmail.com,tonia.qrs@gmail.com,1,399.0,1,399.0,2018-10-28,2018-10-28,2536,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+bnrstell@gmail.com,bnrstell@gmail.com,bnrstell@gmail.com,1,399.0,1,399.0,2013-04-16,2013-04-16,4557,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+shawn@comfortableefficiency.com,shawn@comfortableefficiency.com,shawn@comfortableefficiency.com,1,399.0,1,399.0,2020-01-10,2020-01-10,2097,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+creoflan2@gmail.com ,creoflan2@gmail.com ,creoflan2@gmail.com ,1,399.0,1,399.0,2017-09-07,2017-09-07,2952,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+kate@movetomalibu.com,kate@movetomalibu.com,kate@movetomalibu.com,1,399.0,1,399.0,2020-01-31,2020-01-31,2076,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+jimsc@mac.com,jimsc@mac.com,jimsc@mac.com,1,399.0,1,399.0,2020-02-25,2020-02-25,2051,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+jacob@bruun-jensen.com,jacob@bruun-jensen.com,jacob@bruun-jensen.com,1,399.0,1,399.0,2020-03-20,2020-03-20,2027,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+rob.lempert@gmail.com,rob.lempert@gmail.com,rob.lempert@gmail.com,1,399.0,1,399.0,2017-12-18,2017-12-18,2850,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+dlmarrin@gmail.com,dlmarrin@gmail.com,dlmarrin@gmail.com,1,399.0,1,399.0,2011-12-07,2011-12-07,5053,1,Low Value - Dormant,['GWDD Gravity'],['CA'],pre_shopify
+courtney@datcoservices.com,courtney@datcoservices.com,courtney@datcoservices.com,1,399.0,1,399.0,2018-11-27,2018-11-27,2506,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+virginiak701@gmail.com,virginiak701@gmail.com,virginiak701@gmail.com,1,399.0,1,399.0,2018-09-16,2018-09-16,2578,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+larryanorby@gmail.com,larryanorby@gmail.com,larryanorby@gmail.com,1,399.0,1,399.0,2020-10-22,2020-10-22,1811,1,Low Value - Dormant,['Gravity'],['NV'],pre_shopify
+sales@turquoisedreams.com,sales@turquoisedreams.com,sales@turquoisedreams.com,1,399.0,1,399.0,2019-09-07,2019-09-07,2222,1,Low Value - Dormant,['Gravity'],['UT'],pre_shopify
+gmctrade@yahoo.com,gmctrade@yahoo.com,gmctrade@yahoo.com,1,399.0,1,399.0,2018-06-29,2018-06-29,2657,1,Low Value - Dormant,['Gravity'],['UT'],pre_shopify
+rosalind@buildinggreenfutures.com,rosalind@buildinggreenfutures.com,rosalind@buildinggreenfutures.com,1,399.0,1,399.0,2011-12-08,2011-12-08,5052,1,Low Value - Dormant,['GWDD Gravity'],['CA'],pre_shopify
+ramangum@live.com,ramangum@live.com,ramangum@live.com,1,399.0,1,399.0,2017-07-31,2017-07-31,2990,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+garybeverage@aol.com,garybeverage@aol.com,garybeverage@aol.com,1,399.0,1,399.0,2014-02-21,2014-02-21,4246,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+jimpisz@gmail.com,jimpisz@gmail.com,jimpisz@gmail.com,1,399.0,1,399.0,2021-01-03,2021-01-03,1738,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+herrerias129@hotmail.com,herrerias129@hotmail.com,herrerias129@hotmail.com,1,399.0,1,399.0,2013-03-19,2013-03-19,4585,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+w L moore Construction,w L moore Construction,w L moore Construction,1,399.0,1,399.0,2012-03-23,2012-03-23,4946,1,Low Value - Dormant,['GWDD Gravity'],['TX'],pre_shopify
+albertop@andersenmechanical.com,albertop@andersenmechanical.com,albertop@andersenmechanical.com,1,399.0,1,399.0,2020-03-02,2020-03-02,2045,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+lstepick@gmail.com,lstepick@gmail.com,lstepick@gmail.com,1,399.0,1,399.0,2020-07-28,2020-07-28,1897,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+m.krienke@sasktel.net,m.krienke@sasktel.net,m.krienke@sasktel.net,1,399.0,1,399.0,2017-03-29,2017-03-29,3114,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+scot.schoenborn@asu.edu,scot.schoenborn@asu.edu,scot.schoenborn@asu.edu,1,399.0,1,399.0,2017-11-13,2017-11-13,2885,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+derryl.meeks@eac.edu,derryl.meeks@eac.edu,derryl.meeks@eac.edu,1,399.0,1,399.0,2016-08-16,2016-08-16,3339,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+kkremodelllc@gmail.com,kkremodelllc@gmail.com,kkremodelllc@gmail.com,1,399.0,1,399.0,2016-10-07,2016-10-07,3287,1,Low Value - Dormant,['Gravity'],['AZ'],pre_shopify
+katemorsehomeo@gmail.com,katemorsehomeo@gmail.com,katemorsehomeo@gmail.com,1,399.0,1,399.0,2015-04-21,2015-04-21,3822,1,Low Value - Dormant,['Gravity'],['OR'],pre_shopify
+lionelchristopherson@hotmail.com,lionelchristopherson@hotmail.com,lionelchristopherson@hotmail.com,1,399.0,1,399.0,2016-08-08,2016-08-08,3347,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+ck_wde@yahoo.com,ck_wde@yahoo.com,ck_wde@yahoo.com,1,399.0,1,399.0,2011-04-08,2011-04-08,5296,1,Low Value - Dormant,['GWDD Gravity'],['CA'],pre_shopify
+leopoldo.marquez@itesm.mx,leopoldo.marquez@itesm.mx,leopoldo.marquez@itesm.mx,1,399.0,1,399.0,2013-03-04,2013-03-04,4600,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+lisaraineri@comcast.net,lisaraineri@comcast.net,lisaraineri@comcast.net,1,399.0,1,399.0,2020-08-31,2020-08-31,1863,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+bridgett@timbrearch.com,bridgett@timbrearch.com,bridgett@timbrearch.com,1,399.0,1,399.0,2018-03-29,2018-03-29,2749,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+vchow21@yahoo.com ,vchow21@yahoo.com ,vchow21@yahoo.com ,1,399.0,1,399.0,2018-07-01,2018-07-01,2655,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+bill@bbagnell.com ,bill@bbagnell.com ,bill@bbagnell.com ,1,399.0,1,399.0,2018-07-09,2018-07-09,2647,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+steve.chalk@warnerbros.com,steve.chalk@warnerbros.com,steve.chalk@warnerbros.com,1,399.0,1,399.0,2018-09-13,2018-09-13,2581,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+kendons@sbcglobal.net,kendons@sbcglobal.net,kendons@sbcglobal.net,1,399.0,1,399.0,2018-09-15,2018-09-15,2579,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+tom@cornerstonecompany.net,tom@cornerstonecompany.net,tom@cornerstonecompany.net,1,399.0,1,399.0,2020-07-31,2020-07-31,1894,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+sean.c.rhea@gmail.com,sean.c.rhea@gmail.com,sean.c.rhea@gmail.com,1,399.0,1,399.0,2020-07-15,2020-07-15,1910,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+melissaraev@gmail.com,melissaraev@gmail.com,melissaraev@gmail.com,1,399.0,1,399.0,2020-11-17,2020-11-17,1785,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+rich@ganefinancial.com ,rich@ganefinancial.com ,rich@ganefinancial.com ,1,399.0,1,399.0,2017-06-15,2017-06-15,3036,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+acaruana80@gmail.com,acaruana80@gmail.com,acaruana80@gmail.com,1,399.0,1,399.0,2020-06-07,2020-06-07,1948,1,Low Value - Dormant,['Gravity'],['NY'],pre_shopify
+lizallen28@gmail.com,lizallen28@gmail.com,lizallen28@gmail.com,1,399.0,1,399.0,2020-10-07,2020-10-07,1826,1,Low Value - Dormant,['Gravity'],['NC'],pre_shopify
+rickmyers928@att.net,rickmyers928@att.net,rickmyers928@att.net,1,399.0,1,399.0,2019-01-11,2019-01-11,2461,1,Low Value - Dormant,['Gravity'],['WI'],pre_shopify
+maggie_schuyler@gmx.com,maggie_schuyler@gmx.com,maggie_schuyler@gmx.com,1,399.0,1,399.0,2019-01-13,2019-01-13,2459,1,Low Value - Dormant,['Gravity'],['WV'],pre_shopify
+heisfamily@comcast.net,heisfamily@comcast.net,heisfamily@comcast.net,1,399.0,1,399.0,2019-07-12,2019-07-12,2279,1,Low Value - Dormant,['Gravity'],['WV'],pre_shopify
+tom@dtssoftware.com,tom@dtssoftware.com,tom@dtssoftware.com,1,399.0,1,399.0,2019-10-31,2019-10-31,2168,1,Low Value - Dormant,['Gravity'],['NC'],pre_shopify
+tfalcone@nascentservices.org,tfalcone@nascentservices.org,tfalcone@nascentservices.org,1,399.0,1,399.0,2018-01-03,2018-01-03,2834,1,Low Value - Dormant,['Gravity'],['PA'],pre_shopify
+4gsplumbing@gmail.com,4gsplumbing@gmail.com,4gsplumbing@gmail.com,1,399.0,1,399.0,2020-12-14,2020-12-14,1758,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+kimmoore274@yahoo.com,kimmoore274@yahoo.com,kimmoore274@yahoo.com,1,399.0,1,399.0,2018-05-31,2018-05-31,2686,1,Low Value - Dormant,['Gravity'],['NC'],pre_shopify
+eebinger@uxo.net ,eebinger@uxo.net ,eebinger@uxo.net ,1,399.0,1,399.0,2018-09-27,2018-09-27,2567,1,Low Value - Dormant,['Gravity'],['ME'],pre_shopify
+mimotokawasaki@gmail.com,mimotokawasaki@gmail.com,mimotokawasaki@gmail.com,1,399.0,1,399.0,2017-10-31,2017-10-31,2898,1,Low Value - Dormant,['Gravity'],['IA'],pre_shopify
+mark.bracken@konecranes.com,mark.bracken@konecranes.com,mark.bracken@konecranes.com,1,399.0,1,399.0,2018-05-01,2018-05-01,2716,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+wildyogastream@gmail.com,wildyogastream@gmail.com,wildyogastream@gmail.com,1,399.0,1,399.0,2017-09-15,2017-09-15,2944,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+zeus@mygsc.com,zeus@mygsc.com,zeus@mygsc.com,1,399.0,1,399.0,2020-03-27,2020-03-27,2020,1,Low Value - Dormant,['Gravity'],['NH'],pre_shopify
+scout2370@hotmail.com,scout2370@hotmail.com,scout2370@hotmail.com,1,399.0,1,399.0,2016-08-18,2016-08-18,3337,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+apu3_r@hotmail.com,apu3_r@hotmail.com,apu3_r@hotmail.com,1,399.0,1,399.0,2014-02-05,2014-02-05,4262,1,Low Value - Dormant,['Gravity'],['FL'],pre_shopify
+justicejtmp@comcast.net,justicejtmp@comcast.net,justicejtmp@comcast.net,1,399.0,1,399.0,2014-08-11,2014-08-11,4075,1,Low Value - Dormant,['GWDD'],['MD'],pre_shopify
+jessica.tann@hotmail.com,jessica.tann@hotmail.com,jessica.tann@hotmail.com,1,399.0,1,399.0,2019-06-05,2019-06-05,2316,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+kim.vadzis@gmail.com ,kim.vadzis@gmail.com ,kim.vadzis@gmail.com ,1,399.0,1,399.0,2019-08-13,2019-08-13,2247,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+hapatzza@yahoo.com,hapatzza@yahoo.com,hapatzza@yahoo.com,1,399.0,1,399.0,2013-09-26,2013-09-26,4394,1,Low Value - Dormant,['Gravity'],['HI'],pre_shopify
+jescobar@aquakitbolivia.com,jescobar@aquakitbolivia.com,jescobar@aquakitbolivia.com,1,399.0,1,399.0,2018-08-23,2018-08-23,2602,1,Low Value - Dormant,['Gravity'],['LA'],pre_shopify
+jescobar@aquakitbolivia.com ,jescobar@aquakitbolivia.com ,jescobar@aquakitbolivia.com ,1,399.0,1,399.0,2018-11-08,2018-11-08,2525,1,Low Value - Dormant,['Gravity'],['FL'],pre_shopify
+stephanegaudette@gmail.com,stephanegaudette@gmail.com,stephanegaudette@gmail.com,1,399.0,1,399.0,2020-06-24,2020-06-24,1931,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+boutch1967@hotmail.com,boutch1967@hotmail.com,boutch1967@hotmail.com,1,399.0,1,399.0,2015-05-27,2015-05-27,3786,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+susannebrunsch3@gmail.com ,susannebrunsch3@gmail.com ,susannebrunsch3@gmail.com ,1,399.0,1,399.0,2018-11-18,2018-11-18,2515,1,Low Value - Dormant,['Gravity'],['HI'],pre_shopify
+ber.gonzalez@me.com,ber.gonzalez@me.com,ber.gonzalez@me.com,1,399.0,1,399.0,2012-12-31,2012-12-31,4663,1,Low Value - Dormant,['GWDD Gravity'],['Mexico'],pre_shopify
+chrisfrost92@gmail.com,chrisfrost92@gmail.com,chrisfrost92@gmail.com,1,399.0,1,399.0,2020-05-14,2020-05-14,1972,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+dksafework@aol.com,dksafework@aol.com,dksafework@aol.com,1,399.0,1,399.0,2018-05-30,2018-05-30,2687,1,Low Value - Dormant,['Gravity'],['MA'],pre_shopify
+nathanmcwayne@gmail.com,nathanmcwayne@gmail.com,nathanmcwayne@gmail.com,1,399.0,1,399.0,2018-05-18,2018-05-18,2699,1,Low Value - Dormant,['Gravity'],['MA'],pre_shopify
+dadla@cox.net,dadla@cox.net,dadla@cox.net,1,399.0,1,399.0,2015-10-21,2015-10-21,3639,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+ongelectricalservices@gmail.com,ongelectricalservices@gmail.com,ongelectricalservices@gmail.com,1,399.0,1,399.0,2019-07-24,2019-07-24,2267,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+abheylamba@gmail.com,abheylamba@gmail.com,abheylamba@gmail.com,1,399.0,1,399.0,2019-10-02,2019-10-02,2197,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+WELDER3011@AOL.COM,WELDER3011@AOL.COM,WELDER3011@AOL.COM,1,399.0,1,399.0,2016-04-27,2016-04-27,3450,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+jacobusj@amgt.com,jacobusj@amgt.com,jacobusj@amgt.com,1,399.0,1,399.0,2016-05-10,2016-05-10,3437,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+bobandsandra2@verizon.net,bobandsandra2@verizon.net,bobandsandra2@verizon.net,1,399.0,1,399.0,2020-02-19,2020-02-19,2057,1,Low Value - Dormant,['Gravity'],['RI'],pre_shopify
+dean@dtindustrial.com,dean@dtindustrial.com,dean@dtindustrial.com,1,399.0,1,399.0,2015-04-02,2015-04-02,3841,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+mark.jen@mac.com,mark.jen@mac.com,mark.jen@mac.com,1,399.0,1,399.0,2015-07-13,2015-07-13,3739,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+2222avd@gmail.com,2222avd@gmail.com,2222avd@gmail.com,1,399.0,1,399.0,2015-08-03,2015-08-03,3718,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+bundi404@gmail.com,bundi404@gmail.com,bundi404@gmail.com,1,399.0,1,399.0,2015-08-04,2015-08-04,3717,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+wellerwakefield@yahoo.com,wellerwakefield@yahoo.com,wellerwakefield@yahoo.com,1,399.0,1,399.0,2015-09-28,2015-09-28,3662,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+Storer@pacbell.net,Storer@pacbell.net,Storer@pacbell.net,1,399.0,1,399.0,2015-09-29,2015-09-29,3661,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+toothdock@verizon.net,toothdock@verizon.net,toothdock@verizon.net,1,399.0,1,399.0,2015-10-21,2015-10-21,3639,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+robert.cumby@cox.net,robert.cumby@cox.net,robert.cumby@cox.net,1,399.0,1,399.0,2016-06-21,2016-06-21,3395,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+ewdoyle@gmail.com,ewdoyle@gmail.com,ewdoyle@gmail.com,1,399.0,1,399.0,2014-03-21,2014-03-21,4218,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+ollen7@msn.com,ollen7@msn.com,ollen7@msn.com,1,399.0,1,399.0,2015-04-13,2015-04-13,3830,1,Low Value - Dormant,['Gravity'],['MA'],pre_shopify
+staci.g@gasparinc.com,staci.g@gasparinc.com,staci.g@gasparinc.com,1,399.0,1,399.0,2015-11-30,2015-11-30,3599,1,Low Value - Dormant,['Gravity'],['OH'],pre_shopify
+lesliebaggish@gmail.com,lesliebaggish@gmail.com,lesliebaggish@gmail.com,1,399.0,1,399.0,2014-04-15,2014-04-15,4193,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+russ.reimann@gmail.com,russ.reimann@gmail.com,russ.reimann@gmail.com,1,399.0,1,399.0,2015-09-23,2015-09-23,3667,1,Low Value - Dormant,['Gravity'],['WI'],pre_shopify
+proudtobeaboyd@gmail.com,proudtobeaboyd@gmail.com,proudtobeaboyd@gmail.com,1,399.0,1,399.0,2015-06-01,2015-06-01,3781,1,Low Value - Dormant,['Gravity'],['GA'],pre_shopify
+mark_pesola@hotmail.com,mark_pesola@hotmail.com,mark_pesola@hotmail.com,1,399.0,1,399.0,2015-04-28,2015-04-28,3815,1,Low Value - Dormant,['Gravity'],['MD'],pre_shopify
+tparks@earthlink.net,tparks@earthlink.net,tparks@earthlink.net,1,399.0,1,399.0,2015-04-25,2015-04-25,3818,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+teberhardt@coventryct.org,teberhardt@coventryct.org,teberhardt@coventryct.org,1,399.0,1,399.0,2015-03-05,2015-03-05,3869,1,Low Value - Dormant,['Gravity'],['CT'],pre_shopify
+acalzada@crconstrucciones.com,acalzada@crconstrucciones.com,acalzada@crconstrucciones.com,1,399.0,1,399.0,2017-01-22,2017-01-22,3180,1,Low Value - Dormant,['Gravity'],['FL'],pre_shopify
+eww21@yahoo.com,eww21@yahoo.com,eww21@yahoo.com,1,399.0,1,399.0,2014-10-18,2014-10-18,4007,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+will.pitkin@gmail.com,will.pitkin@gmail.com,will.pitkin@gmail.com,1,399.0,1,399.0,2017-08-15,2017-08-15,2975,1,Low Value - Dormant,['Gravity'],['MA'],pre_shopify
+stacy22kay@yahoo.com,stacy22kay@yahoo.com,stacy22kay@yahoo.com,1,399.0,1,399.0,2017-01-18,2017-01-18,3184,1,Low Value - Dormant,['Gravity'],['MI'],pre_shopify
+jaypatidar@yahoo.com,jaypatidar@yahoo.com,jaypatidar@yahoo.com,1,359.0,1,359.0,2012-09-14,2012-09-14,4771,1,Low Value - Dormant,['GWDD Gravity'],['VA'],pre_shopify
+Green Earh Materials,Green Earh Materials,Green Earh Materials,1,339.0,1,339.0,2017-09-27,2017-09-27,2932,1,Low Value - Dormant,['Gravity'],['TX'],pre_shopify
+tinyhomehardware@gmail.com,tinyhomehardware@gmail.com,tinyhomehardware@gmail.com,1,339.0,1,339.0,2019-08-14,2019-08-14,2246,1,Low Value - Dormant,['Gravity'],['WA'],pre_shopify
+marco@grupolan.com,marco@grupolan.com,marco@grupolan.com,1,339.0,1,339.0,2016-12-21,2016-12-21,3212,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+Green Earth Material,Green Earth Material,Green Earth Material,1,339.0,1,339.0,2022-02-09,2022-02-09,1336,1,Low Value - Dormant,['Gravity'],['NC'],pre_shopify
+Tiny Houses and Solar,Tiny Houses and Solar,Tiny Houses and Solar,1,339.0,1,339.0,2017-07-07,2017-07-07,3014,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+Tiny House Inside,Tiny House Inside,Tiny House Inside,1,339.0,1,339.0,2017-06-30,2017-06-30,3021,1,Low Value - Dormant,['Gravity'],['NY'],pre_shopify
+Just Water Savers,Just Water Savers,Just Water Savers,1,339.0,1,339.0,2014-02-18,2014-02-18,4249,1,Low Value - Dormant,['Gravity'],['PA'],pre_shopify
+tstrode6@gmail.com,tstrode6@gmail.com,tstrode6@gmail.com,1,339.0,1,339.0,2020-08-26,2020-08-26,1868,1,Low Value - Dormant,['Gravity'],['CT'],pre_shopify
+Eckco Techno,Eckco Techno,Eckco Techno,1,339.0,1,339.0,2017-10-18,2017-10-18,2911,1,Low Value - Dormant,['Gravity'],['PA'],pre_shopify
+axel.whalen@tinylifesupply.com,axel.whalen@tinylifesupply.com,axel.whalen@tinylifesupply.com,1,339.0,1,339.0,2017-04-18,2017-04-18,3094,1,Low Value - Dormant,['Gravity'],['Canada'],pre_shopify
+Box Up,Box Up,Box Up,1,339.0,1,339.0,2017-10-04,2017-10-04,2925,1,Low Value - Dormant,['Gravity'],['TN'],pre_shopify
+scottm@basixcd.com,scottm@basixcd.com,scottm@basixcd.com,1,329.0,1,329.0,2015-07-28,2015-07-28,3724,1,Low Value - Dormant,['Gravity'],['CA'],pre_shopify
+Frank – MA,Frank – MA,Frank – MA,1,319.0,1,319.0,2011-02-17,2011-02-17,5346,1,Low Value - Dormant,['GWDD'],['MA'],pre_shopify
+Sebastien,Sebastien,Sebastien,1,300.0,1,300.0,2011-09-30,2011-09-30,5121,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+Warrior Homesteads,Warrior Homesteads,Warrior Homesteads,1,299.0,1,299.0,2015-08-26,2015-08-26,3695,1,Low Value - Dormant,['Gravity'],['OH'],pre_shopify
+sophie@gorgeouslygreen.com,sophie@gorgeouslygreen.com,sophie@gorgeouslygreen.com,1,299.0,1,299.0,2011-09-19,2011-09-19,5132,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+sponz@mindspring.com,sponz@mindspring.com,sponz@mindspring.com,1,159.0,0,159.0,2014-04-17,2014-04-17,4191,1,Low Value - Dormant,['Filters'],['CA'],pre_shopify
+Sierra Water – sold 2 then reimbursed,Sierra Water – sold 2 then reimbursed,Sierra Water – sold 2 then reimbursed,1,0.0,1,0.0,2012-05-14,2012-05-14,4894,1,Low Value - Dormant,['GWDD'],['CA'],pre_shopify
+wbrzozowski@tewire.com,wbrzozowski@tewire.com,wbrzozowski@tewire.com,1,,,,2022-03-25,2022-03-25,1292,1,Low Value - Dormant,[],[],pre_shopify
+geraldlee11@yahoo.com,geraldlee11@yahoo.com,geraldlee11@yahoo.com,1,,,,2022-04-10,2022-04-10,1276,1,Low Value - Dormant,[],[],pre_shopify
+deepakahuj@gmail.com,deepakahuj@gmail.com,deepakahuj@gmail.com,1,,2,,2022-06-09,2022-06-09,1216,1,Low Value - Dormant,['Pro'],['CA'],pre_shopify
+Refund,Refund,Refund,1,,,,2020-01-04,2020-01-04,2103,1,Low Value - Dormant,[],['CA'],pre_shopify

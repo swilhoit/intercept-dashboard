@@ -1,0 +1,17 @@
+# Development Dockerfile for Next.js app
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Expose development port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "dev"]

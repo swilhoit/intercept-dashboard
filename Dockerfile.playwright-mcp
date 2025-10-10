@@ -1,0 +1,60 @@
+# Dockerfile for Playwright MCP Server
+FROM mcr.microsoft.com/playwright:v1.47.0-focal
+
+WORKDIR /app
+
+# Install Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
+
+# Install Playwright and create a simple MCP server
+RUN npm install -g playwright
+RUN npm install -g express
+
+# Create non-root user
+RUN addgroup --system --gid 1001 playwright && \
+    adduser --system --uid 1001 playwright
+
+# Set up Playwright browsers
+RUN npx playwright install --with-deps
+
+# Change ownership
+RUN chown -R playwright:playwright /app /ms-playwright
+
+USER playwright
+
+EXPOSE 3001
+
+# Create a simple MCP server
+COPY <<EOF /app/server.js
+const express = require('express');
+const { chromium } = require('playwright');
+
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'playwright-mcp' });
+});
+
+app.post('/screenshot', async (req, res) => {
+  try {
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
+    await page.goto(req.body.url || 'http://localhost:3000');
+    const screenshot = await page.screenshot();
+    await browser.close();
+    res.json({ success: true, screenshot: screenshot.toString('base64') });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+const port = process.env.PORT || 3001;
+app.listen(port, '0.0.0.0', () => {
+  console.log(\`Playwright MCP server running on port \${port}\`);
+});
+EOF
+
+# Start the server
+CMD ["node", "/app/server.js"]

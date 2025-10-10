@@ -1,0 +1,61 @@
+# Lightweight Playwright MCP Server
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install basic dependencies
+RUN npm install -g express playwright-core
+
+# Create a basic MCP server
+RUN cat > /app/server.js << 'EOF'
+const express = require('express');
+
+const app = express();
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'playwright-mcp-lite',
+    message: 'Lightweight Playwright MCP server running'
+  });
+});
+
+app.get('/info', (req, res) => {
+  res.json({
+    service: 'Playwright MCP Server',
+    version: '1.0.0',
+    endpoints: [
+      'GET /health - Health check',
+      'GET /info - Server information',
+      'POST /automation - Future automation endpoints'
+    ]
+  });
+});
+
+app.post('/automation', (req, res) => {
+  res.json({
+    message: 'Automation endpoint ready for implementation',
+    received: req.body
+  });
+});
+
+const port = process.env.PORT || 3001;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Playwright MCP Lite server running on port ${port}`);
+});
+EOF
+
+# Create non-root user
+RUN addgroup -g 1001 -S playwright && \
+    adduser -S -u 1001 playwright
+
+# Change ownership
+RUN chown -R playwright:playwright /app
+
+USER playwright
+
+EXPOSE 3001
+
+# Start the server
+CMD ["node", "/app/server.js"]
