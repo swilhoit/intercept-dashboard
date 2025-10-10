@@ -43,6 +43,48 @@ export async function GET(request: NextRequest) {
       SELECT SUM(revenue) as total_woocommerce_revenue FROM all_woo_revenue
     `;
 
+    // Use deduplicated Amazon data to ensure accurate totals
+    const amazonProductsQuery = `
+      WITH deduplicated_amazon AS (
+        -- Deduplicate amazon_seller data by using DISTINCT on product, price, and parsed date
+        SELECT DISTINCT
+          Product_Name as product_name,
+          Item_Price as revenue,
+          1 as item_quantity,
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
+            ELSE PARSE_DATE('%m/%e/%y', Date)
+          END as order_date,
+          ASIN
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+        
+        UNION ALL
+        
+        -- Historical data from amazon orders table  
+        SELECT DISTINCT
+          product_name,
+          revenue,
+          item_quantity,
+          DATE(date) as order_date,
+          asin
+        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+        WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+      )
+      SELECT 
+        product_name,
+        'Amazon' as channel,
+        SUM(revenue) as total_sales,
+        COUNT(*) as quantity,
+        MIN(order_date) as first_sale_date,
+        MAX(order_date) as last_sale_date
+      FROM deduplicated_amazon
+      WHERE product_name IS NOT NULL ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+      GROUP BY product_name
+    `;
+
+    // Keep the MASTER table query for comparison and other metrics
     const query = `
       SELECT
         SUM(total_sales) as total_revenue,
@@ -121,6 +163,32 @@ export async function GET(request: NextRequest) {
     
     const [rows] = await bigquery.query(query);
     const currentData = rows[0] || {};
+
+    // Get Amazon products data and calculate summary metrics
+    let currentAmazonRevenue = 0;
+    let amazonDays = 0;
+    let amazonAvgDaily = 0;
+    let amazonHighestDay = 0;
+    try {
+      const [amazonRows] = await bigquery.query(amazonProductsQuery);
+      
+      // Calculate summary metrics from products data
+      currentAmazonRevenue = amazonRows.reduce((sum, row) => sum + (row.total_sales || 0), 0);
+      
+      // Get unique dates to calculate daily metrics
+      const uniqueDates = [...new Set(amazonRows.map(row => row.first_sale_date).filter(date => date))];
+      amazonDays = uniqueDates.length;
+      amazonAvgDaily = amazonDays > 0 ? currentAmazonRevenue / amazonDays : 0;
+      
+      console.log('Amazon Products Query Result:', {
+        productCount: amazonRows.length,
+        totalRevenue: currentAmazonRevenue,
+        uniqueDates: amazonDays
+      });
+    } catch (error) {
+      console.error('Error fetching Amazon products:', error);
+      console.error('Amazon query:', amazonProductsQuery);
+    }
 
     // Get current WooCommerce revenue directly
     let currentWooCommerceRevenue = 0;
@@ -219,11 +287,16 @@ export async function GET(request: NextRequest) {
       };
     }
     
-    // Override WooCommerce revenue with current data and recalculate total
+    // Use correct Amazon and WooCommerce revenue and recalculate all totals
+    const totalRevenue = currentAmazonRevenue + currentWooCommerceRevenue;
     const correctedData = {
       ...currentData,
+      amazon_revenue: currentAmazonRevenue,
       woocommerce_revenue: currentWooCommerceRevenue,
-      total_revenue: (currentData.amazon_revenue || 0) + currentWooCommerceRevenue
+      total_revenue: totalRevenue,
+      avg_daily_sales: amazonDays > 0 ? totalRevenue / amazonDays : 0,
+      highest_day: Math.max(amazonHighestDay, currentData.highest_day || 0),
+      days_with_sales: amazonDays
     };
 
     const response = {
@@ -239,12 +312,18 @@ export async function GET(request: NextRequest) {
       ...response,
       _timestamp: Date.now(),
       _debugInfo: {
-        message: "Fixed: Search Console data, WooCommerce revenue, and order count",
+        message: "Fixed: Amazon data source, Search Console data, WooCommerce revenue, and order count",
         fixes: {
-          organicClicks: organicClicks,
+          amazonRevenue: currentAmazonRevenue,
           woocommerceRevenue: currentWooCommerceRevenue,
+          organicClicks: organicClicks,
           totalOrders: totalOrders,
-          correctedTotalRevenue: (currentData.amazon_revenue || 0) + currentWooCommerceRevenue
+          correctedTotalRevenue: totalRevenue
+        },
+        dataSources: {
+          amazonSource: "amazon_seller.amazon_orders_2025",
+          woocommerceSource: "individual_site_tables",
+          organicSource: "search_console_aggregated"
         }
       }
     }, {

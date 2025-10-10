@@ -15,11 +15,11 @@ export async function GET(request: NextRequest) {
     let queries = [];
     
     if (!channel || channel === 'all' || channel === 'Amazon') {
-      // Use both Amazon tables to get complete data coverage
+      // Use both Amazon tables to get complete data coverage with deduplication
       let amazonQuery = `
-        WITH combined_amazon AS (
-          -- Recent data from amazon_seller table (handle M/D/YY, YYYY-MM-DD, and Excel serial formats)
-          SELECT
+        WITH deduplicated_amazon AS (
+          -- Deduplicate amazon_seller data by using DISTINCT on product, price, and parsed date
+          SELECT DISTINCT
             Product_Name as product_name,
             Item_Price as revenue,
             1 as item_quantity,
@@ -27,18 +27,20 @@ export async function GET(request: NextRequest) {
               WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
               WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
               ELSE PARSE_DATE('%m/%e/%y', Date)
-            END as order_date
+            END as order_date,
+            ASIN
           FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
           WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
           
           UNION ALL
           
           -- Historical data from amazon orders table  
-          SELECT 
+          SELECT DISTINCT
             product_name,
             revenue,
             item_quantity,
-            DATE(date) as order_date
+            DATE(date) as order_date,
+            asin
           FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
           WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
         )
@@ -46,8 +48,8 @@ export async function GET(request: NextRequest) {
           product_name,
           'Amazon' as channel,
           SUM(revenue) as total_sales,
-          SUM(item_quantity) as quantity
-        FROM combined_amazon
+          COUNT(*) as quantity
+        FROM deduplicated_amazon
         WHERE product_name IS NOT NULL
       `;
       

@@ -66,24 +66,36 @@ export async function GET(request: NextRequest) {
     // Build CASE statement for Amazon data with correct column name
     const amazonCaseStatement = caseStatement.replace(/product_name/g, 'Product_Name');
 
-    // Query for Amazon data - using amazon_seller.amazon_orders_2025 which has current data
+    // Query for Amazon data with deduplication to fix inflated numbers
     let query = `
-      WITH categorized_amazon AS (
+      WITH deduplicated_amazon AS (
+        SELECT DISTINCT
+          Product_Name,
+          Item_Price,
+          ASIN,
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
+            ELSE PARSE_DATE('%m/%e/%y', Date)
+          END as category_date
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+      ),
+      categorized_amazon AS (
         SELECT
-          DATE(Purchase_Date) as category_date,
-          ${amazonCaseStatement} as category,
+          category_date,
+          ${amazonCaseStatement.replace(/Product_Name/g, 'Product_Name')} as category,
           Product_Name as product_name,
           ASIN as product_id,
           Item_Price as sales,
           1 as quantity,
           'Amazon' as channel
-        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        FROM deduplicated_amazon
         WHERE Product_Name IS NOT NULL
-        AND Purchase_Date >= '2025-01-01'
     `;
     
     if (startDate && endDate) {
-      query += ` AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'`;
+      query += ` AND category_date >= '${startDate}' AND category_date <= '${endDate}'`;
     }
     
     query += `
@@ -141,18 +153,31 @@ export async function GET(request: NextRequest) {
       throw error;
     }
     
-    // Get channel breakdown per category
+    // Get channel breakdown per category with deduplication
     const channelBreakdownQuery = `
-      WITH categorized_amazon AS (
+      WITH deduplicated_amazon_breakdown AS (
+        SELECT DISTINCT
+          Product_Name,
+          Item_Price,
+          ASIN,
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
+            ELSE PARSE_DATE('%m/%e/%y', Date)
+          END as category_date
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+        ${startDate && endDate ? `AND CASE WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date) ELSE PARSE_DATE('%m/%e/%y', Date) END >= '${startDate}' AND CASE WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date) ELSE PARSE_DATE('%m/%e/%y', Date) END <= '${endDate}'` : ''}
+      ),
+      categorized_amazon AS (
         SELECT
-          ${caseStatement} as category,
+          ${caseStatement.replace(/product_name/g, 'Product_Name')} as category,
           'Amazon' as channel,
           SUM(Item_Price) as total_sales,
           COUNT(*) as total_quantity,
           COUNT(DISTINCT ASIN) as unique_products
-        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        FROM deduplicated_amazon_breakdown
         WHERE Product_Name IS NOT NULL
-        ${startDate && endDate ? `AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'` : ''}
         GROUP BY category
       ),
       categorized_woocommerce AS (
@@ -185,17 +210,30 @@ export async function GET(request: NextRequest) {
       channelRows = [];
     }
     
-    // Add channel time series query
+    // Add channel time series query with deduplication
     const channelTimeSeriesQuery = `
-      WITH categorized_amazon AS (
+      WITH deduplicated_amazon_ts AS (
+        SELECT DISTINCT
+          Product_Name,
+          Item_Price,
+          ASIN,
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
+            ELSE PARSE_DATE('%m/%e/%y', Date)
+          END as category_date
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+        ${startDate && endDate ? `AND CASE WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date) ELSE PARSE_DATE('%m/%e/%y', Date) END >= '${startDate}' AND CASE WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date) ELSE PARSE_DATE('%m/%e/%y', Date) END <= '${endDate}'` : ''}
+      ),
+      categorized_amazon AS (
         SELECT
-          DATE(Purchase_Date) as category_date,
-          ${caseStatement} as category,
+          category_date,
+          ${caseStatement.replace(/product_name/g, 'Product_Name')} as category,
           Item_Price as sales,
           'Amazon' as channel
-        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        FROM deduplicated_amazon_ts
         WHERE Product_Name IS NOT NULL
-        ${startDate && endDate ? `AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'` : ''}
       ),
       categorized_woocommerce AS (
         SELECT 
@@ -232,15 +270,27 @@ export async function GET(request: NextRequest) {
       channelTimeRows = [];
     }
 
-    // Add unique products query
+    // Add unique products query with deduplication
     const uniqueProductsQuery = `
-      WITH categorized_amazon AS (
-        SELECT
-          ${caseStatement} as category,
-          ASIN as product_id
+      WITH deduplicated_amazon_unique AS (
+        SELECT DISTINCT
+          Product_Name,
+          ASIN,
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
+            ELSE PARSE_DATE('%m/%e/%y', Date)
+          END as category_date
         FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+        ${startDate && endDate ? `AND CASE WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date) ELSE PARSE_DATE('%m/%e/%y', Date) END >= '${startDate}' AND CASE WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date) ELSE PARSE_DATE('%m/%e/%y', Date) END <= '${endDate}'` : ''}
+      ),
+      categorized_amazon AS (
+        SELECT
+          ${caseStatement.replace(/product_name/g, 'Product_Name')} as category,
+          ASIN as product_id
+        FROM deduplicated_amazon_unique
         WHERE Product_Name IS NOT NULL
-        ${startDate && endDate ? `AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'` : ''}
       ),
       categorized_woocommerce AS (
         SELECT 
