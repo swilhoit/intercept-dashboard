@@ -62,25 +62,28 @@ export async function GET(request: NextRequest) {
     caseStatement += `WHEN ${fireplaceConditions} THEN 'Fireplace Doors' `;
     
     caseStatement += `ELSE 'Other' END`;
-    
-    // Query for Amazon data
+
+    // Build CASE statement for Amazon data with correct column name
+    const amazonCaseStatement = caseStatement.replace(/product_name/g, 'Product_Name');
+
+    // Query for Amazon data - using amazon_seller.amazon_orders_2025 which has current data
     let query = `
       WITH categorized_amazon AS (
         SELECT
-          DATE(date) as category_date,
-          ${caseStatement} as category,
-          product_name,
-          asin as product_id,
-          revenue as sales,
-          item_quantity as quantity,
+          DATE(Purchase_Date) as category_date,
+          ${amazonCaseStatement} as category,
+          Product_Name as product_name,
+          ASIN as product_id,
+          Item_Price as sales,
+          1 as quantity,
           'Amazon' as channel
-        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE product_name IS NOT NULL
-        AND DATE(date) >= '2025-01-01'
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL
+        AND Purchase_Date >= '2025-01-01'
     `;
     
     if (startDate && endDate) {
-      query += ` AND DATE(date) >= '${startDate}' AND DATE(date) <= '${endDate}'`;
+      query += ` AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'`;
     }
     
     query += `
@@ -141,15 +144,15 @@ export async function GET(request: NextRequest) {
     // Get channel breakdown per category
     const channelBreakdownQuery = `
       WITH categorized_amazon AS (
-        SELECT 
+        SELECT
           ${caseStatement} as category,
           'Amazon' as channel,
-          SUM(revenue) as total_sales,
-          SUM(item_quantity) as total_quantity,
-          COUNT(DISTINCT asin) as unique_products
-        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE product_name IS NOT NULL
-        ${startDate && endDate ? `AND DATE(date) >= '${startDate}' AND DATE(date) <= '${endDate}'` : ''}
+          SUM(Item_Price) as total_sales,
+          COUNT(*) as total_quantity,
+          COUNT(DISTINCT ASIN) as unique_products
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL
+        ${startDate && endDate ? `AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'` : ''}
         GROUP BY category
       ),
       categorized_woocommerce AS (
@@ -185,14 +188,14 @@ export async function GET(request: NextRequest) {
     // Add channel time series query
     const channelTimeSeriesQuery = `
       WITH categorized_amazon AS (
-        SELECT 
-          DATE(date) as category_date,
+        SELECT
+          DATE(Purchase_Date) as category_date,
           ${caseStatement} as category,
-          revenue as sales,
+          Item_Price as sales,
           'Amazon' as channel
-        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE product_name IS NOT NULL
-        ${startDate && endDate ? `AND DATE(date) >= '${startDate}' AND DATE(date) <= '${endDate}'` : ''}
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL
+        ${startDate && endDate ? `AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'` : ''}
       ),
       categorized_woocommerce AS (
         SELECT 
@@ -232,12 +235,12 @@ export async function GET(request: NextRequest) {
     // Add unique products query
     const uniqueProductsQuery = `
       WITH categorized_amazon AS (
-        SELECT 
+        SELECT
           ${caseStatement} as category,
-          asin as product_id
-        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE product_name IS NOT NULL
-        ${startDate && endDate ? `AND DATE(date) >= '${startDate}' AND DATE(date) <= '${endDate}'` : ''}
+          ASIN as product_id
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL
+        ${startDate && endDate ? `AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'` : ''}
       ),
       categorized_woocommerce AS (
         SELECT 
