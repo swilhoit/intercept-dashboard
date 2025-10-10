@@ -9,6 +9,15 @@ interface ChannelBreakdownProps {
 }
 
 export function ChannelBreakdown({ amazonRevenue, woocommerceRevenue }: ChannelBreakdownProps) {
+  // Debug logging to see what props we're receiving
+  console.log('📊 ChannelBreakdown Props:', {
+    amazonRevenue,
+    woocommerceRevenue,
+    amazonType: typeof amazonRevenue,
+    woocommerceType: typeof woocommerceRevenue
+  })
+
+
   const data = [
     {
       name: "Amazon",

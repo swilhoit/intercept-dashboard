@@ -40,7 +40,9 @@ export function AmazonDashboard({
 
   const chartData = view === 'daily' ? salesData?.daily || [] : salesData?.monthly || []
   const topProducts = productData?.filter((p: any) => p.channel === 'Amazon').slice(0, 10) || []
-  const categories = categoryData?.filter((c: any) => c.channel === 'Amazon') || []
+  const categories = Array.isArray(categoryData)
+    ? categoryData.filter((c: any) => c.channel === 'Amazon' && c.name && c.revenue > 0)
+    : []
 
   const stats = [
     {
@@ -145,25 +147,31 @@ export function AmazonDashboard({
             <CardDescription>Revenue by product category</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categories}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="revenue"
-                >
-                  {categories.map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: any) => formatCurrency(value)} />
-              </PieChart>
-            </ResponsiveContainer>
+            {categories.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={categories}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="revenue"
+                  >
+                    {categories.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                No category data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -173,15 +181,21 @@ export function AmazonDashboard({
             <CardDescription>Top categories by revenue</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categories.slice(0, 5)}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(value: any) => formatCurrency(value)} />
-                <Bar dataKey="revenue" fill="#FF9500" />
-              </BarChart>
-            </ResponsiveContainer>
+            {categories.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={categories.slice(0, 5)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
+                  <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                  <Bar dataKey="revenue" fill="#FF9500" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                No category data available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

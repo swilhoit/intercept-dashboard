@@ -45,12 +45,20 @@ export default function OverviewPage() {
         adSpendRes.json(),
       ])
 
-      setSummary(summaryData.error ? { 
-        total_revenue: 0, 
-        total_orders: 0, 
+      // Debug logging to see what we're actually getting
+      console.log('🔍 API Response Debug:')
+      console.log('Summary Data:', summaryData)
+      console.log('WooCommerce Revenue:', summaryData.woocommerce_revenue)
+      console.log('Amazon Revenue:', summaryData.amazon_revenue)
+      console.log('Total Revenue:', summaryData.total_revenue)
+      console.log('Has Error:', !!summaryData.error)
+
+      setSummary(summaryData.error ? {
+        total_revenue: 0,
+        total_orders: 0,
         days_with_sales: 0,
         amazon_revenue: 0,
-        woocommerce_revenue: 0 
+        woocommerce_revenue: 0
       } : summaryData)
       setProducts(Array.isArray(productsData) ? productsData : [])
       setAdSpendData(adSpendInfo.error ? { 
@@ -75,13 +83,15 @@ export default function OverviewPage() {
         daysWithSales={summary.days_with_sales}
         highestDay={summary.highest_day}
         totalAdSpend={adSpendData.metrics?.totalAdSpend || 0}
-        tacos={(adSpendData.metrics?.totalAdSpend && summary.total_revenue > 0) 
-          ? (adSpendData.metrics.totalAdSpend / summary.total_revenue * 100) 
+        tacos={(adSpendData.metrics?.totalAdSpend && summary.total_revenue > 0)
+          ? (adSpendData.metrics.totalAdSpend / summary.total_revenue * 100)
           : 0}
+        organicClicks={summary.organic_clicks}
         percentageChanges={{
           total_revenue: summary.percentage_changes?.total_revenue,
           avg_daily_sales: summary.percentage_changes?.avg_daily_sales,
-          totalAdSpend: adSpendData.metrics?.percentage_changes?.totalAdSpend
+          totalAdSpend: adSpendData.metrics?.percentage_changes?.totalAdSpend,
+          organicClicks: summary.percentage_changes?.organicClicks
         }}
         hasComparison={summary.has_comparison || adSpendData.metrics?.has_comparison}
       />

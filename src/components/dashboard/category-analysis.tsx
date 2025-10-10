@@ -52,14 +52,41 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
         fetch(`/api/sales/category-products?${params}`),
         fetch(`/api/ads/category-metrics?${params}`)
       ])
-      const categoryData = await categoryResponse.json()
-      const productsData = await productsResponse.json()
-      const adsMetrics = await adsResponse.json()
+      
+      // Check if responses are ok and log errors
+      if (!categoryResponse.ok) {
+        console.error("Categories API error:", categoryResponse.status, categoryResponse.statusText)
+        const errorText = await categoryResponse.text()
+        console.error("Categories API error details:", errorText)
+      }
+      if (!productsResponse.ok) {
+        console.error("Products API error:", productsResponse.status, productsResponse.statusText)
+        const errorText = await productsResponse.text()
+        console.error("Products API error details:", errorText)
+      }
+      if (!adsResponse.ok) {
+        console.error("Ads API error:", adsResponse.status, adsResponse.statusText)
+        const errorText = await adsResponse.text()
+        console.error("Ads API error details:", errorText)
+      }
+      
+      const categoryData = categoryResponse.ok ? await categoryResponse.json() : { categories: {}, aggregated: [], dates: [] }
+      const productsData = productsResponse.ok ? await productsResponse.json() : { products: [] }
+      const adsMetrics = adsResponse.ok ? await adsResponse.json() : { categories: {}, dates: [] }
+      
+      console.log("Category data received:", categoryData)
+      console.log("Products data received:", productsData)
+      console.log("Ads data received:", adsMetrics)
+      
       setData(categoryData)
       setProducts(productsData.products || [])
       setAdsData(adsMetrics)
     } catch (error) {
       console.error("Error fetching category data:", error)
+      // Set empty data on error
+      setData({ categories: {}, aggregated: [], dates: [] })
+      setProducts([])
+      setAdsData({ categories: {}, dates: [] })
     } finally {
       setLoading(false)
     }
@@ -127,6 +154,25 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
 
   // Calculate total sales for percentage calculations
   const totalSales = categories.reduce((sum: number, cat: any) => sum + (cat.totalSales || 0), 0)
+  
+  // Show message if no data is available
+  if (!loading && categories.length === 0) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="h-[400px] flex items-center justify-center">
+            <div className="text-center">
+              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <div className="text-muted-foreground">No category data available</div>
+              <div className="text-sm text-muted-foreground mt-2">
+                Check the browser console for API errors or try adjusting the date range.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
   
   // Prepare pie chart data
   const pieData = categories.map((cat: any) => ({

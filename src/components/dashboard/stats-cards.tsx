@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowUpIcon, ArrowDownIcon, DollarSign, TrendingUp, Calendar, ShoppingCart, TrendingDown, Target } from "lucide-react"
+import { ArrowUpIcon, ArrowDownIcon, DollarSign, TrendingUp, MousePointerClick, ShoppingCart, TrendingDown, Target } from "lucide-react"
 
 interface StatsCardsProps {
   totalRevenue: number
@@ -10,15 +10,17 @@ interface StatsCardsProps {
   highestDay: number
   totalAdSpend?: number
   tacos?: number
+  organicClicks?: number
   percentageChanges?: {
     total_revenue?: number
     avg_daily_sales?: number
     totalAdSpend?: number
+    organicClicks?: number
   }
   hasComparison?: boolean
 }
 
-export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highestDay, totalAdSpend, tacos, percentageChanges, hasComparison }: StatsCardsProps) {
+export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highestDay, totalAdSpend, tacos, organicClicks, percentageChanges, hasComparison }: StatsCardsProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -129,14 +131,22 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Active Days</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium">Organic Clicks</CardTitle>
+          <MousePointerClick className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatNumber(daysWithSales)}</div>
-          <p className="text-xs text-muted-foreground">
-            Days with sales
-          </p>
+          <div className="text-2xl font-bold">{formatNumber(organicClicks || 0)}</div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Total organic traffic
+            </p>
+            {hasComparison && percentageChanges?.organicClicks !== undefined && (
+              <div className={`flex items-center text-xs ${getChangeColor(percentageChanges.organicClicks)}`}>
+                {getChangeIcon(percentageChanges.organicClicks)}
+                <span className="ml-1">{formatPercentageChange(percentageChanges.organicClicks)}</span>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
       
