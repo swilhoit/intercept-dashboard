@@ -83,7 +83,7 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
           <div className="text-2xl font-bold">{formatCurrency(totalAdSpend || 0)}</div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
-              Google Ads spend
+              Total ad spend
             </p>
             {hasComparison && percentageChanges?.totalAdSpend !== undefined && (
               <div className={`flex items-center text-xs ${getChangeColor(percentageChanges.totalAdSpend)}`}>
