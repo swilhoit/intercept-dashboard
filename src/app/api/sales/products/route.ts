@@ -63,25 +63,39 @@ export async function GET(request: NextRequest) {
     }
     
     if (!channel || channel === 'all' || channel === 'WooCommerce') {
-      let wooQuery = `
+      // Query all WooCommerce site tables to get complete product data
+      let wooWhereClause = '';
+      if (startDate && endDate) {
+        wooWhereClause = ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
+      }
+
+      // Create individual queries for each WooCommerce site and combine them
+      const wooSites = ['heatilator', 'superior', 'waterwise', 'brickanew', 'majestic'];
+      const wooQueries = wooSites.map(site => `
         SELECT 
           product_name,
           'WooCommerce' as channel,
           SUM(total_revenue) as total_sales,
           SUM(total_quantity_sold) as quantity
-        FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
-        WHERE product_name IS NOT NULL
-      `;
-      
-      if (startDate && endDate) {
-        wooQuery += ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
-      }
-      
-      wooQuery += `
+        FROM \`intercept-sales-2508061117.woocommerce.${site}_daily_product_sales\`
+        WHERE product_name IS NOT NULL ${wooWhereClause}
         GROUP BY product_name
+      `);
+
+      // Combine all WooCommerce queries
+      const combinedWooQuery = `
+        SELECT 
+          product_name,
+          channel,
+          SUM(total_sales) as total_sales,
+          SUM(quantity) as quantity
+        FROM (
+          ${wooQueries.join(' UNION ALL ')}
+        )
+        GROUP BY product_name, channel
       `;
       
-      queries.push(wooQuery);
+      queries.push(combinedWooQuery);
     }
     
     // Combine queries with UNION ALL if we have multiple
