@@ -58,7 +58,7 @@ def sync_ecommerce(request):
                 SELECT
                     order_date as date,
                     SUM(total_revenue) as shopify_sales
-                FROM `{PROJECT_ID}.shopify.waterwise_daily_product_sales`
+                FROM `{PROJECT_ID}.shopify.waterwise_daily_product_sales_clean`
                 WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
                 GROUP BY order_date
             )
