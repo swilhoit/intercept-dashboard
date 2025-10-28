@@ -19,37 +19,37 @@ export async function GET(request: NextRequest) {
       wooWhereClause = ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
     }
     
-    // Get WooCommerce + Shopify sales summary (combined website sales)
+    // Get WooCommerce sales summary (excluding Shopify/WaterWise)
     const summaryQuery = `
       SELECT 
-        SUM(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as total_revenue,
-        AVG(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as avg_daily_sales,
+        SUM(woocommerce_sales) as total_revenue,
+        AVG(woocommerce_sales) as avg_daily_sales,
         COUNT(DISTINCT date) as days_with_sales,
-        COUNT(DISTINCT CASE WHEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 THEN date END) as active_days,
-        MAX(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as highest_day,
-        MIN(CASE WHEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 THEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) END) as lowest_day
+        COUNT(DISTINCT CASE WHEN woocommerce_sales > 0 THEN date END) as active_days,
+        MAX(woocommerce_sales) as highest_day,
+        MIN(CASE WHEN woocommerce_sales > 0 THEN woocommerce_sales END) as lowest_day
       FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
-      WHERE (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 ${whereClause}
+      WHERE woocommerce_sales > 0 ${whereClause}
     `;
     
-    // Get daily sales data (combined websites)
+    // Get daily sales data (WooCommerce only)
     const dailyQuery = `
       SELECT 
         date,
-        (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as sales
+        woocommerce_sales as sales
       FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
-      WHERE (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 ${whereClause}
+      WHERE woocommerce_sales > 0 ${whereClause}
       ORDER BY date DESC
       LIMIT 90
     `;
     
-    // Get monthly aggregated data (combined websites)
+    // Get monthly aggregated data (WooCommerce only)
     const monthlyQuery = `
       SELECT 
         FORMAT_DATE('%Y-%m', date) as date,
-        SUM(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as sales
+        SUM(woocommerce_sales) as sales
       FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
-      WHERE (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 ${whereClause}
+      WHERE woocommerce_sales > 0 ${whereClause}
       GROUP BY date
       ORDER BY date DESC
       LIMIT 12
@@ -73,13 +73,7 @@ export async function GET(request: NextRequest) {
         SELECT product_name, 'Superior' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
         FROM \`intercept-sales-2508061117.woocommerce.superior_daily_product_sales\`
         WHERE 1=1 ${wooWhereClause}
-        
-        UNION ALL
-        
-        SELECT product_name, 'WaterWise' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
-        FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
-        WHERE 1=1 ${wooWhereClause}
-        
+
         UNION ALL
         
         SELECT product_name, 'Majestic' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
@@ -117,13 +111,7 @@ export async function GET(request: NextRequest) {
         SELECT product_name, 'Superior' as site, total_revenue, total_quantity_sold, order_date
         FROM \`intercept-sales-2508061117.woocommerce.superior_daily_product_sales\`
         WHERE 1=1 ${wooWhereClause}
-        
-        UNION ALL
-        
-        SELECT product_name, 'WaterWise' as site, total_revenue, total_quantity_sold, order_date
-        FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
-        WHERE 1=1 ${wooWhereClause}
-        
+
         UNION ALL
         
         SELECT product_name, 'Majestic' as site, total_revenue, total_quantity_sold, order_date
@@ -136,7 +124,7 @@ export async function GET(request: NextRequest) {
           WHEN UPPER(product_name) LIKE '%PAINT%' OR UPPER(product_name) LIKE '%ROLLER%' THEN 'Paint Products'
           WHEN UPPER(product_name) LIKE '%BELT%' OR UPPER(product_name) LIKE '%GRAB%' THEN 'Automotive'
           WHEN UPPER(product_name) LIKE '%HEATILATOR%' OR UPPER(product_name) LIKE '%SLIM%' THEN 'Heatilator Products'
-          WHEN UPPER(product_name) LIKE '%WATER%' OR UPPER(product_name) LIKE '%FILTER%' OR UPPER(product_name) LIKE '%PURIFIER%' THEN 'Water Treatment'
+          WHEN UPPER(product_name) LIKE '%SUPERIOR%' THEN 'Superior Products'
           WHEN UPPER(product_name) LIKE '%MAJESTIC%' OR UPPER(product_name) LIKE '%PREMIUM%' THEN 'Majestic Products'
           ELSE 'Other'
         END as name,

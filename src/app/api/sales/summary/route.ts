@@ -31,9 +31,6 @@ export async function GET(request: NextRequest) {
         SELECT SUM(total_revenue) as revenue FROM \`intercept-sales-2508061117.woocommerce.superior_daily_product_sales\`
         WHERE 1=1 ${wooWhereClause}
         UNION ALL
-        SELECT SUM(total_revenue) as revenue FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
-        WHERE 1=1 ${wooWhereClause}
-        UNION ALL
         SELECT SUM(total_revenue) as revenue FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
         WHERE 1=1 ${wooWhereClause}
         UNION ALL
@@ -199,6 +196,20 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching WooCommerce revenue:', error);
     }
 
+    // Get Shopify (WaterWise/Aqua2use) revenue separately
+    let currentShopifyRevenue = 0;
+    const shopifyRevenueQuery = `
+      SELECT SUM(total_revenue) as total_shopify_revenue
+      FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales\`
+      WHERE 1=1 ${wooWhereClause}
+    `;
+    try {
+      const [shopifyRows] = await bigquery.query(shopifyRevenueQuery);
+      currentShopifyRevenue = shopifyRows[0]?.total_shopify_revenue || 0;
+    } catch (error) {
+      console.error('Error fetching Shopify revenue:', error);
+    }
+
     // Get organic clicks
     let organicClicks = 0;
     try {
@@ -287,12 +298,13 @@ export async function GET(request: NextRequest) {
       };
     }
     
-    // Use correct Amazon and WooCommerce revenue and recalculate all totals
-    const totalRevenue = currentAmazonRevenue + currentWooCommerceRevenue;
+    // Use correct Amazon, WooCommerce, and Shopify revenue and recalculate all totals
+    const totalRevenue = currentAmazonRevenue + currentWooCommerceRevenue + currentShopifyRevenue;
     const correctedData = {
       ...currentData,
       amazon_revenue: currentAmazonRevenue,
       woocommerce_revenue: currentWooCommerceRevenue,
+      shopify_revenue: currentShopifyRevenue,
       total_revenue: totalRevenue,
       avg_daily_sales: amazonDays > 0 ? totalRevenue / amazonDays : 0,
       highest_day: Math.max(amazonHighestDay, currentData.highest_day || 0),
@@ -316,13 +328,15 @@ export async function GET(request: NextRequest) {
         fixes: {
           amazonRevenue: currentAmazonRevenue,
           woocommerceRevenue: currentWooCommerceRevenue,
+          shopifyRevenue: currentShopifyRevenue,
           organicClicks: organicClicks,
           totalOrders: totalOrders,
           correctedTotalRevenue: totalRevenue
         },
         dataSources: {
           amazonSource: "amazon_seller.amazon_orders_2025",
-          woocommerceSource: "individual_site_tables",
+          woocommerceSource: "individual_site_tables (excluding WaterWise)",
+          shopifySource: "shopify.waterwise_daily_product_sales",
           organicSource: "search_console_aggregated"
         }
       }

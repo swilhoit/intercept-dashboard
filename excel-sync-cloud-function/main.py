@@ -71,3 +71,6 @@ def excel_sync_handler(request):
             "message": str(e),
             "timestamp": datetime.now().isoformat()
         }
+
+# Alias for Cloud Functions deployment (cloud functions expects this name)
+excel_sharepoint_sync = excel_sync_handler
