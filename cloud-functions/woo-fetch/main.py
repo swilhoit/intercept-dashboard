@@ -11,7 +11,7 @@ import time
 # Get project ID from environment
 PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-2508061117')
 
-# WooCommerce site configurations - will need to be updated with actual credentials
+# WooCommerce site configurations - CORRECTED credentials from .env.woocommerce
 WOOCOMMERCE_SITES = {
     'brickanew': {
         'base_url': 'https://brick-anew.com',
@@ -21,8 +21,8 @@ WOOCOMMERCE_SITES = {
     },
     'heatilator': {
         'base_url': 'https://heatilatorfireplacedoors.com',
-        'consumer_key': 'ck_440a83e0aa324f7a0dcb10b07710239b1af741d0',
-        'consumer_secret': 'cs_893f884fb20e5bc9c2655188c18c08debebf7bb7',
+        'consumer_key': 'ck_662b9b92b3ad56d4e6a8104368081f7de3fecd4e',
+        'consumer_secret': 'cs_b94be3803bacbf508eb774b1e414e3ed9cd21a85',
         'table': 'heatilator_daily_product_sales'
     },
     'superior': {
@@ -30,6 +30,12 @@ WOOCOMMERCE_SITES = {
         'consumer_key': 'ck_4e6e36da2bc12181bdfef39125fa3074630078b9',
         'consumer_secret': 'cs_802ba938ebacf7e9af0f931403f554a134352ac1',
         'table': 'superior_daily_product_sales'
+    },
+    'majestic': {
+        'base_url': 'https://majesticfireplacedoors.com',
+        'consumer_key': 'ck_24fc09cea9514ee80496cdecefad84526c957662',
+        'consumer_secret': 'cs_0571e9b8db8a232c2d8ad343ad112b4652f13a1a',
+        'table': 'majestic_daily_product_sales'
     }
 }
 
@@ -50,7 +56,13 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=7):
     # WooCommerce REST API endpoint
     url = f"{base_url}/wp-json/wc/v3/orders"
     auth = (consumer_key, consumer_secret)
-    
+
+    # Add headers to bypass Cloudflare/security plugins blocking Python requests
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+    }
+
     params = {
         'after': start_date.isoformat() + 'T00:00:00',
         'before': end_date.isoformat() + 'T23:59:59',
@@ -58,12 +70,12 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=7):
         'per_page': 100,
         'page': 1
     }
-    
+
     all_orders = []
-    
+
     try:
         # Fetch first page to test connection
-        response = requests.get(url, auth=auth, params=params, timeout=30)
+        response = requests.get(url, auth=auth, params=params, headers=headers, timeout=30)
         
         if response.status_code == 401:
             return {'status': 'error', 'message': f'Authentication failed for {site_name}'}
@@ -79,7 +91,7 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=7):
         page = 2
         while len(orders) == 100 and page <= 10:  # Limit to 10 pages max
             params['page'] = page
-            response = requests.get(url, auth=auth, params=params, timeout=30)
+            response = requests.get(url, auth=auth, params=params, headers=headers, timeout=30)
             if response.status_code == 200:
                 orders = response.json()
                 all_orders.extend(orders)
@@ -98,17 +110,17 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=7):
         return {'status': 'error', 'message': f'Failed to fetch {site_name} orders: {str(e)}'}
 
 def process_orders_to_bigquery(site_name, orders, table_name):
-    """Process orders and insert into BigQuery"""
-    
+    """Process orders and insert into BigQuery with deduplication"""
+
     if not orders:
         return {'status': 'skipped', 'message': 'No orders to process'}
-    
+
     client = bigquery.Client(project=PROJECT_ID)
     rows_to_insert = []
-    
+
     for order in orders:
         order_date = datetime.fromisoformat(order['date_created'].replace('Z', '+00:00')).date()
-        
+
         # Process line items (products)
         for item in order.get('line_items', []):
             product_id = item['product_id']
@@ -117,7 +129,7 @@ def process_orders_to_bigquery(site_name, orders, table_name):
             quantity = item['quantity']
             total_price = float(item['total'])
             unit_price = total_price / quantity if quantity > 0 else 0
-            
+
             row = {
                 'order_date': order_date.isoformat(),
                 'product_id': product_id,
@@ -129,69 +141,84 @@ def process_orders_to_bigquery(site_name, orders, table_name):
                 'order_count': 1
             }
             rows_to_insert.append(row)
-    
+
     if rows_to_insert:
-        # Delete existing data for today to avoid duplicates
-        today = date.today().isoformat()
-        delete_query = f"""
-        DELETE FROM `{PROJECT_ID}.woocommerce.{table_name}`
-        WHERE order_date = '{today}'
-        """
-        
         try:
-            job = client.query(delete_query)
-            job.result()
-            
-            # Insert new data
+            # Get unique dates to delete
+            unique_dates = set(row['order_date'] for row in rows_to_insert)
+            date_list = "', '".join(unique_dates)
+
+            # Delete existing data for these dates to prevent duplicates
+            table_id = f"{PROJECT_ID}.woocommerce.{table_name}"
+            delete_query = f"""
+            DELETE FROM `{table_id}`
+            WHERE order_date IN ('{date_list}')
+            """
+
+            delete_job = client.query(delete_query)
+            delete_job.result()
+            print(f"Deleted existing data for {len(unique_dates)} dates in {site_name}")
+
+            # Now insert fresh data
             table_ref = client.dataset('woocommerce').table(table_name)
             errors = client.insert_rows_json(table_ref, rows_to_insert)
-            
+
             if errors:
                 return {'status': 'error', 'message': f'BigQuery insert errors: {errors}'}
-            else:
-                return {
-                    'status': 'success', 
-                    'message': f'Inserted {len(rows_to_insert)} rows for {site_name}'
-                }
-                
+
+            return {
+                'status': 'success',
+                'message': f'Inserted {len(rows_to_insert)} rows for {site_name} across {len(unique_dates)} dates (deduplicated)'
+            }
+
         except Exception as e:
             return {'status': 'error', 'message': f'BigQuery error for {site_name}: {str(e)}'}
-    
+
     return {'status': 'skipped', 'message': 'No product data to insert'}
 
 def fetch_all_woocommerce(request):
     """
     HTTP Cloud Function to fetch data from all WooCommerce sites
+    Supports ?days_back=N parameter for backfilling historical data
     """
     try:
+        # Get days_back parameter from request (default 7)
+        days_back = 7
+        if request.args and 'days_back' in request.args:
+            try:
+                days_back = int(request.args.get('days_back'))
+            except ValueError:
+                days_back = 7
+
         results = {
             'timestamp': datetime.now().isoformat(),
             'project_id': PROJECT_ID,
+            'days_back': days_back,
             'sites': {}
         }
-        
+
         # Process each site
         for site_name, site_config in WOOCOMMERCE_SITES.items():
-            print(f"Processing {site_name}...")
-            
-            # Fetch orders
-            fetch_result = fetch_woocommerce_orders(site_name, site_config)
+            print(f"Processing {site_name} (fetching {days_back} days)...")
+
+            # Fetch orders with specified days_back
+            fetch_result = fetch_woocommerce_orders(site_name, site_config, days_back=days_back)
             results['sites'][site_name] = {'fetch': fetch_result}
-            
+
             # If fetch successful, process to BigQuery
             if fetch_result['status'] == 'success':
                 process_result = process_orders_to_bigquery(
-                    site_name, 
-                    fetch_result['orders'], 
+                    site_name,
+                    fetch_result['orders'],
                     site_config['table']
                 )
                 results['sites'][site_name]['process'] = process_result
             else:
                 results['sites'][site_name]['process'] = {
-                    'status': 'skipped', 
+                    'status': 'skipped',
                     'message': 'Fetch failed'
                 }
-        
+
         return json.dumps(results, indent=2)
         
     except Exception as e:
