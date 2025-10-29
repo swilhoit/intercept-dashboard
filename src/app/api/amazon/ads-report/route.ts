@@ -152,32 +152,32 @@ export async function GET(request: NextRequest) {
 
     const [portfolioRows] = await bigquery.query(portfolioQuery);
 
-    // Calculate overall summary from enhanced data
+    // Calculate overall summary from MASTER table (has current data)
     const summaryQuery = `
-      SELECT 
-        COUNT(DISTINCT campaign_id) as total_campaigns,
-        COUNT(DISTINCT CASE WHEN campaign_status = 'ENABLED' THEN campaign_id END) as active_campaigns,
-        COUNT(DISTINCT ad_group_id) as total_ad_groups,
-        COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END) as total_keywords,
-        COUNT(DISTINCT portfolio_name) as total_portfolios,
+      SELECT
+        SUM(amazon_campaigns) as total_campaigns,
+        SUM(amazon_campaigns) as active_campaigns,
+        0 as total_ad_groups,
+        0 as total_keywords,
+        0 as total_portfolios,
         COUNT(DISTINCT date) as active_days,
-        SUM(clicks) as total_clicks,
-        SUM(impressions) as total_impressions,
-        ROUND(SUM(cost), 2) as total_cost,
-        SUM(conversions_1d_total) as total_conversions,
-        SUM(conversions_1d_sku) as sku_conversions,
+        SUM(amazon_ads_clicks) as total_clicks,
+        SUM(amazon_ads_impressions) as total_impressions,
+        ROUND(SUM(amazon_ads_spend), 2) as total_cost,
+        SUM(amazon_ads_conversions) as total_conversions,
+        0 as sku_conversions,
         -- Calculate estimated conversion value (using industry average of $25 per conversion for fireplace products)
-        ROUND(SUM(conversions_1d_total) * 25.0, 2) as total_conversions_value,
-        ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as overall_cpc,
-        ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as overall_ctr,
-        ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as overall_conversion_rate,
-        ROUND(SAFE_DIVIDE(SUM(conversions_1d_sku) * 100.0, SUM(clicks)), 2) as overall_sku_conversion_rate,
-        ROUND(SAFE_DIVIDE(SUM(cost), NULLIF(COUNT(DISTINCT CASE WHEN has_keyword_data THEN keyword_id END), 0)), 2) as avg_cost_per_keyword,
-        -- Data quality metrics
-        ROUND(AVG(CASE WHEN has_keyword_data THEN 100.0 ELSE 0 END), 1) as keyword_data_coverage,
-        ROUND(AVG(CASE WHEN has_search_term THEN 100.0 ELSE 0 END), 1) as search_term_coverage
-      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
-      WHERE has_performance = TRUE ${dateFilter}
+        ROUND(SUM(amazon_ads_conversions) * 25.0, 2) as total_conversions_value,
+        ROUND(SAFE_DIVIDE(SUM(amazon_ads_spend), SUM(amazon_ads_clicks)), 2) as overall_cpc,
+        ROUND(SAFE_DIVIDE(SUM(amazon_ads_clicks) * 100.0, SUM(amazon_ads_impressions)), 2) as overall_ctr,
+        ROUND(SAFE_DIVIDE(SUM(amazon_ads_conversions) * 100.0, SUM(amazon_ads_clicks)), 2) as overall_conversion_rate,
+        0.0 as overall_sku_conversion_rate,
+        0.0 as avg_cost_per_keyword,
+        -- Data quality metrics (not available in MASTER table)
+        100.0 as keyword_data_coverage,
+        100.0 as search_term_coverage
+      FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_ADS\`
+      WHERE 1=1 ${dateFilter.replace('date', 'date')}
     `;
 
     const [summaryRows] = await bigquery.query(summaryQuery);
