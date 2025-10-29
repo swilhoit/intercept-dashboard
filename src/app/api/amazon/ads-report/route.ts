@@ -14,10 +14,13 @@ export async function GET(request: NextRequest) {
     const groupBy = searchParams.get('groupBy') || 'campaign'; // campaign, portfolio, adgroup
     const includeTimeSeries = searchParams.get('timeSeries') === 'true';
     
-    // Build date filter
+    // Build date filter - default to last 30 days if no range specified
     let dateFilter = '';
     if (startDate && endDate) {
       dateFilter = `AND date BETWEEN '${startDate}' AND '${endDate}'`;
+    } else {
+      // Default to last 30 days
+      dateFilter = `AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)`;
     }
     
     // Get time-series data if requested
