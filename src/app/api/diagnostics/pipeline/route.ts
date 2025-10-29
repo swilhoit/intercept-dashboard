@@ -73,13 +73,19 @@ export async function GET(request: NextRequest) {
     );
 
     // Check WooCommerce Sources
-    const wooSites = ['brickanew', 'heatilator', 'superior', 'majestic'];
+    // Note: Superior and Majestic are low-volume sites, so use longer thresholds
+    const wooSites = [
+      { name: 'brickanew', threshold: 7 },
+      { name: 'heatilator', threshold: 7 },
+      { name: 'superior', threshold: 30 },  // Low-volume site
+      { name: 'majestic', threshold: 30 }   // Low-volume site
+    ];
     for (const site of wooSites) {
-      result.sources[`woo_${site}`] = await checkTable(
-        `woocommerce.${site}_daily_product_sales`,
-        `WooCommerce ${site}`,
+      result.sources[`woo_${site.name}`] = await checkTable(
+        `woocommerce.${site.name}_daily_product_sales`,
+        `WooCommerce ${site.name}`,
         'order_date',
-        7
+        site.threshold
       );
     }
 
