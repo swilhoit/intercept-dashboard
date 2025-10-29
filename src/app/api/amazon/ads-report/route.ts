@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       `;
       const [timeSeriesRows] = await bigquery.query(timeSeriesQuery);
       timeSeriesData = timeSeriesRows.map(row => ({
-        date: row.date.value,
+        date: row.date?.value || row.date,
         spend: parseFloat(row.spend || 0),
         clicks: parseInt(row.clicks || 0),
         impressions: parseInt(row.impressions || 0),
