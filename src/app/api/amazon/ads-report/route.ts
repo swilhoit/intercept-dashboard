@@ -48,14 +48,20 @@ export async function GET(request: NextRequest) {
         ORDER BY date
       `;
       const [timeSeriesRows] = await bigquery.query(timeSeriesQuery);
-      timeSeriesData = timeSeriesRows.map(row => ({
-        date: row.date?.value || row.date,
-        spend: parseFloat(row.spend || 0),
-        clicks: parseInt(row.clicks || 0),
-        impressions: parseInt(row.impressions || 0),
-        conversions: parseInt(row.conversions || 0),
-        conversions_value: parseFloat(row.conversions_value || 0)
-      }));
+      timeSeriesData = timeSeriesRows.map(row => {
+        // Handle BigQuery DATE field which can be object or string
+        const dateValue = row.date?.value || row.date;
+        const dateStr = typeof dateValue === 'string' ? dateValue : dateValue.toString();
+
+        return {
+          date: dateStr,
+          spend: parseFloat(row.spend || 0),
+          clicks: parseInt(row.clicks || 0),
+          impressions: parseInt(row.impressions || 0),
+          conversions: parseInt(row.conversions || 0),
+          conversions_value: parseFloat(row.conversions_value || 0)
+        };
+      });
     }
     
     // Main metrics query - Skip for now as keywords_enhanced only has old data
