@@ -82,10 +82,36 @@ interface HistoricalData {
   };
 }
 
+interface E2ECheck {
+  name: string;
+  layer: 'source' | 'api' | 'integration';
+  status: 'healthy' | 'warning' | 'error';
+  message: string;
+  responseTime?: number;
+  dataReturned?: boolean;
+  recordCount?: number;
+  endpoint?: string;
+  errors?: string[];
+}
+
+interface E2EData {
+  timestamp: string;
+  overallStatus: 'healthy' | 'warning' | 'error';
+  checks: E2ECheck[];
+  summary: {
+    totalChecks: number;
+    passed: number;
+    warnings: number;
+    errors: number;
+    avgResponseTime: number;
+  };
+}
+
 export default function DiagnosticsPage() {
   const [data, setData] = useState<PipelineCheck | null>(null)
   const [schedulers, setSchedulers] = useState<SchedulerData | null>(null)
   const [historical, setHistorical] = useState<HistoricalData | null>(null)
+  const [e2e, setE2e] = useState<E2EData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,10 +119,11 @@ export default function DiagnosticsPage() {
     setLoading(true)
     setError(null)
     try {
-      const [pipelineRes, schedulersRes, historyRes] = await Promise.all([
+      const [pipelineRes, schedulersRes, historyRes, e2eRes] = await Promise.all([
         fetch('/api/diagnostics/pipeline'),
         fetch('/api/diagnostics/schedulers'),
-        fetch('/api/diagnostics/history?days=30')
+        fetch('/api/diagnostics/history?days=30'),
+        fetch('/api/diagnostics/e2e')
       ])
 
       if (!pipelineRes.ok) throw new Error('Failed to fetch pipeline diagnostics')
@@ -111,6 +138,11 @@ export default function DiagnosticsPage() {
       if (historyRes.ok) {
         const historyResult = await historyRes.json()
         setHistorical(historyResult)
+      }
+
+      if (e2eRes.ok) {
+        const e2eResult = await e2eRes.json()
+        setE2e(e2eResult)
       }
     } catch (err: any) {
       setError(err.message)
@@ -215,17 +247,172 @@ export default function DiagnosticsPage() {
       </div>
 
       {/* Tabbed Interface */}
-      <Tabs defaultValue="live" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="e2e" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="e2e" className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            End-to-End
+          </TabsTrigger>
           <TabsTrigger value="live" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            Live Diagnostics
+            Data Sources
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Historical Logs
           </TabsTrigger>
         </TabsList>
+
+        {/* End-to-End Testing Tab */}
+        <TabsContent value="e2e" className="space-y-6 mt-6">
+          {e2e ? (
+            <>
+              {/* E2E Summary */}
+              <div className="grid gap-4 md:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Checks</CardTitle>
+                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{e2e.summary.totalChecks}</div>
+                    <p className="text-xs text-muted-foreground">Full stack tests</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Passed</CardTitle>
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">{e2e.summary.passed}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {((e2e.summary.passed / e2e.summary.totalChecks) * 100).toFixed(0)}% success rate
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Issues</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {e2e.summary.warnings + e2e.summary.errors}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {e2e.summary.warnings} warnings, {e2e.summary.errors} errors
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg Response</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{e2e.summary.avgResponseTime}ms</div>
+                    <p className="text-xs text-muted-foreground">API response time</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* API Endpoints */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>API Endpoint Tests</CardTitle>
+                  <CardDescription>Validation of all critical API endpoints</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Endpoint</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Response Time</TableHead>
+                        <TableHead>Records</TableHead>
+                        <TableHead>Result</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {e2e.checks
+                        .filter(c => c.layer === 'api')
+                        .map((check, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-medium">
+                              <div className="flex flex-col">
+                                <span>{check.name}</span>
+                                <span className="text-xs text-muted-foreground font-mono">
+                                  {check.endpoint}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(check.status)}</TableCell>
+                            <TableCell>
+                              {check.responseTime !== undefined ? `${check.responseTime}ms` : 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              {check.recordCount !== undefined ? check.recordCount.toLocaleString() : 'N/A'}
+                            </TableCell>
+                            <TableCell className={check.status === 'healthy' ? 'text-green-600' : check.status === 'warning' ? 'text-yellow-600' : 'text-red-600'}>
+                              {check.message}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Integration Tests */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Data Flow Integration Tests</CardTitle>
+                  <CardDescription>End-to-end validation from BigQuery → API → Frontend</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {e2e.checks
+                      .filter(c => c.layer === 'integration')
+                      .map((check, i) => (
+                        <div key={i} className="flex items-start gap-4 p-4 rounded-lg border">
+                          <div className="mt-1">
+                            {check.status === 'healthy' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                            {check.status === 'warning' && <AlertTriangle className="h-5 w-5 text-yellow-500" />}
+                            {check.status === 'error' && <XCircle className="h-5 w-5 text-red-500" />}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium">{check.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1">{check.message}</div>
+                            {check.errors && check.errors.length > 0 && (
+                              <div className="text-xs text-red-500 mt-2">
+                                {check.errors.map((err, j) => (
+                                  <div key={j}>• {err}</div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {getStatusBadge(check.status)}
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-muted-foreground">
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Loading end-to-end tests...</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         {/* Live Diagnostics Tab */}
         <TabsContent value="live" className="space-y-6 mt-6">
