@@ -649,6 +649,36 @@ async function performConsistencyChecks(result: PipelineCheck) {
       actual: `Sales: ${salesMissing} missing, Ads: ${adsMissing} missing`
     });
 
+    // API Endpoint Data Validation
+    try {
+      // Test if Amazon Ads API returns campaign data
+      const campaignTestQuery = `
+        SELECT COUNT(DISTINCT campaign_name) as campaign_count
+        FROM \`${PROJECT_ID}.amazon_ads_sharepoint.keywords_enhanced\`
+        WHERE has_performance = TRUE
+          AND campaign_name IS NOT NULL
+          AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      `;
+      const [campaignTest] = await bigquery.query(campaignTestQuery);
+      const campaignCount = parseInt(campaignTest[0]?.campaign_count || 0);
+
+      checks.push({
+        name: 'Amazon Ads API Data Availability',
+        passed: campaignCount > 0,
+        message: campaignCount > 0
+          ? `${campaignCount} campaigns available for API consumption`
+          : 'No Amazon Ads campaigns found - API will return empty results',
+        expected: 'Campaign count > 0',
+        actual: `${campaignCount} campaigns`
+      });
+    } catch (error: any) {
+      checks.push({
+        name: 'Amazon Ads API Data Availability',
+        passed: false,
+        message: `Failed to validate API data: ${error.message}`
+      });
+    }
+
     // Set consistency status
     const failedChecks = checks.filter(c => !c.passed).length;
     if (failedChecks > 0) {
