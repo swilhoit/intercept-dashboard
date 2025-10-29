@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Amazon Ads API Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        pre { background: #f4f4f4; padding: 10px; overflow: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Amazon Ads API Diagnostic Tool</h1>
+
+    <button onclick="testAPI1()">Test: /api/amazon/ads-report?timeSeries=true</button>
+    <button onclick="testAPI2()">Test: /api/amazon/ads-report (no params)</button>
+    <button onclick="testAPI3()">Test: /api/ads/master-metrics</button>
+
+    <h2>Results:</h2>
+    <div id="results"></div>
+
+    <script>
+        async function testAPI1() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing /api/amazon/ads-report?timeSeries=true...</p>';
+
+            try {
+                const response = await fetch('/api/amazon/ads-report?timeSeries=true');
+                const data = await response.json();
+
+                results.innerHTML = `
+                    <h3 class="success">✓ API Response Successful</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Summary Total Cost:</strong> $${data.summary?.total_cost || 0}</p>
+                    <p><strong>Summary Total Clicks:</strong> ${data.summary?.total_clicks || 0}</p>
+                    <p><strong>TimeSeries Records:</strong> ${data.timeSeries?.length || 0}</p>
+                    <p><strong>Sample TimeSeries Data:</strong></p>
+                    <pre>${JSON.stringify(data.timeSeries?.slice(0, 3), null, 2)}</pre>
+                    <p><strong>Full Response:</strong></p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                results.innerHTML = `<h3 class="error">✗ API Error</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        async function testAPI2() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing /api/amazon/ads-report (no params)...</p>';
+
+            try {
+                const response = await fetch('/api/amazon/ads-report');
+                const data = await response.json();
+
+                results.innerHTML = `
+                    <h3 class="success">✓ API Response Successful</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Summary Total Cost:</strong> $${data.summary?.total_cost || 0}</p>
+                    <p><strong>Full Response:</strong></p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                results.innerHTML = `<h3 class="error">✗ API Error</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        async function testAPI3() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing /api/ads/master-metrics...</p>';
+
+            try {
+                const response = await fetch('/api/ads/master-metrics');
+                const data = await response.json();
+
+                results.innerHTML = `
+                    <h3 class="success">✓ API Response Successful</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Amazon Spend:</strong> $${data.summary?.amazon_spend || 0}</p>
+                    <p><strong>Amazon Clicks:</strong> ${data.summary?.amazon_clicks || 0}</p>
+                    <p><strong>Daily Records:</strong> ${data.daily?.length || 0}</p>
+                    <p><strong>Full Response:</strong></p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                results.innerHTML = `<h3 class="error">✗ API Error</h3><pre>${error.message}</pre>`;
+            }
+        }
+
+        // Auto-run first test on load
+        testAPI1();
+    </script>
+</body>
+</html>
