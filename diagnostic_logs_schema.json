@@ -1,0 +1,104 @@
+[
+  {
+    "name": "timestamp",
+    "type": "TIMESTAMP",
+    "mode": "REQUIRED",
+    "description": "When the diagnostic check was run"
+  },
+  {
+    "name": "overall_status",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Overall health status: healthy, warning, or error"
+  },
+  {
+    "name": "data_sources_healthy",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of data sources with healthy status"
+  },
+  {
+    "name": "data_sources_warning",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of data sources with warning status"
+  },
+  {
+    "name": "data_sources_error",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of data sources with error status"
+  },
+  {
+    "name": "master_tables_healthy",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of master tables with healthy status"
+  },
+  {
+    "name": "consistency_checks_passed",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of consistency checks that passed"
+  },
+  {
+    "name": "consistency_checks_failed",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of consistency checks that failed"
+  },
+  {
+    "name": "schedulers_active",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Number of active schedulers"
+  },
+  {
+    "name": "schedulers_total",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Total number of schedulers"
+  },
+  {
+    "name": "total_7day_revenue",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Total revenue from all sources (last 7 days)"
+  },
+  {
+    "name": "amazon_7day_revenue",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Amazon revenue (last 7 days)"
+  },
+  {
+    "name": "woocommerce_7day_revenue",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "WooCommerce revenue (last 7 days)"
+  },
+  {
+    "name": "shopify_7day_revenue",
+    "type": "FLOAT",
+    "mode": "NULLABLE",
+    "description": "Shopify revenue (last 7 days)"
+  },
+  {
+    "name": "issues_detected",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Comma-separated list of issues detected"
+  },
+  {
+    "name": "diagnostic_details",
+    "type": "JSON",
+    "mode": "NULLABLE",
+    "description": "Full diagnostic response as JSON for detailed analysis"
+  },
+  {
+    "name": "execution_time_ms",
+    "type": "INTEGER",
+    "mode": "NULLABLE",
+    "description": "Time taken to run diagnostics in milliseconds"
+  }
+]

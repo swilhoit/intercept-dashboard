@@ -62,9 +62,27 @@ interface SchedulerData {
   };
 }
 
+interface HistoricalData {
+  logs: Array<{
+    timestamp: string;
+    overall_status: string;
+    total_7day_revenue: number;
+    data_sources_healthy: number;
+    consistency_checks_passed: number;
+    issues_detected: string | null;
+  }>;
+  summary: {
+    total_runs: number;
+    healthy_runs: number;
+    health_percentage: number;
+    avg_7day_revenue: number;
+  };
+}
+
 export default function DiagnosticsPage() {
   const [data, setData] = useState<PipelineCheck | null>(null)
   const [schedulers, setSchedulers] = useState<SchedulerData | null>(null)
+  const [historical, setHistorical] = useState<HistoricalData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -72,9 +90,10 @@ export default function DiagnosticsPage() {
     setLoading(true)
     setError(null)
     try {
-      const [pipelineRes, schedulersRes] = await Promise.all([
+      const [pipelineRes, schedulersRes, historyRes] = await Promise.all([
         fetch('/api/diagnostics/pipeline'),
-        fetch('/api/diagnostics/schedulers')
+        fetch('/api/diagnostics/schedulers'),
+        fetch('/api/diagnostics/history?days=30')
       ])
 
       if (!pipelineRes.ok) throw new Error('Failed to fetch pipeline diagnostics')
@@ -84,6 +103,11 @@ export default function DiagnosticsPage() {
       if (schedulersRes.ok) {
         const schedulersResult = await schedulersRes.json()
         setSchedulers(schedulersResult)
+      }
+
+      if (historyRes.ok) {
+        const historyResult = await historyRes.json()
+        setHistorical(historyResult)
       }
     } catch (err: any) {
       setError(err.message)
@@ -253,6 +277,93 @@ export default function DiagnosticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Historical Intelligence */}
+      {historical && historical.summary.total_runs > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pipeline Intelligence (Last 30 Days)</CardTitle>
+            <CardDescription>AI-powered insights and historical trends</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-4 mb-6">
+              <div>
+                <div className="text-sm text-muted-foreground">Total Health Checks</div>
+                <div className="text-2xl font-bold">{historical.summary.total_runs}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Automated diagnostic runs
+                </p>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">System Uptime</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {historical.summary.health_percentage.toFixed(1)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {historical.summary.healthy_runs} of {historical.summary.total_runs} runs healthy
+                </p>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Avg 7-Day Revenue</div>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(historical.summary.avg_7day_revenue)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Rolling average
+                </p>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Latest Check</div>
+                <div className="text-sm font-bold">
+                  {new Date(historical.logs[0].timestamp).toLocaleString()}
+                </div>
+                <Badge variant={historical.logs[0].overall_status === 'healthy' ? 'default' : 'destructive'} className="mt-2">
+                  {historical.logs[0].overall_status.toUpperCase()}
+                </Badge>
+              </div>
+            </div>
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Timestamp</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Healthy Sources</TableHead>
+                  <TableHead>Checks Passed</TableHead>
+                  <TableHead>7-Day Revenue</TableHead>
+                  <TableHead>Issues</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {historical.logs.slice(0, 10).map((log, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="text-sm">
+                      {new Date(log.timestamp).toLocaleString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={log.overall_status === 'healthy' ? 'default' : 'destructive'}>
+                        {log.overall_status.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{log.data_sources_healthy || 0}/8</TableCell>
+                    <TableCell>{log.consistency_checks_passed || 0}/4</TableCell>
+                    <TableCell>{formatCurrency(log.total_7day_revenue || 0)}</TableCell>
+                    <TableCell className="text-xs">
+                      {log.issues_detected ? (
+                        <div className="text-red-500 truncate max-w-xs" title={log.issues_detected}>
+                          {log.issues_detected.substring(0, 50)}...
+                        </div>
+                      ) : (
+                        <span className="text-green-500">None</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Data Sources */}
       <Card>
