@@ -314,15 +314,15 @@ export default function DiagnosticsPage() {
                       <div key={i} className="border-l-4 border-yellow-500 pl-4 py-2">
                         <div className="font-medium">{source.name}</div>
                         <div className="text-sm text-muted-foreground mt-1">
-                          {source.metrics.dateGaps.recentMissing > 0 && (
+                          {source.metrics?.dateGaps?.recentMissing && source.metrics.dateGaps.recentMissing > 0 && (
                             <div className="text-red-600 font-medium">
                               ⚠️ {source.metrics.dateGaps.recentMissing} missing dates in last 7 days: {source.metrics.dateGaps.recentMissingDates}
                             </div>
                           )}
                           <div className="text-yellow-700">
-                            Total: {source.metrics.dateGaps.totalMissing} missing dates in last 30 days
+                            Total: {source.metrics?.dateGaps?.totalMissing || 0} missing dates in last 30 days
                           </div>
-                          {source.metrics.dateGaps.allMissingDates && (
+                          {source.metrics?.dateGaps?.allMissingDates && (
                             <div className="text-xs mt-1 text-gray-600">
                               Missing: {source.metrics.dateGaps.allMissingDates}
                             </div>
