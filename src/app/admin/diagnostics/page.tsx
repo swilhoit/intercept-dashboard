@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import ReactMarkdown from "react-markdown"
 import {
   CheckCircle2,
   XCircle,
@@ -16,7 +15,6 @@ import {
   Activity,
   TrendingUp,
   Calendar,
-  Sparkles,
   BarChart3,
   FileText
 } from "lucide-react"
@@ -84,22 +82,10 @@ interface HistoricalData {
   };
 }
 
-interface AIInsights {
-  success: boolean;
-  insights: string;
-  metadata: {
-    timestamp: string;
-    execution_time_ms: number;
-    model: string;
-  };
-}
-
 export default function DiagnosticsPage() {
   const [data, setData] = useState<PipelineCheck | null>(null)
   const [schedulers, setSchedulers] = useState<SchedulerData | null>(null)
   const [historical, setHistorical] = useState<HistoricalData | null>(null)
-  const [aiInsights, setAiInsights] = useState<AIInsights | null>(null)
-  const [loadingInsights, setLoadingInsights] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -133,24 +119,8 @@ export default function DiagnosticsPage() {
     }
   }
 
-  const fetchAIInsights = async () => {
-    setLoadingInsights(true)
-    try {
-      const res = await fetch('/api/diagnostics/insights')
-      if (res.ok) {
-        const insights = await res.json()
-        setAiInsights(insights)
-      }
-    } catch (err: any) {
-      console.error('Failed to fetch AI insights:', err)
-    } finally {
-      setLoadingInsights(false)
-    }
-  }
-
   useEffect(() => {
     fetchDiagnostics()
-    fetchAIInsights()
     // Auto-refresh every 5 minutes
     const interval = setInterval(fetchDiagnostics, 5 * 60 * 1000)
     return () => clearInterval(interval)
@@ -246,7 +216,7 @@ export default function DiagnosticsPage() {
 
       {/* Tabbed Interface */}
       <Tabs defaultValue="live" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="live" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Live Diagnostics
@@ -254,10 +224,6 @@ export default function DiagnosticsPage() {
           <TabsTrigger value="history" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Historical Logs
-          </TabsTrigger>
-          <TabsTrigger value="insights" className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" />
-            AI Insights
           </TabsTrigger>
         </TabsList>
 
@@ -330,6 +296,45 @@ export default function DiagnosticsPage() {
             </Card>
           </div>
 
+          {/* Date Gap Summary */}
+          {Object.values(data.sources).some(s => s.metrics?.dateGaps?.totalMissing > 0) && (
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-yellow-600" />
+                  Date Gaps Detected
+                </CardTitle>
+                <CardDescription>Sources with missing dates in the last 30 days</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Object.values(data.sources)
+                    .filter(s => s.metrics?.dateGaps?.totalMissing > 0)
+                    .map((source, i) => (
+                      <div key={i} className="border-l-4 border-yellow-500 pl-4 py-2">
+                        <div className="font-medium">{source.name}</div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {source.metrics.dateGaps.recentMissing > 0 && (
+                            <div className="text-red-600 font-medium">
+                              ⚠️ {source.metrics.dateGaps.recentMissing} missing dates in last 7 days: {source.metrics.dateGaps.recentMissingDates}
+                            </div>
+                          )}
+                          <div className="text-yellow-700">
+                            Total: {source.metrics.dateGaps.totalMissing} missing dates in last 30 days
+                          </div>
+                          {source.metrics.dateGaps.allMissingDates && (
+                            <div className="text-xs mt-1 text-gray-600">
+                              Missing: {source.metrics.dateGaps.allMissingDates}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Data Sources */}
           <Card>
             <CardHeader>
@@ -345,45 +350,70 @@ export default function DiagnosticsPage() {
                     <TableHead>Last Sync</TableHead>
                     <TableHead>Row Count</TableHead>
                     <TableHead>Date Range</TableHead>
-                    <TableHead>7-Day Revenue</TableHead>
+                    <TableHead>7-Day Metrics</TableHead>
                     <TableHead>Issues</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Object.entries(data.sources).map(([key, source]) => (
-                    <TableRow key={key}>
-                      <TableCell className="font-medium">{source.name}</TableCell>
-                      <TableCell>{getStatusBadge(source.status)}</TableCell>
-                      <TableCell className="text-sm">
-                        {source.lastSync ? new Date(source.lastSync).toLocaleDateString() : 'N/A'}
-                      </TableCell>
-                      <TableCell>{source.rowCount.toLocaleString()}</TableCell>
-                      <TableCell className="text-sm">
-                        {source.dateRange.earliest && source.dateRange.latest ? (
-                          <div>
-                            {new Date(source.dateRange.earliest).toLocaleDateString()} -<br />
-                            {new Date(source.dateRange.latest).toLocaleDateString()}
-                          </div>
-                        ) : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        {source.metrics?.last7DaysRevenue
-                          ? formatCurrency(source.metrics.last7DaysRevenue)
-                          : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        {source.issues.length > 0 ? (
-                          <div className="text-xs text-red-500">
-                            {source.issues.map((issue, i) => (
-                              <div key={i}>{issue}</div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-green-500">None</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {Object.entries(data.sources).map(([key, source]) => {
+                    // Render different metrics based on source type
+                    let metricsDisplay = 'N/A';
+                    if (source.metrics?.last7DaysRevenue) {
+                      // Sales source
+                      metricsDisplay = formatCurrency(source.metrics.last7DaysRevenue);
+                    } else if (source.metrics?.last7DaysSpend !== undefined) {
+                      // Amazon Ads source
+                      metricsDisplay = (
+                        <div className="text-xs">
+                          <div>Spend: {formatCurrency(source.metrics.last7DaysSpend)}</div>
+                          <div>Clicks: {source.metrics.totalClicks?.toLocaleString() || 0}</div>
+                          <div>Impr: {(source.metrics.totalImpressions || 0).toLocaleString()}</div>
+                        </div>
+                      );
+                    } else if (source.metrics?.last7DaysSessions !== undefined) {
+                      // GA4 source
+                      metricsDisplay = (
+                        <div className="text-xs">
+                          <div>Sessions: {source.metrics.last7DaysSessions?.toLocaleString() || 0}</div>
+                          <div>Users: {source.metrics.totalUsers?.toLocaleString() || 0}</div>
+                          <div>Conv: {source.metrics.totalConversions?.toLocaleString() || 0}</div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <TableRow key={key}>
+                        <TableCell className="font-medium">{source.name}</TableCell>
+                        <TableCell>{getStatusBadge(source.status)}</TableCell>
+                        <TableCell className="text-sm">
+                          {source.lastSync ? new Date(source.lastSync).toLocaleDateString() : 'N/A'}
+                        </TableCell>
+                        <TableCell>{source.rowCount.toLocaleString()}</TableCell>
+                        <TableCell className="text-sm">
+                          {source.dateRange.earliest && source.dateRange.latest ? (
+                            <div>
+                              {new Date(source.dateRange.earliest).toLocaleDateString()} -<br />
+                              {new Date(source.dateRange.latest).toLocaleDateString()}
+                            </div>
+                          ) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          {metricsDisplay}
+                        </TableCell>
+                        <TableCell>
+                          {source.issues.length > 0 ? (
+                            <div className="text-xs text-red-500">
+                              {source.issues.map((issue, i) => (
+                                <div key={i}>{issue}</div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-green-500">None</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
@@ -650,57 +680,6 @@ export default function DiagnosticsPage() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
-
-        {/* AI Insights Tab */}
-        <TabsContent value="insights" className="space-y-6 mt-6">
-          <Card className="border-blue-200 bg-blue-50/50">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-blue-600" />
-                  <CardTitle>AI-Powered Insights</CardTitle>
-                </div>
-                <Button
-                  onClick={fetchAIInsights}
-                  disabled={loadingInsights}
-                  variant="outline"
-                  size="sm"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${loadingInsights ? 'animate-spin' : ''}`} />
-                  Refresh Insights
-                </Button>
-              </div>
-              <CardDescription>
-                GPT-4 analysis of your data pipeline health and trends
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingInsights && !aiInsights && (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="h-6 w-6 animate-spin text-blue-600 mr-2" />
-                  <span className="text-muted-foreground">AI analyzing your pipeline...</span>
-                </div>
-              )}
-
-              {aiInsights && aiInsights.success && (
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{aiInsights.insights}</ReactMarkdown>
-                  <div className="mt-4 pt-4 border-t text-xs text-muted-foreground">
-                    Generated by {aiInsights.metadata.model} •
-                    Analyzed at {new Date(aiInsights.metadata.timestamp).toLocaleString()} •
-                    Execution time: {aiInsights.metadata.execution_time_ms}ms
-                  </div>
-                </div>
-              )}
-
-              {!loadingInsights && !aiInsights && (
-                <div className="text-center py-8 text-muted-foreground">
-                  Click "Refresh Insights" to generate AI analysis
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -98,9 +98,31 @@ export async function GET(request: NextRequest) {
     );
 
     // Check Amazon Ads Sources
-    result.sources.amazonAds = await checkTable(
-      'MASTER.TOTAL_DAILY_ADS',
-      'Amazon Ads (Master)',
+    result.sources.amazonAdsKeywords = await checkTable(
+      'amazon_ads_sharepoint.keywords_enhanced',
+      'Amazon Ads Keywords',
+      'date',
+      3
+    );
+
+    result.sources.amazonAdsConversions = await checkTable(
+      'amazon_ads_sharepoint.conversions_orders',
+      'Amazon Ads Conversions',
+      'date',
+      3
+    );
+
+    // Check GA4 Attribution Sources
+    result.sources.ga4BrickAnew = await checkTable(
+      'brick_anew_ga4.attribution_channel_performance',
+      'GA4 Attribution - Brick Anew',
+      'date',
+      2
+    );
+
+    result.sources.ga4Heatilator = await checkTable(
+      'heatilator_ga4.attribution_channel_performance',
+      'GA4 Attribution - Heatilator',
       'date',
       2
     );
@@ -197,9 +219,79 @@ async function checkTable(
       check.issues.push(`Last update was ${daysSinceUpdate} days ago (threshold: ${maxDaysSinceUpdate} days)`);
     }
 
-    // Get additional metrics if this is a sales table
+    // Check for date gaps in last 30 days - more thorough
+    const gapCheckQuery = `
+      WITH date_series AS (
+        SELECT date
+        FROM UNNEST(GENERATE_DATE_ARRAY(
+          DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY),
+          CURRENT_DATE()
+        )) as date
+      ),
+      actual_dates AS (
+        SELECT DISTINCT ${dateExpression} as date
+        FROM \`${PROJECT_ID}.${tableId}\`
+        WHERE ${dateExpression} >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+          AND ${dateExpression} <= CURRENT_DATE()
+      ),
+      missing_dates AS (
+        SELECT ds.date as missing_date
+        FROM date_series ds
+        LEFT JOIN actual_dates ad ON ds.date = ad.date
+        WHERE ad.date IS NULL
+        ORDER BY ds.date
+      ),
+      recent_missing AS (
+        SELECT date as missing_date
+        FROM missing_dates
+        WHERE missing_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      )
+      SELECT
+        (SELECT COUNT(*) FROM missing_dates) as total_missing,
+        (SELECT COUNT(*) FROM recent_missing) as recent_missing,
+        (SELECT STRING_AGG(CAST(missing_date AS STRING), ', ') FROM missing_dates LIMIT 10) as all_missing_dates,
+        (SELECT STRING_AGG(CAST(missing_date AS STRING), ', ') FROM recent_missing) as recent_missing_dates
+    `;
+    const [gapRows] = await bigquery.query(gapCheckQuery);
+    const totalMissing = parseInt(gapRows[0]?.total_missing || 0);
+    const recentMissing = parseInt(gapRows[0]?.recent_missing || 0);
+
+    if (totalMissing > 0) {
+      const allMissing = gapRows[0]?.all_missing_dates || '';
+      const recentMissingStr = gapRows[0]?.recent_missing_dates || '';
+
+      if (recentMissing > 0) {
+        // Recent gaps are more concerning
+        check.issues.push(`⚠️ ${recentMissing} missing dates in last 7 days: ${recentMissingStr}`);
+        check.status = 'warning';
+      }
+
+      if (totalMissing > recentMissing) {
+        check.issues.push(`${totalMissing - recentMissing} additional missing dates in last 30 days: ${allMissing}`);
+      }
+
+      // Severe warning if more than 30% of dates are missing
+      const missingPercent = (totalMissing / 30) * 100;
+      if (missingPercent > 30) {
+        check.issues.push(`⚠️ Critical: ${missingPercent.toFixed(0)}% of dates missing in last 30 days`);
+        if (check.status === 'healthy') check.status = 'warning';
+      }
+    }
+
+    // Store gap metrics for detailed reporting
+    if (totalMissing > 0) {
+      check.metrics = check.metrics || {};
+      check.metrics.dateGaps = {
+        totalMissing,
+        recentMissing,
+        allMissingDates: gapRows[0]?.all_missing_dates,
+        recentMissingDates: gapRows[0]?.recent_missing_dates
+      };
+    }
+
+    // Get additional metrics based on table type
     if (tableId.includes('daily_product_sales') || tableId.includes('daily_total_sales')) {
-      // Determine the correct revenue column name
+      // Sales table metrics
       const revenueColumn = tableId.includes('amazon.daily_total_sales')
         ? 'ordered_product_sales'
         : 'total_revenue';
@@ -207,13 +299,54 @@ async function checkTable(
       const metricsQuery = `
         SELECT
           SUM(${revenueColumn}) as total_revenue,
-          COUNT(DISTINCT ${dateColumn}) as days_with_data
+          COUNT(DISTINCT ${dateColumn}) as days_with_data,
+          AVG(${revenueColumn}) as avg_daily_revenue
         FROM \`${PROJECT_ID}.${tableId}\`
         WHERE ${dateColumn} >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
       `;
       const [metricsRows] = await bigquery.query(metricsQuery);
       check.metrics = {
         last7DaysRevenue: parseFloat(metricsRows[0]?.total_revenue || 0),
+        avgDailyRevenue: parseFloat(metricsRows[0]?.avg_daily_revenue || 0),
+        daysWithData: parseInt(metricsRows[0]?.days_with_data || 0)
+      };
+    } else if (tableId.includes('TOTAL_DAILY_ADS') || tableId.includes('amazon_ads')) {
+      // Amazon Ads metrics
+      const spendCol = tableId.includes('keywords_enhanced') ? 'cost' : 'spend';
+      const metricsQuery = `
+        SELECT
+          SUM(${spendCol}) as total_spend,
+          SUM(impressions) as total_impressions,
+          SUM(clicks) as total_clicks,
+          COUNT(DISTINCT ${dateColumn === 'date' ? dateColumn : dateExpression}) as days_with_data
+        FROM \`${PROJECT_ID}.${tableId}\`
+        WHERE ${dateColumn === 'date' ? dateColumn : dateExpression} >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      `;
+      const [metricsRows] = await bigquery.query(metricsQuery);
+      check.metrics = {
+        last7DaysSpend: parseFloat(metricsRows[0]?.total_spend || 0),
+        totalImpressions: parseInt(metricsRows[0]?.total_impressions || 0),
+        totalClicks: parseInt(metricsRows[0]?.total_clicks || 0),
+        daysWithData: parseInt(metricsRows[0]?.days_with_data || 0)
+      };
+    } else if (tableId.includes('attribution_channel_performance')) {
+      // GA4 Attribution metrics
+      const metricsQuery = `
+        SELECT
+          SUM(sessions) as total_sessions,
+          SUM(totalUsers) as total_users,
+          SUM(ecommercePurchases) as total_conversions,
+          SUM(purchaseRevenue) as total_revenue,
+          COUNT(DISTINCT ${dateColumn}) as days_with_data
+        FROM \`${PROJECT_ID}.${tableId}\`
+        WHERE ${dateColumn} >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      `;
+      const [metricsRows] = await bigquery.query(metricsQuery);
+      check.metrics = {
+        last7DaysSessions: parseInt(metricsRows[0]?.total_sessions || 0),
+        totalUsers: parseInt(metricsRows[0]?.total_users || 0),
+        totalConversions: parseInt(metricsRows[0]?.total_conversions || 0),
+        totalRevenue: parseFloat(metricsRows[0]?.total_revenue || 0),
         daysWithData: parseInt(metricsRows[0]?.days_with_data || 0)
       };
     }
@@ -335,6 +468,185 @@ async function performConsistencyChecks(result: PipelineCheck) {
         : `Found ${dupeRows.length} duplicate records in WooCommerce`,
       expected: 0,
       actual: dupeRows.length
+    });
+
+    // Marketing Data Consistency Checks
+    // Check Amazon Ads spend consistency
+    const masterAdsQuery = `
+      SELECT
+        SUM(spend) as total_spend,
+        SUM(impressions) as total_impressions,
+        SUM(clicks) as total_clicks
+      FROM \`${PROJECT_ID}.MASTER.TOTAL_DAILY_ADS\`
+      WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+    `;
+    const [masterAdsRows] = await bigquery.query(masterAdsQuery);
+    const masterSpend = parseFloat(masterAdsRows[0]?.total_spend || 0);
+
+    const sourceAdsQuery = `
+      SELECT
+        SUM(cost) as total_spend,
+        SUM(impressions) as total_impressions,
+        SUM(clicks) as total_clicks
+      FROM \`${PROJECT_ID}.amazon_ads_sharepoint.keywords_enhanced\`
+      WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+    `;
+    const [sourceAdsRows] = await bigquery.query(sourceAdsQuery);
+    const sourceSpend = parseFloat(sourceAdsRows[0]?.total_spend || 0);
+
+    const spendDiff = Math.abs(masterSpend - sourceSpend);
+    const spendDiffPct = masterSpend > 0 ? (spendDiff / masterSpend) * 100 : 0;
+
+    checks.push({
+      name: 'Amazon Ads Spend Consistency',
+      passed: spendDiffPct < 5, // Allow 5% variance
+      message: spendDiffPct < 5
+        ? 'Amazon Ads spend matches between source and MASTER'
+        : `Amazon Ads spend variance: ${spendDiffPct.toFixed(1)}% (MASTER=$${masterSpend.toFixed(2)}, Source=$${sourceSpend.toFixed(2)})`,
+      expected: sourceSpend,
+      actual: masterSpend
+    });
+
+    // GA4 Data Quality Check
+    const ga4CheckQuery = `
+      SELECT
+        SUM(sessions) as total_sessions,
+        SUM(ecommercePurchases) as total_purchases,
+        SUM(purchaseRevenue) as total_revenue
+      FROM (
+        SELECT sessions, ecommercePurchases, purchaseRevenue
+        FROM \`${PROJECT_ID}.brick_anew_ga4.attribution_channel_performance\`
+        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+        UNION ALL
+        SELECT sessions, ecommercePurchases, purchaseRevenue
+        FROM \`${PROJECT_ID}.heatilator_ga4.attribution_channel_performance\`
+        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      )
+    `;
+    const [ga4Rows] = await bigquery.query(ga4CheckQuery);
+    const ga4Sessions = parseInt(ga4Rows[0]?.total_sessions || 0);
+    const ga4Purchases = parseInt(ga4Rows[0]?.total_purchases || 0);
+
+    checks.push({
+      name: 'GA4 Data Quality',
+      passed: ga4Sessions > 0 && ga4Purchases >= 0,
+      message: ga4Sessions > 0
+        ? `GA4 data looks healthy: ${ga4Sessions.toLocaleString()} sessions, ${ga4Purchases} purchases`
+        : 'GA4 data missing or incomplete',
+      expected: 'Sessions > 0',
+      actual: `${ga4Sessions} sessions`
+    });
+
+    // ROAS Health Check
+    const roasQuery = `
+      SELECT
+        SUM(ads.spend) as total_spend,
+        SUM(sales.total_sales) as total_sales
+      FROM \`${PROJECT_ID}.MASTER.TOTAL_DAILY_ADS\` ads
+      INNER JOIN \`${PROJECT_ID}.MASTER.TOTAL_DAILY_SALES\` sales
+        ON ads.date = sales.date
+      WHERE ads.date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+    `;
+    const [roasRows] = await bigquery.query(roasQuery);
+    const totalSpend = parseFloat(roasRows[0]?.total_spend || 0);
+    const totalSales = parseFloat(roasRows[0]?.total_sales || 0);
+    const roas = totalSpend > 0 ? totalSales / totalSpend : 0;
+
+    checks.push({
+      name: 'ROAS Health Check',
+      passed: roas > 0,
+      message: roas > 0
+        ? `7-day ROAS: ${roas.toFixed(2)}x (Revenue: $${totalSales.toFixed(0)}, Spend: $${totalSpend.toFixed(0)})`
+        : 'Unable to calculate ROAS - missing data',
+      expected: 'ROAS > 0',
+      actual: roas > 0 ? `${roas.toFixed(2)}x` : 'N/A'
+    });
+
+    // Comprehensive Date Gap Summary Check
+    const sourcesWithGaps = Object.values(result.sources).filter(
+      s => s.metrics?.dateGaps?.totalMissing > 0
+    );
+
+    const criticalGapSources = sourcesWithGaps.filter(
+      s => s.metrics?.dateGaps?.recentMissing > 0
+    );
+
+    const totalSourcesChecked = Object.values(result.sources).length;
+    const sourcesWithRecentGaps = criticalGapSources.length;
+
+    let gapSummaryMessage = '';
+    if (sourcesWithRecentGaps === 0 && sourcesWithGaps.length === 0) {
+      gapSummaryMessage = `All ${totalSourcesChecked} sources have complete data for the last 30 days`;
+    } else if (sourcesWithRecentGaps > 0) {
+      gapSummaryMessage = `⚠️ ${sourcesWithRecentGaps} source(s) missing recent data (last 7 days): `;
+      gapSummaryMessage += criticalGapSources.map(s =>
+        `${s.name} (${s.metrics.dateGaps.recentMissing} dates)`
+      ).join(', ');
+    } else {
+      gapSummaryMessage = `${sourcesWithGaps.length} source(s) have older date gaps (>7 days ago)`;
+    }
+
+    checks.push({
+      name: 'Date Completeness Check',
+      passed: sourcesWithRecentGaps === 0,
+      message: gapSummaryMessage,
+      expected: '0 sources with recent gaps',
+      actual: `${sourcesWithRecentGaps} sources with recent gaps, ${sourcesWithGaps.length} total with gaps`
+    });
+
+    // Master Table Date Alignment Check
+    const masterAlignmentQuery = `
+      WITH sales_dates AS (
+        SELECT DISTINCT date
+        FROM \`${PROJECT_ID}.MASTER.TOTAL_DAILY_SALES\`
+        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      ),
+      ads_dates AS (
+        SELECT DISTINCT date
+        FROM \`${PROJECT_ID}.MASTER.TOTAL_DAILY_ADS\`
+        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      ),
+      date_series AS (
+        SELECT date
+        FROM UNNEST(GENERATE_DATE_ARRAY(
+          DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY),
+          CURRENT_DATE()
+        )) as date
+      )
+      SELECT
+        COUNT(DISTINCT ds.date) as total_expected_dates,
+        COUNT(DISTINCT sd.date) as sales_dates_present,
+        COUNT(DISTINCT ad.date) as ads_dates_present,
+        COUNT(DISTINCT CASE WHEN sd.date IS NULL THEN ds.date END) as sales_missing,
+        COUNT(DISTINCT CASE WHEN ad.date IS NULL THEN ds.date END) as ads_missing,
+        STRING_AGG(DISTINCT CASE WHEN sd.date IS NULL THEN CAST(ds.date AS STRING) END, ', ' ORDER BY CAST(ds.date AS STRING)) as sales_missing_dates,
+        STRING_AGG(DISTINCT CASE WHEN ad.date IS NULL THEN CAST(ds.date AS STRING) END, ', ' ORDER BY CAST(ds.date AS STRING)) as ads_missing_dates
+      FROM date_series ds
+      LEFT JOIN sales_dates sd ON ds.date = sd.date
+      LEFT JOIN ads_dates ad ON ds.date = ad.date
+    `;
+    const [alignmentRows] = await bigquery.query(masterAlignmentQuery);
+    const salesMissing = parseInt(alignmentRows[0]?.sales_missing || 0);
+    const adsMissing = parseInt(alignmentRows[0]?.ads_missing || 0);
+    const salesMissingDates = alignmentRows[0]?.sales_missing_dates || '';
+    const adsMissingDates = alignmentRows[0]?.ads_missing_dates || '';
+
+    let alignmentMessage = '';
+    if (salesMissing === 0 && adsMissing === 0) {
+      alignmentMessage = 'MASTER tables have complete data for last 7 days';
+    } else {
+      const issues = [];
+      if (salesMissing > 0) issues.push(`Sales: ${salesMissing} dates (${salesMissingDates})`);
+      if (adsMissing > 0) issues.push(`Ads: ${adsMissing} dates (${adsMissingDates})`);
+      alignmentMessage = `⚠️ Missing dates in MASTER tables: ${issues.join(' | ')}`;
+    }
+
+    checks.push({
+      name: 'Master Table Date Alignment',
+      passed: salesMissing === 0 && adsMissing === 0,
+      message: alignmentMessage,
+      expected: '0 missing dates',
+      actual: `Sales: ${salesMissing} missing, Ads: ${adsMissing} missing`
     });
 
     // Set consistency status
