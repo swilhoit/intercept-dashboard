@@ -110,13 +110,15 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=7):
         return {'status': 'error', 'message': f'Failed to fetch {site_name} orders: {str(e)}'}
 
 def process_orders_to_bigquery(site_name, orders, table_name):
-    """Process orders and insert into BigQuery with deduplication"""
+    """Process orders and insert into BigQuery with deduplication and aggregation"""
 
     if not orders:
         return {'status': 'skipped', 'message': 'No orders to process'}
 
     client = bigquery.Client(project=PROJECT_ID)
-    rows_to_insert = []
+
+    # Aggregate line items by (date, product_id, sku) to prevent duplicates
+    aggregated_data = {}
 
     for order in orders:
         order_date = datetime.fromisoformat(order['date_created'].replace('Z', '+00:00')).date()
@@ -130,45 +132,93 @@ def process_orders_to_bigquery(site_name, orders, table_name):
             total_price = float(item['total'])
             unit_price = total_price / quantity if quantity > 0 else 0
 
-            row = {
-                'order_date': order_date.isoformat(),
-                'product_id': product_id,
-                'product_name': product_name,
-                'sku': sku,
-                'total_quantity_sold': quantity,
-                'avg_unit_price': round(unit_price, 2),
-                'total_revenue': round(total_price, 2),
-                'order_count': 1
-            }
-            rows_to_insert.append(row)
+            # Create unique key for aggregation
+            key = (order_date.isoformat(), product_id, sku)
+
+            if key not in aggregated_data:
+                aggregated_data[key] = {
+                    'order_date': order_date.isoformat(),
+                    'product_id': product_id,
+                    'product_name': product_name,
+                    'sku': sku,
+                    'total_quantity_sold': 0,
+                    'total_revenue': 0,
+                    'order_count': 0,
+                    'unit_prices': []
+                }
+
+            # Aggregate the data
+            aggregated_data[key]['total_quantity_sold'] += quantity
+            aggregated_data[key]['total_revenue'] += total_price
+            aggregated_data[key]['order_count'] += 1
+            aggregated_data[key]['unit_prices'].append(unit_price)
+
+    # Convert aggregated data to rows for insertion
+    rows_to_insert = []
+    for data in aggregated_data.values():
+        # Calculate average unit price
+        avg_unit_price = sum(data['unit_prices']) / len(data['unit_prices']) if data['unit_prices'] else 0
+
+        rows_to_insert.append({
+            'order_date': data['order_date'],
+            'product_id': data['product_id'],
+            'product_name': data['product_name'],
+            'sku': data['sku'],
+            'total_quantity_sold': data['total_quantity_sold'],
+            'avg_unit_price': round(avg_unit_price, 2),
+            'total_revenue': round(data['total_revenue'], 2),
+            'order_count': data['order_count']
+        })
 
     if rows_to_insert:
         try:
-            # Get unique dates to delete
+            table_id = f"{PROJECT_ID}.woocommerce.{table_name}"
             unique_dates = set(row['order_date'] for row in rows_to_insert)
+
+            # Get dates to update
             date_list = "', '".join(unique_dates)
 
-            # Delete existing data for these dates to prevent duplicates
-            table_id = f"{PROJECT_ID}.woocommerce.{table_name}"
-            delete_query = f"""
-            DELETE FROM `{table_id}`
-            WHERE order_date IN ('{date_list}')
+            # Create VALUES clause for new data
+            values_list = []
+            for row in rows_to_insert:
+                values_list.append(f"""(
+                    DATE('{row['order_date']}'),
+                    {row['product_id']},
+                    '{row['product_name'].replace("'", "''")}',
+                    '{row['sku'].replace("'", "''")}',
+                    {row['total_quantity_sold']},
+                    {row['avg_unit_price']},
+                    {row['total_revenue']},
+                    {row['order_count']}
+                )""")
+
+            # Use CREATE OR REPLACE to bypass streaming buffer limitations
+            # Keep existing data for dates NOT being updated, replace data for dates being updated
+            replace_query = f"""
+            CREATE OR REPLACE TABLE `{table_id}` AS
+            SELECT * FROM (
+                -- Keep existing data for dates NOT being updated
+                SELECT *
+                FROM `{table_id}`
+                WHERE order_date NOT IN ('{date_list}')
+
+                UNION ALL
+
+                -- Add new/updated data for these dates
+                SELECT * FROM UNNEST([
+                    STRUCT<order_date DATE, product_id INT64, product_name STRING, sku STRING,
+                           total_quantity_sold INT64, avg_unit_price FLOAT64, total_revenue FLOAT64, order_count INT64>
+                    {', '.join(values_list)}
+                ])
+            )
             """
 
-            delete_job = client.query(delete_query)
-            delete_job.result()
-            print(f"Deleted existing data for {len(unique_dates)} dates in {site_name}")
-
-            # Now insert fresh data
-            table_ref = client.dataset('woocommerce').table(table_name)
-            errors = client.insert_rows_json(table_ref, rows_to_insert)
-
-            if errors:
-                return {'status': 'error', 'message': f'BigQuery insert errors: {errors}'}
+            replace_job = client.query(replace_query)
+            replace_job.result()
 
             return {
                 'status': 'success',
-                'message': f'Inserted {len(rows_to_insert)} rows for {site_name} across {len(unique_dates)} dates (deduplicated)'
+                'message': f'Updated {len(rows_to_insert)} rows for {site_name} across {len(unique_dates)} dates (deduplicated)'
             }
 
         except Exception as e:
