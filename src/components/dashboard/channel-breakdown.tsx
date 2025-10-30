@@ -4,11 +4,11 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recha
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ChannelBreakdownProps {
-  amazonRevenue: number
-  woocommerceRevenue: number
+  amazonRevenue?: number
+  woocommerceRevenue?: number
 }
 
-export function ChannelBreakdown({ amazonRevenue, woocommerceRevenue }: ChannelBreakdownProps) {
+export function ChannelBreakdown({ amazonRevenue = 0, woocommerceRevenue = 0 }: ChannelBreakdownProps) {
   // Debug logging to see what props we're receiving
   console.log('📊 ChannelBreakdown Props:', {
     amazonRevenue,
@@ -17,16 +17,19 @@ export function ChannelBreakdown({ amazonRevenue, woocommerceRevenue }: ChannelB
     woocommerceType: typeof woocommerceRevenue
   })
 
+  // Ensure we have valid numbers
+  const safeAmazonRevenue = Number(amazonRevenue) || 0
+  const safeWoocommerceRevenue = Number(woocommerceRevenue) || 0
 
   const data = [
     {
       name: "Amazon",
-      value: amazonRevenue || 0,
+      value: safeAmazonRevenue,
       color: "#FF9500"
     },
     {
       name: "WooCommerce",
-      value: woocommerceRevenue || 0,
+      value: safeWoocommerceRevenue,
       color: "#007AFF"
     }
   ]
@@ -40,25 +43,24 @@ export function ChannelBreakdown({ amazonRevenue, woocommerceRevenue }: ChannelB
     }).format(value)
   }
 
+  const total = safeAmazonRevenue + safeWoocommerceRevenue
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0]
-      const total = amazonRevenue + woocommerceRevenue
-      const percentage = ((data.value / total) * 100).toFixed(1)
-      
+      const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : '0.0'
+
       return (
         <div className="bg-background border border-border p-2 rounded-md shadow-sm">
-          <p className="font-medium">{data.name}</p>
+          <p className="font-medium">{data.name || 'Unknown'}</p>
           <p className="text-sm text-muted-foreground">
-            {formatCurrency(data.value)} ({percentage}%)
+            {formatCurrency(data.value || 0)} ({percentage}%)
           </p>
         </div>
       )
     }
     return null
   }
-
-  const total = amazonRevenue + woocommerceRevenue
 
   return (
     <Card>
@@ -75,6 +77,7 @@ export function ChannelBreakdown({ amazonRevenue, woocommerceRevenue }: ChannelB
               cy="50%"
               labelLine={false}
               label={({ name, value }) => {
+                if (!name || total === 0) return ''
                 const percentage = (((value || 0) / total) * 100).toFixed(1)
                 return `${name}: ${percentage}%`
               }}
