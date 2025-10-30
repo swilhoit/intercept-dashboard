@@ -160,8 +160,8 @@ export async function GET(request: NextRequest) {
         (SELECT TO_JSON_STRING(s) FROM summary s) AS summary,
         (SELECT TO_JSON_STRING(ARRAY_AGG(m ORDER BY total_cost DESC)) FROM metrics m) AS metrics,
         (SELECT TO_JSON_STRING(ARRAY_AGG(p ORDER BY cost DESC)) FROM portfolios p) AS portfolios,
-        (SELECT TO_JSON_STRING(ARRAY_AGG(tk ORDER BY clicks DESC)) FROM top_keywords tk) AS topKeywords,
-        (SELECT TO_JSON_STRING(ARRAY_AGG(mt ORDER BY cost DESC)) FROM match_type_perf mt) AS matchTypePerformance,
+        (SELECT TO_JSON_STRING(COALESCE(ARRAY_AGG(tk ORDER BY clicks DESC), [])) FROM top_keywords tk) AS topKeywords,
+        (SELECT TO_JSON_STRING(COALESCE(ARRAY_AGG(mt ORDER BY cost DESC), [])) FROM match_type_perf mt) AS matchTypePerformance,
         ${includeTimeSeries ? '(SELECT TO_JSON_STRING(ARRAY_AGG(t ORDER BY date)) FROM time_series t) AS timeSeries' : '"[]" AS timeSeries'}
     `;
 
