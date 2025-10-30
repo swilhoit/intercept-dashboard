@@ -2,3 +2,5 @@ google-cloud-bigquery==3.11.4
 requests==2.31.0
 pandas==2.*
 db-dtypes==1.*
+google-cloud-logging
+google-cloud-pubsub
