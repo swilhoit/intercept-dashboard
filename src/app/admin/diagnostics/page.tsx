@@ -1121,48 +1121,224 @@ export default function DiagnosticsPage() {
         {/* Historical Logs Tab */}
         <TabsContent value="history" className="space-y-6 mt-6">
           {historical && historical.summary.total_runs > 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Pipeline Intelligence (Last 30 Days)</CardTitle>
-                <CardDescription>Historical diagnostic logs and trends</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-4 mb-6">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Total Health Checks</div>
+            <>
+              {/* Overview Cards */}
+              <div className="grid gap-4 md:grid-cols-4">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Health Checks</CardTitle>
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
                     <div className="text-2xl font-bold">{historical.summary.total_runs}</div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Automated diagnostic runs
                     </p>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">System Uptime</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
                     <div className="text-2xl font-bold text-green-600">
                       {historical.summary.health_percentage.toFixed(1)}%
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {historical.summary.healthy_runs} of {historical.summary.total_runs} runs healthy
                     </p>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Avg 7-Day Revenue</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Avg 7-Day Revenue</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
                     <div className="text-2xl font-bold">
                       {formatCurrency(historical.summary.avg_7day_revenue)}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Rolling average
                     </p>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Latest Check</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Latest Check</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
                     <div className="text-sm font-bold">
                       {new Date(historical.logs[0].timestamp).toLocaleString()}
                     </div>
                     <Badge variant={historical.logs[0].overall_status === 'healthy' ? 'default' : 'destructive'} className="mt-2">
                       {historical.logs[0].overall_status.toUpperCase()}
                     </Badge>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Health Trend Visualization */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>System Health Trend (Last 10 Runs)</CardTitle>
+                  <CardDescription>Visual timeline of diagnostic health status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end gap-2 h-32">
+                    {historical.logs.slice(0, 10).reverse().map((log, i) => {
+                      const healthScore = (
+                        (log.data_sources_healthy || 0) * 100 / 10 +
+                        (log.e2e_passed || 0) * 100 / (log.e2e_total_checks || 1) +
+                        (log.pipeline_healthy_nodes || 0) * 100 / (log.pipeline_total_nodes || 1)
+                      ) / 3;
+
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                          <div
+                            className={`w-full rounded-t ${
+                              log.overall_status === 'healthy' ? 'bg-green-500' :
+                              log.overall_status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ height: `${healthScore}%` }}
+                            title={`${new Date(log.timestamp).toLocaleString()}: ${log.overall_status}`}
+                          />
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(log.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+
+              {/* Metrics Grid */}
+              <div className="grid gap-4 md:grid-cols-3">
+                {/* E2E Test Success Rate */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">E2E Test Success Rate</CardTitle>
+                    <CardDescription>Last 10 diagnostic runs</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {historical.logs.slice(0, 10).map((log, i) => {
+                        const total = log.e2e_total_checks || 0;
+                        const passed = log.e2e_passed || 0;
+                        const successRate = total > 0 ? (passed / total) * 100 : 0;
+
+                        return (
+                          <div key={i} className="flex items-center gap-2">
+                            <div className="text-xs text-muted-foreground w-20">
+                              {new Date(log.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  successRate === 100 ? 'bg-green-500' :
+                                  successRate >= 80 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${successRate}%` }}
+                              />
+                            </div>
+                            <div className="text-xs font-medium w-12 text-right">
+                              {successRate.toFixed(0)}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Pipeline Health */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Pipeline Node Health</CardTitle>
+                    <CardDescription>Healthy nodes over time</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {historical.logs.slice(0, 10).map((log, i) => {
+                        const total = log.pipeline_total_nodes || 0;
+                        const healthy = log.pipeline_healthy_nodes || 0;
+                        const healthRate = total > 0 ? (healthy / total) * 100 : 0;
+
+                        return (
+                          <div key={i} className="flex items-center gap-2">
+                            <div className="text-xs text-muted-foreground w-20">
+                              {new Date(log.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  healthRate === 100 ? 'bg-green-500' :
+                                  healthRate >= 90 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${healthRate}%` }}
+                              />
+                            </div>
+                            <div className="text-xs font-medium w-12 text-right">
+                              {healthy}/{total}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* API Response Time */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">API Response Time</CardTitle>
+                    <CardDescription>Average E2E response time</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {historical.logs.slice(0, 10).map((log, i) => {
+                        const responseTime = log.e2e_avg_response_time_ms || 0;
+                        const maxTime = 3000; // 3 seconds max for scale
+                        const percentage = Math.min((responseTime / maxTime) * 100, 100);
+
+                        return (
+                          <div key={i} className="flex items-center gap-2">
+                            <div className="text-xs text-muted-foreground w-20">
+                              {new Date(log.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="flex-1 bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full ${
+                                  responseTime < 500 ? 'bg-green-500' :
+                                  responseTime < 1000 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${percentage}%` }}
+                              />
+                            </div>
+                            <div className="text-xs font-medium w-12 text-right">
+                              {responseTime}ms
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Detailed Logs Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Detailed Diagnostic Logs</CardTitle>
+                  <CardDescription>Complete history of all diagnostic runs</CardDescription>
+                </CardHeader>
+                <CardContent>
 
                 <Table>
                   <TableHeader>
