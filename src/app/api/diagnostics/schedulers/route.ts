@@ -1,90 +1,132 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { bigquery } from '@/lib/bigquery';
 
-const execAsync = promisify(exec);
+const PROJECT_ID = 'intercept-sales-2508061117';
 
-interface SchedulerStatus {
+interface DataPipeline {
   name: string;
-  state: string;
-  schedule: string;
-  lastRun: string | null;
-  nextRun: string | null;
-  target: string;
-  status: 'active' | 'paused' | 'error';
+  dataset: string;
+  table: string;
+  expectedUpdateFrequency: 'daily' | 'hourly';
+  lastUpdate: string | null;
+  rowCount: number;
+  status: 'active' | 'stale' | 'error';
+  daysSinceUpdate: number | null;
+  message: string;
 }
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if running in a serverless environment (Vercel)
-    const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+    // Instead of checking schedulers, check data pipeline health
+    // This tells us if data is actually flowing regardless of how it's scheduled
+    const pipelines: DataPipeline[] = [];
 
-    if (isServerless) {
-      // Return mock data or a graceful response for serverless environments
-      // In production, you would use the Cloud Scheduler API client library instead of gcloud CLI
-      console.warn('Cloud Scheduler CLI not available in serverless environment');
-      return NextResponse.json({
-        timestamp: new Date().toISOString(),
-        schedulers: [],
-        summary: {
-          total: 0,
-          active: 0,
-          paused: 0,
-          error: 0
-        },
-        note: 'Scheduler status unavailable in serverless environment. Use Google Cloud Console to view scheduler status.'
-      });
-    }
+    const dataSources = [
+      { name: 'Master Sales Data', dataset: 'MASTER', table: 'TOTAL_DAILY_SALES', frequency: 'daily' as const, dateColumn: 'date' },
+      { name: 'Master Ads Data', dataset: 'MASTER', table: 'TOTAL_DAILY_ADS', frequency: 'daily' as const, dateColumn: 'date' },
+      { name: 'Amazon Conversions', dataset: 'amazon_ads_sharepoint', table: 'conversions_orders', frequency: 'daily' as const, dateColumn: 'date' },
+      { name: 'Amazon ROAS Summary', dataset: 'MASTER', table: 'AMAZON_ROAS_SUMMARY', frequency: 'daily' as const, dateColumn: 'date' },
+      { name: 'BrickAnew WooCommerce', dataset: 'woocommerce', table: 'brickanew_daily_product_sales', frequency: 'daily' as const, dateColumn: 'order_date' },
+      { name: 'Heatilator WooCommerce', dataset: 'woocommerce', table: 'heatilator_daily_product_sales', frequency: 'daily' as const, dateColumn: 'order_date' },
+      { name: 'Superior WooCommerce', dataset: 'woocommerce', table: 'superior_daily_product_sales', frequency: 'daily' as const, dateColumn: 'order_date' },
+    ];
 
-    // Get all Cloud Scheduler jobs (only works in environments with gcloud CLI)
-    const { stdout } = await execAsync(
-      'gcloud scheduler jobs list --format=json --project=intercept-sales-2508061117'
-    );
+    for (const source of dataSources) {
+      try {
+        const query = `
+          SELECT
+            COUNT(*) as row_count,
+            MAX(${source.dateColumn}) as last_update
+          FROM \`${PROJECT_ID}.${source.dataset}.${source.table}\`
+        `;
 
-    const jobs = JSON.parse(stdout);
-    const schedulers: SchedulerStatus[] = [];
+        const [rows] = await bigquery.query({ query, timeoutMs: 10000 });
+        const data = rows[0];
 
-    for (const job of jobs) {
-      schedulers.push({
-        name: job.name.split('/').pop(),
-        state: job.state,
-        schedule: job.schedule,
-        lastRun: job.status?.lastAttemptTime || null,
-        nextRun: job.scheduleTime || null,
-        target: job.httpTarget?.uri || job.pubsubTarget?.topicName || 'Unknown',
-        status: job.state === 'ENABLED' ? 'active' : job.state === 'PAUSED' ? 'paused' : 'error'
-      });
-    }
+        const lastUpdate = data.last_update?.value || data.last_update;
+        const rowCount = Number(data.row_count) || 0;
 
-    // Sort by name
-    schedulers.sort((a, b) => a.name.localeCompare(b.name));
+        let daysSinceUpdate: number | null = null;
+        let status: 'active' | 'stale' | 'error' = 'active';
+        let message = 'Data is up to date';
 
-    return NextResponse.json({
-      timestamp: new Date().toISOString(),
-      schedulers,
-      summary: {
-        total: schedulers.length,
-        active: schedulers.filter(s => s.status === 'active').length,
-        paused: schedulers.filter(s => s.status === 'paused').length,
-        error: schedulers.filter(s => s.status === 'error').length
+        if (lastUpdate) {
+          const lastUpdateDate = new Date(lastUpdate);
+          const now = new Date();
+          daysSinceUpdate = Math.floor((now.getTime() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (daysSinceUpdate === 0) {
+            message = 'Updated today';
+          } else if (daysSinceUpdate === 1) {
+            message = 'Updated yesterday';
+            status = 'stale';
+          } else if (daysSinceUpdate > 7) {
+            message = `${daysSinceUpdate} days since last update`;
+            status = 'error';
+          } else {
+            message = `${daysSinceUpdate} days since last update`;
+            status = 'stale';
+          }
+        } else {
+          status = 'error';
+          message = 'No data found';
+        }
+
+        pipelines.push({
+          name: source.name,
+          dataset: source.dataset,
+          table: source.table,
+          expectedUpdateFrequency: source.frequency,
+          lastUpdate,
+          rowCount,
+          status,
+          daysSinceUpdate,
+          message
+        });
+
+      } catch (error: any) {
+        pipelines.push({
+          name: source.name,
+          dataset: source.dataset,
+          table: source.table,
+          expectedUpdateFrequency: source.frequency,
+          lastUpdate: null,
+          rowCount: 0,
+          status: 'error',
+          daysSinceUpdate: null,
+          message: `Error: ${error.message}`
+        });
       }
-    });
-  } catch (error: any) {
-    console.error('Error fetching scheduler status:', error);
+    }
 
-    // Return graceful error response
+    const summary = {
+      total: pipelines.length,
+      active: pipelines.filter(p => p.status === 'active').length,
+      stale: pipelines.filter(p => p.status === 'stale').length,
+      error: pipelines.filter(p => p.status === 'error').length
+    };
+
     return NextResponse.json({
       timestamp: new Date().toISOString(),
-      schedulers: [],
+      pipelines,
+      summary,
+      note: 'Showing data freshness for key tables. Active = updated within 24h, Stale = 1-7 days, Error = >7 days or no data.'
+    });
+
+  } catch (error: any) {
+    console.error('Error checking data pipelines:', error);
+
+    return NextResponse.json({
+      timestamp: new Date().toISOString(),
+      pipelines: [],
       summary: {
         total: 0,
         active: 0,
-        paused: 0,
+        stale: 0,
         error: 0
       },
-      error: 'Failed to fetch scheduler status',
-      message: error.message,
-      note: 'Use Google Cloud Console to view scheduler status.'
-    }, { status: 200 }); // Return 200 instead of 500 to prevent client errors
+      error: 'Failed to check data pipelines',
+      message: error.message
+    }, { status: 200 });
   }
 }
