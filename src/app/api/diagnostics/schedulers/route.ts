@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       { name: 'Master Sales Data', dataset: 'MASTER', table: 'TOTAL_DAILY_SALES', frequency: 'daily' as const, dateColumn: 'date' },
       { name: 'Master Ads Data', dataset: 'MASTER', table: 'TOTAL_DAILY_ADS', frequency: 'daily' as const, dateColumn: 'date' },
       { name: 'Amazon Conversions', dataset: 'amazon_ads_sharepoint', table: 'conversions_orders', frequency: 'daily' as const, dateColumn: 'date' },
-      { name: 'Amazon ROAS Summary', dataset: 'MASTER', table: 'AMAZON_ROAS_SUMMARY', frequency: 'daily' as const, dateColumn: 'date' },
+      { name: 'Amazon ROAS Summary', dataset: 'MASTER', table: 'AMAZON_ROAS_SUMMARY', frequency: 'daily' as const, dateColumn: 'calculation_date' },
       { name: 'BrickAnew WooCommerce', dataset: 'woocommerce', table: 'brickanew_daily_product_sales', frequency: 'daily' as const, dateColumn: 'order_date' },
       { name: 'Heatilator WooCommerce', dataset: 'woocommerce', table: 'heatilator_daily_product_sales', frequency: 'daily' as const, dateColumn: 'order_date' },
       { name: 'Superior WooCommerce', dataset: 'woocommerce', table: 'superior_daily_product_sales', frequency: 'daily' as const, dateColumn: 'order_date' },
