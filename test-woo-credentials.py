@@ -3,12 +3,17 @@
 import requests
 import json
 
-# Test each WooCommerce site's API access
+# Test each WooCommerce site's API access - UPDATED with .env.woocommerce credentials
 SITES = {
+    'brickanew': {
+        'base_url': 'https://brickanew.com',
+        'consumer_key': 'ck_917c430be2a325d3ee74d809ca184726130d2fc2',
+        'consumer_secret': 'cs_261e146b6578faf1c644e6bf1c3da9a5042abf86'
+    },
     'heatilator': {
         'base_url': 'https://heatilatorfireplacedoors.com',
-        'consumer_key': 'ck_440a83e0aa324f7a0dcb10b07710239b1af741d0',
-        'consumer_secret': 'cs_893f884fb20e5bc9c2655188c18c08debebf7bb7'
+        'consumer_key': 'ck_662b9b92b3ad56d4e6a8104368081f7de3fecd4e',
+        'consumer_secret': 'cs_b94be3803bacbf508eb774b1e414e3ed9cd21a85'
     },
     'superior': {
         'base_url': 'https://superiorfireplacedoors.com',

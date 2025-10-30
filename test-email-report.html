@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header p { margin: 5px 0 0 0; opacity: 0.9; }
+        .status { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .status h2 { margin: 0 0 10px 0; color: #856404; }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .metric-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; }
+        .metric-card h3 { margin: 0 0 10px 0; font-size: 14px; color: #666; text-transform: uppercase; }
+        .metric-card .value { font-size: 28px; font-weight: bold; color: #333; }
+        .metric-card .subtext { font-size: 12px; color: #999; margin-top: 5px; }
+        .channel-breakdown { margin-bottom: 30px; }
+        .channel-row { display: flex; justify-content: space-between; padding: 12px; background: #fff; border-bottom: 1px solid #eee; }
+        .channel-row:hover { background: #f8f9fa; }
+        .channel-name { font-weight: 600; }
+        .channel-value { color: #667eea; font-weight: 600; }
+        .freshness-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: white; }
+        .freshness-table th { background: #667eea; color: white; padding: 12px; text-align: left; }
+        .freshness-table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .fresh { color: #28a745; font-weight: bold; }
+        .stale { color: #dc3545; font-weight: bold; }
+        .footer { text-align: center; padding: 20px; color: #999; font-size: 12px; border-top: 1px solid #eee; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚠️ Daily Sales Report</h1>
+        <p>October 22, 2025 Performance Summary</p>
+    </div>
+
+    <div class="status">
+        <h2>Some Data Stale</h2>
+        <p>Report generated: October 23, 2025 at 05:48 PM</p>
+    </div>
+
+    <h2>💰 Yesterday's Performance</h2>
+    <div class="metric-grid">
+        <div class="metric-card">
+            <h3>Total Revenue</h3>
+            <div class="value">$1,087.35</div>
+            <div class="subtext">+32.4% vs 7-day avg</div>
+        </div>
+        <div class="metric-card">
+            <h3>Total Orders</h3>
+            <div class="value">9</div>
+            <div class="subtext">All channels combined</div>
+        </div>
+        <div class="metric-card">
+            <h3>7-Day Average</h3>
+            <div class="value">$821.17</div>
+            <div class="subtext">$5,748.20 total</div>
+        </div>
+    </div>
+
+    <h2>📊 Revenue by Channel</h2>
+    <div class="channel-breakdown">
+        <div class="channel-row">
+            <span class="channel-name">🛒 Amazon</span>
+            <span class="channel-value">$1,087.35 (9 orders)</span>
+        </div>
+        <div class="channel-row">
+            <span class="channel-name">🏪 WooCommerce</span>
+            <span class="channel-value">$0.00 (0 orders)</span>
+        </div>
+        <div class="channel-row">
+            <span class="channel-name">🛍️ Shopify</span>
+            <span class="channel-value">$0.00</span>
+        </div>
+    </div>
+
+    <h2>🔄 Data Freshness Status</h2>
+    <table class="freshness-table">
+        <thead>
+            <tr>
+                <th>Data Source</th>
+                <th>Last Updated</th>
+                <th>Status</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>🛒 Amazon Orders</td>
+                <td>2025-10-23</td>
+                <td class="fresh">✅ Fresh</td>
+                <td>0 days</td>
+            </tr>
+            <tr>
+                <td>🏪 WooCommerce</td>
+                <td>2025-10-09</td>
+                <td class="stale">⚠️ 14 days old</td>
+                <td>14 days</td>
+            </tr>
+            <tr>
+                <td>🛍️ Shopify</td>
+                <td>2025-09-15</td>
+                <td class="stale">⚠️ 38 days old</td>
+                <td>38 days</td>
+            </tr>
+            <tr>
+                <td>📊 Master Table</td>
+                <td>2025-10-23</td>
+                <td class="fresh">✅ Fresh</td>
+                <td>0 days</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>🤖 Generated automatically by Intercept Sales Dashboard</p>
+        <p>Cloud Functions • BigQuery • SendGrid</p>
+    </div>
+</body>
+</html>

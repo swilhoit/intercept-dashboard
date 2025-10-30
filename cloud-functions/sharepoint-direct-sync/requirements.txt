@@ -1,0 +1,6 @@
+functions-framework==3.*
+google-cloud-bigquery==3.*
+pandas==2.*
+requests==2.*
+openpyxl==3.*
+pyarrow==14.*

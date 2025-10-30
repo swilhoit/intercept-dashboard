@@ -16,7 +16,9 @@ import {
   TrendingUp,
   Calendar,
   BarChart3,
-  FileText
+  FileText,
+  GitBranch,
+  ArrowRight
 } from "lucide-react"
 
 interface DataSourceCheck {
@@ -107,11 +109,47 @@ interface E2EData {
   };
 }
 
+interface PipelineNode {
+  id: string;
+  name: string;
+  type: 'source' | 'scheduler' | 'raw_table' | 'master_table' | 'api' | 'dashboard';
+  status: 'healthy' | 'warning' | 'error' | 'idle';
+  metadata: {
+    lastUpdate?: string;
+    recordCount?: number;
+    dataFreshness?: string;
+    nextRun?: string;
+    issues?: string[];
+    metrics?: Record<string, any>;
+  };
+  dependencies: string[];
+}
+
+interface PipelineFlowData {
+  timestamp: string;
+  nodes: PipelineNode[];
+  edges: Array<{
+    from: string;
+    to: string;
+    label?: string;
+    status: 'active' | 'stale' | 'broken';
+  }>;
+  stages: {
+    sources: PipelineNode[];
+    schedulers: PipelineNode[];
+    rawTables: PipelineNode[];
+    masterTables: PipelineNode[];
+    apis: PipelineNode[];
+    dashboards: PipelineNode[];
+  };
+}
+
 export default function DiagnosticsPage() {
   const [data, setData] = useState<PipelineCheck | null>(null)
   const [schedulers, setSchedulers] = useState<SchedulerData | null>(null)
   const [historical, setHistorical] = useState<HistoricalData | null>(null)
   const [e2e, setE2e] = useState<E2EData | null>(null)
+  const [pipelineFlow, setPipelineFlow] = useState<PipelineFlowData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -119,11 +157,12 @@ export default function DiagnosticsPage() {
     setLoading(true)
     setError(null)
     try {
-      const [pipelineRes, schedulersRes, historyRes, e2eRes] = await Promise.all([
+      const [pipelineRes, schedulersRes, historyRes, e2eRes, flowRes] = await Promise.all([
         fetch('/api/diagnostics/pipeline'),
         fetch('/api/diagnostics/schedulers'),
         fetch('/api/diagnostics/history?days=30'),
-        fetch('/api/diagnostics/e2e')
+        fetch('/api/diagnostics/e2e'),
+        fetch('/api/diagnostics/pipeline-flow')
       ])
 
       if (!pipelineRes.ok) throw new Error('Failed to fetch pipeline diagnostics')
@@ -143,6 +182,11 @@ export default function DiagnosticsPage() {
       if (e2eRes.ok) {
         const e2eResult = await e2eRes.json()
         setE2e(e2eResult)
+      }
+
+      if (flowRes.ok) {
+        const flowResult = await flowRes.json()
+        setPipelineFlow(flowResult)
       }
     } catch (err: any) {
       setError(err.message)
@@ -247,8 +291,12 @@ export default function DiagnosticsPage() {
       </div>
 
       {/* Tabbed Interface */}
-      <Tabs defaultValue="e2e" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="flow" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="flow" className="flex items-center gap-2">
+            <GitBranch className="h-4 w-4" />
+            Pipeline Flow
+          </TabsTrigger>
           <TabsTrigger value="e2e" className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4" />
             End-to-End
@@ -262,6 +310,292 @@ export default function DiagnosticsPage() {
             Historical Logs
           </TabsTrigger>
         </TabsList>
+
+        {/* Pipeline Flow Visualization Tab */}
+        <TabsContent value="flow" className="space-y-6 mt-6">
+          {pipelineFlow ? (
+            <>
+              {/* Pipeline Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Data Pipeline Flow</CardTitle>
+                  <CardDescription>
+                    Complete data journey from sources to dashboards
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 mb-6 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span>Healthy</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                      <span>Warning</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span>Error</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                      <span>Idle</span>
+                    </div>
+                  </div>
+
+                  {/* Pipeline Flow Visualization */}
+                  <div className="flex gap-8 overflow-x-auto pb-4">
+                    {/* Sources Column */}
+                    <div className="flex-shrink-0" style={{ minWidth: '200px' }}>
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <Database className="h-4 w-4" />
+                        Data Sources
+                      </h3>
+                      <div className="space-y-3">
+                        {pipelineFlow.stages.sources.map((node) => (
+                          <div
+                            key={node.id}
+                            className={`p-3 rounded-lg border-2 ${
+                              node.status === 'healthy' ? 'border-green-500 bg-green-50' :
+                              node.status === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                              node.status === 'error' ? 'border-red-500 bg-red-50' :
+                              'border-gray-300 bg-gray-50'
+                            }`}
+                          >
+                            <div className="font-medium text-sm">{node.name}</div>
+                            {node.metadata.dataFreshness && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {node.metadata.dataFreshness}
+                              </div>
+                            )}
+                            {node.metadata.recordCount !== undefined && (
+                              <div className="text-xs text-muted-foreground">
+                                {node.metadata.recordCount.toLocaleString()} records
+                              </div>
+                            )}
+                            {node.metadata.issues && node.metadata.issues.length > 0 && (
+                              <div className="text-xs text-red-600 mt-1">
+                                {node.metadata.issues[0]}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Arrow Separator */}
+                    <div className="flex items-center justify-center flex-shrink-0">
+                      <ArrowRight className="h-8 w-8 text-gray-400" />
+                    </div>
+
+                    {/* Master Tables Column */}
+                    <div className="flex-shrink-0" style={{ minWidth: '200px' }}>
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <Activity className="h-4 w-4" />
+                        Master Tables
+                      </h3>
+                      <div className="space-y-3">
+                        {pipelineFlow.stages.masterTables.map((node) => (
+                          <div
+                            key={node.id}
+                            className={`p-3 rounded-lg border-2 ${
+                              node.status === 'healthy' ? 'border-green-500 bg-green-50' :
+                              node.status === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                              node.status === 'error' ? 'border-red-500 bg-red-50' :
+                              'border-gray-300 bg-gray-50'
+                            }`}
+                          >
+                            <div className="font-medium text-sm">{node.name}</div>
+                            {node.metadata.dataFreshness && (
+                              <div className="text-xs text-muted-foreground mt-1">
+                                {node.metadata.dataFreshness}
+                              </div>
+                            )}
+                            {node.metadata.recordCount !== undefined && (
+                              <div className="text-xs text-muted-foreground">
+                                {node.metadata.recordCount.toLocaleString()} records
+                              </div>
+                            )}
+                            <div className="text-xs text-blue-600 mt-1">
+                              Aggregates {node.dependencies.length} sources
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Arrow Separator */}
+                    <div className="flex items-center justify-center flex-shrink-0">
+                      <ArrowRight className="h-8 w-8 text-gray-400" />
+                    </div>
+
+                    {/* APIs Column */}
+                    <div className="flex-shrink-0" style={{ minWidth: '200px' }}>
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        API Endpoints
+                      </h3>
+                      <div className="space-y-3">
+                        {pipelineFlow.stages.apis.map((node) => (
+                          <div
+                            key={node.id}
+                            className={`p-3 rounded-lg border-2 ${
+                              node.status === 'healthy' ? 'border-green-500 bg-green-50' :
+                              node.status === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                              node.status === 'error' ? 'border-red-500 bg-red-50' :
+                              'border-gray-300 bg-gray-50'
+                            }`}
+                          >
+                            <div className="font-medium text-sm">{node.name}</div>
+                            {node.metadata.metrics?.endpoint && (
+                              <div className="text-xs text-muted-foreground mt-1 font-mono">
+                                {node.metadata.metrics.endpoint}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Arrow Separator */}
+                    <div className="flex items-center justify-center flex-shrink-0">
+                      <ArrowRight className="h-8 w-8 text-gray-400" />
+                    </div>
+
+                    {/* Dashboards Column */}
+                    <div className="flex-shrink-0" style={{ minWidth: '200px' }}>
+                      <h3 className="font-semibold mb-4 flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        Dashboards
+                      </h3>
+                      <div className="space-y-3">
+                        {pipelineFlow.stages.dashboards.map((node) => (
+                          <div
+                            key={node.id}
+                            className={`p-3 rounded-lg border-2 ${
+                              node.status === 'healthy' ? 'border-green-500 bg-green-50' :
+                              node.status === 'warning' ? 'border-yellow-500 bg-yellow-50' :
+                              node.status === 'error' ? 'border-red-500 bg-red-50' :
+                              'border-gray-300 bg-gray-50'
+                            }`}
+                          >
+                            <div className="font-medium text-sm">{node.name}</div>
+                            <div className="text-xs text-purple-600 mt-1">
+                              {node.dependencies.length} API dependencies
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pipeline Edges/Connections Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Data Flow Connections</CardTitle>
+                  <CardDescription>
+                    Status of data flowing between pipeline stages
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>From</TableHead>
+                        <TableHead>To</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pipelineFlow.edges.slice(0, 15).map((edge, i) => {
+                        const fromNode = pipelineFlow.nodes.find(n => n.id === edge.from);
+                        const toNode = pipelineFlow.nodes.find(n => n.id === edge.to);
+                        return (
+                          <TableRow key={i}>
+                            <TableCell className="font-medium text-sm">
+                              {fromNode?.name || edge.from}
+                            </TableCell>
+                            <TableCell className="font-medium text-sm">
+                              {toNode?.name || edge.to}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">{edge.label || 'connects'}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant={
+                                edge.status === 'active' ? 'default' :
+                                edge.status === 'stale' ? 'secondary' : 'destructive'
+                              }>
+                                {edge.status.toUpperCase()}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+
+              {/* Pipeline Health Summary */}
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Pipeline Nodes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{pipelineFlow.nodes.length}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {pipelineFlow.nodes.filter(n => n.status === 'healthy').length} healthy,{' '}
+                      {pipelineFlow.nodes.filter(n => n.status === 'warning').length} warnings,{' '}
+                      {pipelineFlow.nodes.filter(n => n.status === 'error').length} errors
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Data Connections</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{pipelineFlow.edges.length}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {pipelineFlow.edges.filter(e => e.status === 'active').length} active,{' '}
+                      {pipelineFlow.edges.filter(e => e.status === 'stale').length} stale,{' '}
+                      {pipelineFlow.edges.filter(e => e.status === 'broken').length} broken
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Pipeline Stages</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-xs space-y-1">
+                      <div>{pipelineFlow.stages.sources.length} Sources</div>
+                      <div>{pipelineFlow.stages.masterTables.length} Master Tables</div>
+                      <div>{pipelineFlow.stages.apis.length} APIs</div>
+                      <div>{pipelineFlow.stages.dashboards.length} Dashboards</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          ) : (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-muted-foreground">
+                  <GitBranch className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">Loading pipeline flow...</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         {/* End-to-End Testing Tab */}
         <TabsContent value="e2e" className="space-y-6 mt-6">
