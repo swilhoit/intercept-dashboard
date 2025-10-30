@@ -1431,6 +1431,7 @@ export default function DiagnosticsPage() {
                 </Table>
               </CardContent>
             </Card>
+            </>
           ) : (
             <Card>
               <CardContent className="py-12">
