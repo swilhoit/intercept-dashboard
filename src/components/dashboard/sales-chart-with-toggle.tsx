@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DateRange } from "react-day-picker"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { validateChartData, safeNumber } from "@/lib/data-validation"
 
 interface SalesChartWithToggleProps {
   dateRange?: DateRange
@@ -72,76 +74,95 @@ export function SalesChartWithToggle({
   }
 
   const formatDate = (dateStr: any) => {
+    // Return fallback for null/undefined
+    if (!dateStr) return 'Unknown'
+
     // Convert to string if not already
-    const str = String(dateStr || '')
-    
+    const str = String(dateStr)
+
     // Handle period format for weekly/monthly aggregations
-    if (str && str.includes('W')) {
+    if (str.includes('W')) {
       // Weekly format like "2025-W30"
       const [, week] = str.split('-W')
       return `Week ${week}`
-    } else if (str && str.match(/^\d{4}-\d{2}$/)) {
+    } else if (str.match(/^\d{4}-\d{2}$/)) {
       // Monthly format like "2025-07"
       const [year, month] = str.split('-')
       const date = new Date(parseInt(year), parseInt(month) - 1)
       return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     }
     // Daily format
-    const date = new Date(str)
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    try {
+      const date = new Date(str)
+      if (isNaN(date.getTime())) return 'Invalid Date'
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    } catch (e) {
+      return 'Invalid Date'
+    }
   }
 
-  const chartData = (Array.isArray(data) ? data : []).map(item => ({
-    ...item,
-    date: item.period || formatDate(item.date),
-    Amazon: item.amazon_sales,
-    WooCommerce: item.woocommerce_sales,
-    Total: item.total_sales,
-  }))
+  // Sanitize and validate chart data
+  const chartData = (Array.isArray(data) ? data : [])
+    .filter(item => item && (item.period || item.date)) // Filter out items with no date
+    .map(item => ({
+      date: item.period || formatDate(item.date),
+      Amazon: safeNumber(item.amazon_sales),
+      WooCommerce: safeNumber(item.woocommerce_sales),
+      Total: safeNumber(item.total_sales),
+    }))
+
+  // Validate chart data
+  const validation = validateChartData(chartData)
+  const validChartData = validation.data
 
   return (
-    <Card className="col-span-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
+    <ErrorBoundary componentName="SalesChartWithToggle">
+      <Card className="col-span-full">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{title}</CardTitle>
+              <CardDescription>{description}</CardDescription>
+            </div>
+            <Select value={aggregation} onValueChange={setAggregation}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={aggregation} onValueChange={setAggregation}>
-            <SelectTrigger className="w-[120px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="pl-2">
-        {loading ? (
-          <div className="h-[350px] flex items-center justify-center text-muted-foreground">
-            Loading chart data...
-          </div>
-        ) : (
-          <Tabs defaultValue="combined" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="combined">Combined</TabsTrigger>
-              <TabsTrigger value="comparison">Channel Comparison</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="combined" className="space-y-4">
-              <ResponsiveContainer width="100%" height={350}>
-                <LineChart data={chartData}>
+        </CardHeader>
+        <CardContent className="pl-2">
+          {loading ? (
+            <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+              Loading chart data...
+            </div>
+          ) : validChartData.length === 0 ? (
+            <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+              No data available for the selected period
+            </div>
+          ) : (
+            <Tabs defaultValue="combined" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="combined">Combined</TabsTrigger>
+                <TabsTrigger value="comparison">Channel Comparison</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="combined" className="space-y-4">
+                <ResponsiveContainer width="100%" height={350}>
+                  <LineChart data={validChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
-                    dataKey="date" 
+                    dataKey="date"
                     className="text-xs"
                     tick={{ fill: 'currentColor' }}
-                    angle={aggregation === "daily" && chartData.length > 20 ? -45 : 0}
-                    textAnchor={aggregation === "daily" && chartData.length > 20 ? "end" : "middle"}
-                    height={aggregation === "daily" && chartData.length > 20 ? 80 : 40}
+                    angle={aggregation === "daily" && validChartData.length > 20 ? -45 : 0}
+                    textAnchor={aggregation === "daily" && validChartData.length > 20 ? "end" : "middle"}
+                    height={aggregation === "daily" && validChartData.length > 20 ? 80 : 40}
                   />
                   <YAxis 
                     className="text-xs"
@@ -158,11 +179,11 @@ export function SalesChartWithToggle({
                   />
                   <Legend />
                   <Line 
-                    type="monotone" 
-                    dataKey="Total" 
-                    stroke="hsl(var(--primary))" 
+                    type="monotone"
+                    dataKey="Total"
+                    stroke="hsl(var(--primary))"
                     strokeWidth={2}
-                    dot={aggregation !== "daily" || chartData.length <= 30}
+                    dot={aggregation !== "daily" || validChartData.length <= 30}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -170,15 +191,15 @@ export function SalesChartWithToggle({
             
             <TabsContent value="comparison" className="space-y-4">
               <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={chartData}>
+                <BarChart data={validChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
+                  <XAxis
                     dataKey="date"
                     className="text-xs"
                     tick={{ fill: 'currentColor' }}
-                    angle={aggregation === "daily" && chartData.length > 20 ? -45 : 0}
-                    textAnchor={aggregation === "daily" && chartData.length > 20 ? "end" : "middle"}
-                    height={aggregation === "daily" && chartData.length > 20 ? 80 : 40}
+                    angle={aggregation === "daily" && validChartData.length > 20 ? -45 : 0}
+                    textAnchor={aggregation === "daily" && validChartData.length > 20 ? "end" : "middle"}
+                    height={aggregation === "daily" && validChartData.length > 20 ? 80 : 40}
                   />
                   <YAxis 
                     className="text-xs"
@@ -199,9 +220,10 @@ export function SalesChartWithToggle({
                 </BarChart>
               </ResponsiveContainer>
             </TabsContent>
-          </Tabs>
-        )}
-      </CardContent>
-    </Card>
+            </Tabs>
+          )}
+        </CardContent>
+      </Card>
+    </ErrorBoundary>
   )
 }
