@@ -75,6 +75,20 @@ interface HistoricalData {
     data_sources_healthy: number;
     consistency_checks_passed: number;
     issues_detected: string | null;
+    e2e_total_checks?: number;
+    e2e_passed?: number;
+    e2e_warnings?: number;
+    e2e_errors?: number;
+    e2e_avg_response_time_ms?: number;
+    pipeline_total_nodes?: number;
+    pipeline_healthy_nodes?: number;
+    pipeline_warning_nodes?: number;
+    pipeline_error_nodes?: number;
+    pipeline_total_edges?: number;
+    pipeline_active_edges?: number;
+    pipeline_stale_edges?: number;
+    pipeline_broken_edges?: number;
+    diagnostic_details?: any;
   }>;
   summary: {
     total_runs: number;
@@ -1155,9 +1169,11 @@ export default function DiagnosticsPage() {
                     <TableRow>
                       <TableHead>Timestamp</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Healthy Sources</TableHead>
-                      <TableHead>Checks Passed</TableHead>
-                      <TableHead>7-Day Revenue</TableHead>
+                      <TableHead>Sources</TableHead>
+                      <TableHead>Consistency</TableHead>
+                      <TableHead>E2E Tests</TableHead>
+                      <TableHead>Pipeline Flow</TableHead>
+                      <TableHead>7d Revenue</TableHead>
                       <TableHead>Issues</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1172,13 +1188,62 @@ export default function DiagnosticsPage() {
                             {log.overall_status.toUpperCase()}
                           </Badge>
                         </TableCell>
-                        <TableCell>{log.data_sources_healthy || 0}/8</TableCell>
-                        <TableCell>{log.consistency_checks_passed || 0}/4</TableCell>
-                        <TableCell>{formatCurrency(log.total_7day_revenue || 0)}</TableCell>
                         <TableCell className="text-xs">
+                          <div>{log.data_sources_healthy || 0} healthy</div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div>{log.consistency_checks_passed || 0} passed</div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {log.e2e_total_checks ? (
+                            <div>
+                              <div className="text-green-600">{log.e2e_passed || 0} passed</div>
+                              {(log.e2e_warnings || 0) + (log.e2e_errors || 0) > 0 && (
+                                <div className="text-red-600">
+                                  {(log.e2e_warnings || 0) + (log.e2e_errors || 0)} issues
+                                </div>
+                              )}
+                              <div className="text-muted-foreground">
+                                {log.e2e_avg_response_time_ms || 0}ms avg
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">N/A</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {log.pipeline_total_nodes ? (
+                            <div>
+                              <div className="text-green-600">{log.pipeline_healthy_nodes || 0} healthy nodes</div>
+                              {(log.pipeline_warning_nodes || 0) + (log.pipeline_error_nodes || 0) > 0 && (
+                                <div className="text-yellow-600">
+                                  {(log.pipeline_warning_nodes || 0) + (log.pipeline_error_nodes || 0)} issues
+                                </div>
+                              )}
+                              {(log.pipeline_broken_edges || 0) > 0 && (
+                                <div className="text-red-600">
+                                  {log.pipeline_broken_edges} broken edges
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">N/A</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {formatCurrency(log.total_7day_revenue || 0)}
+                        </TableCell>
+                        <TableCell className="text-xs max-w-md">
                           {log.issues_detected ? (
-                            <div className="text-red-500 truncate max-w-xs" title={log.issues_detected}>
-                              {log.issues_detected.substring(0, 50)}...
+                            <div className="text-red-500 whitespace-pre-wrap text-xs">
+                              {log.issues_detected.split(' | ').slice(0, 3).map((issue, j) => (
+                                <div key={j} className="mb-1">{issue}</div>
+                              ))}
+                              {log.issues_detected.split(' | ').length > 3 && (
+                                <div className="text-muted-foreground italic">
+                                  +{log.issues_detected.split(' | ').length - 3} more issues
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <span className="text-green-500">None</span>

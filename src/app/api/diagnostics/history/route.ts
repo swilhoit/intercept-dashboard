@@ -27,6 +27,20 @@ export async function GET(request: NextRequest) {
         woocommerce_7day_revenue,
         shopify_7day_revenue,
         issues_detected,
+        e2e_total_checks,
+        e2e_passed,
+        e2e_warnings,
+        e2e_errors,
+        e2e_avg_response_time_ms,
+        pipeline_total_nodes,
+        pipeline_healthy_nodes,
+        pipeline_warning_nodes,
+        pipeline_error_nodes,
+        pipeline_total_edges,
+        pipeline_active_edges,
+        pipeline_stale_edges,
+        pipeline_broken_edges,
+        diagnostic_details,
         execution_time_ms
       FROM \`${PROJECT_ID}.MASTER.diagnostic_logs\`
       WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL ${days} DAY)
@@ -53,7 +67,7 @@ export async function GET(request: NextRequest) {
         issues: r.issues_detected
       }));
 
-    // Format timestamps
+    // Format timestamps and parse diagnostic details
     const logs = rows.map(row => ({
       timestamp: row.timestamp.value || row.timestamp,
       overall_status: row.overall_status,
@@ -70,6 +84,27 @@ export async function GET(request: NextRequest) {
       woocommerce_7day_revenue: row.woocommerce_7day_revenue,
       shopify_7day_revenue: row.shopify_7day_revenue,
       issues_detected: row.issues_detected,
+
+      // E2E test results
+      e2e_total_checks: row.e2e_total_checks || 0,
+      e2e_passed: row.e2e_passed || 0,
+      e2e_warnings: row.e2e_warnings || 0,
+      e2e_errors: row.e2e_errors || 0,
+      e2e_avg_response_time_ms: row.e2e_avg_response_time_ms || 0,
+
+      // Pipeline flow results
+      pipeline_total_nodes: row.pipeline_total_nodes || 0,
+      pipeline_healthy_nodes: row.pipeline_healthy_nodes || 0,
+      pipeline_warning_nodes: row.pipeline_warning_nodes || 0,
+      pipeline_error_nodes: row.pipeline_error_nodes || 0,
+      pipeline_total_edges: row.pipeline_total_edges || 0,
+      pipeline_active_edges: row.pipeline_active_edges || 0,
+      pipeline_stale_edges: row.pipeline_stale_edges || 0,
+      pipeline_broken_edges: row.pipeline_broken_edges || 0,
+
+      // Detailed diagnostic data (parsed JSON)
+      diagnostic_details: row.diagnostic_details ? JSON.parse(row.diagnostic_details) : null,
+
       execution_time_ms: row.execution_time_ms
     }));
 
