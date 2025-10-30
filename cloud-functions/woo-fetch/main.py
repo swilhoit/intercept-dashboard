@@ -7,11 +7,20 @@ import requests
 from datetime import datetime, date, timedelta
 from google.cloud import bigquery
 import time
+import logging
+from google.cloud.logging import Client as LoggingClient
+from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 
-# Get project ID from environment
+# --- Logging Configuration ---
+# Use standard Python logging
+# For Cloud Functions, this will go to Cloud Logging automatically
+log = logging.getLogger()
+log.setLevel(logging.INFO)
+
+# --- GCP Configuration ---
 PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-2508061117')
 
-# WooCommerce site configurations - CORRECTED credentials from .env.woocommerce
+# --- WooCommerce Site Configurations ---
 WOOCOMMERCE_SITES = {
     'brickanew': {
         'base_url': 'https://brick-anew.com',
@@ -39,75 +48,91 @@ WOOCOMMERCE_SITES = {
     }
 }
 
-def fetch_woocommerce_orders(site_name, site_config, days_back=7):
-    """Fetch recent orders from a WooCommerce site"""
-    
-    if not all([site_config.get('base_url'), site_config.get('consumer_key'), site_config.get('consumer_secret')]):
-        return {'status': 'skipped', 'message': f'Missing credentials for {site_name}'}
-    
+def log_structured(severity, message, context=None):
+    """Helper function to log structured data to Cloud Logging."""
+    log_entry = {
+        'message': message,
+        'context': context or {},
+    }
+    log.log(severity, json.dumps(log_entry))
+
+
+def fetch_woocommerce_orders(site_name, site_config, days_back=7, max_retries=3):
+    """Fetch recent orders from a WooCommerce site with retry logic"""
     base_url = site_config['base_url']
     consumer_key = site_config['consumer_key']
     consumer_secret = site_config['consumer_secret']
     
-    # Calculate date range
-    end_date = date.today()
-    start_date = end_date - timedelta(days=days_back)
+    endpoint = f"{base_url}/wp-json/wc/v3/orders"
     
-    # WooCommerce REST API endpoint
-    url = f"{base_url}/wp-json/wc/v3/orders"
-    auth = (consumer_key, consumer_secret)
-
-    # Add headers to bypass Cloudflare/security plugins blocking Python requests
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json',
-    }
+    # Calculate start date
+    start_date = (datetime.utcnow() - timedelta(days=days_back)).strftime('%Y-%m-%dT%H:%M:%S')
 
     params = {
-        'after': start_date.isoformat() + 'T00:00:00',
-        'before': end_date.isoformat() + 'T23:59:59',
-        'status': 'completed',
+        'consumer_key': consumer_key,
+        'consumer_secret': consumer_secret,
+        'after': start_date,
         'per_page': 100,
         'page': 1
     }
 
     all_orders = []
-
-    try:
-        # Fetch first page to test connection
-        response = requests.get(url, auth=auth, params=params, headers=headers, timeout=30)
-        
-        if response.status_code == 401:
-            return {'status': 'error', 'message': f'Authentication failed for {site_name}'}
-        elif response.status_code == 404:
-            return {'status': 'error', 'message': f'WooCommerce API not found for {site_name}'}
-        elif response.status_code != 200:
-            return {'status': 'error', 'message': f'HTTP {response.status_code} for {site_name}'}
-        
-        orders = response.json()
-        all_orders.extend(orders)
-        
-        # Fetch additional pages if needed
-        page = 2
-        while len(orders) == 100 and page <= 10:  # Limit to 10 pages max
-            params['page'] = page
-            response = requests.get(url, auth=auth, params=params, headers=headers, timeout=30)
-            if response.status_code == 200:
+    
+    for attempt in range(max_retries):
+        try:
+            while True:
+                response = requests.get(endpoint, params=params, timeout=60)
+                response.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
+                
                 orders = response.json()
+                
+                if not orders:
+                    break
+                
                 all_orders.extend(orders)
-                page += 1
-                time.sleep(0.5)  # Rate limiting
-            else:
-                break
-        
-        return {
-            'status': 'success', 
-            'message': f'Fetched {len(all_orders)} orders from {site_name}',
-            'orders': all_orders
-        }
-        
-    except Exception as e:
-        return {'status': 'error', 'message': f'Failed to fetch {site_name} orders: {str(e)}'}
+                params['page'] += 1
+            
+            # If loop completes without errors, return success
+            return {
+                'status': 'success',
+                'site': site_name,
+                'order_count': len(all_orders),
+                'orders': all_orders,
+                'days_back': days_back
+            }
+
+        except requests.exceptions.RequestException as e:
+            logging.warning(f"Attempt {attempt + 1}/{max_retries} failed for {site_name}: {e}")
+            if attempt + 1 == max_retries:
+                # Last attempt failed, return error
+                log_structured(
+                    logging.ERROR,
+                    f"Final fetch attempt failed for {site_name}",
+                    {
+                        "site": site_name,
+                        "error": str(e),
+                        "days_back": days_back,
+                        "retries": max_retries
+                    }
+                )
+                return {
+                    'status': 'error',
+                    'site': site_name,
+                    'error': str(e),
+                    'days_back': days_back,
+                    'retries': max_retries
+                }
+            # Wait before retrying
+            time.sleep(2 ** attempt) # Exponential backoff: 1, 2, 4 seconds
+    
+    # This part should not be reachable, but as a fallback:
+    return {
+        'status': 'error',
+        'site': site_name,
+        'error': 'Max retries reached without success',
+        'days_back': days_back,
+        'retries': max_retries
+    }
 
 def process_orders_to_bigquery(site_name, orders, table_name):
     """Process orders and insert into BigQuery with deduplication and aggregation"""
@@ -239,6 +264,7 @@ def fetch_all_woocommerce(request):
                 days_back = int(request.args.get('days_back'))
             except ValueError:
                 days_back = 7
+                logging.warning("Invalid 'days_back' parameter, defaulting to 7.")
 
         results = {
             'timestamp': datetime.now().isoformat(),
@@ -246,10 +272,13 @@ def fetch_all_woocommerce(request):
             'days_back': days_back,
             'sites': {}
         }
+        
+        overall_status = 'success'
+        error_count = 0
 
         # Process each site
         for site_name, site_config in WOOCOMMERCE_SITES.items():
-            print(f"Processing {site_name} (fetching {days_back} days)...")
+            log.info(f"Processing {site_name} (fetching {days_back} days)...")
 
             # Fetch orders with specified days_back
             fetch_result = fetch_woocommerce_orders(site_name, site_config, days_back=days_back)
@@ -257,21 +286,60 @@ def fetch_all_woocommerce(request):
 
             # If fetch successful, process to BigQuery
             if fetch_result['status'] == 'success':
-                process_result = process_orders_to_bigquery(
-                    site_name,
-                    fetch_result['orders'],
-                    site_config['table']
-                )
-                results['sites'][site_name]['process'] = process_result
+                if fetch_result['order_count'] > 0:
+                    process_result = process_orders_to_bigquery(
+                        site_name,
+                        fetch_result['orders'],
+                        site_config['table']
+                    )
+                    results['sites'][site_name]['process'] = process_result
+                    if process_result['status'] != 'success':
+                        error_count += 1
+                        log_structured(
+                            logging.ERROR,
+                            f"BigQuery processing failed for {site_name}",
+                            {
+                                "site": site_name,
+                                "error": process_result.get('message'),
+                                "details": process_result.get('errors')
+                            }
+                        )
+                else:
+                    process_result = {'status': 'skipped', 'message': 'No new orders to process'}
+                    results['sites'][site_name]['process'] = process_result
+                    log.info(f"No new orders for {site_name}, skipping BigQuery processing.")
             else:
+                error_count += 1
+                # The detailed error is already logged inside fetch_woocommerce_orders
                 results['sites'][site_name]['process'] = {
                     'status': 'skipped',
                     'message': 'Fetch failed'
                 }
+        
+        if error_count > 0:
+            overall_status = 'partial_failure' if error_count < len(WOOCOMMERCE_SITES) else 'total_failure'
+        
+        results['overall_status'] = overall_status
+        log_structured(
+            logging.INFO if overall_status == 'success' else logging.WARNING,
+            f"Completed WooCommerce sync with status: {overall_status}",
+            {
+                "final_status": overall_status,
+                "total_sites": len(WOOCOMMERCE_SITES),
+                "successful_sites": len(WOOCOMMERCE_SITES) - error_count,
+                "failed_sites": error_count,
+                "days_back": days_back
+            }
+        )
 
         return json.dumps(results, indent=2)
         
     except Exception as e:
+        log_structured(
+            logging.CRITICAL,
+            "An unexpected error occurred in the main handler",
+            {"error": str(e)}
+        )
         return json.dumps({
             'timestamp': datetime.now().isoformat(),
             'status': 'error',

@@ -48,3 +48,4 @@ package-cloud-function.json
 
 # Development files with sensitive data
 debug-sheets.ts
+__pycache__/
