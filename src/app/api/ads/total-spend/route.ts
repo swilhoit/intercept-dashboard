@@ -11,24 +11,24 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    
-    // Query for total Google Ads spend
+
+    // Query for total ad spend from MASTER.TOTAL_DAILY_ADS (includes Amazon + Google)
     let query = `
-      SELECT 
-        SUM(metrics_cost_micros) / 1000000.0 as total_ad_spend,
-        SUM(metrics_impressions) as total_impressions,
-        SUM(metrics_clicks) as total_clicks,
-        SUM(metrics_conversions) as total_conversions,
-        SUM(metrics_conversions_value) as total_conversions_value,
-        COUNT(DISTINCT campaign_id) as active_campaigns,
-        MIN(segments_date) as start_date,
-        MAX(segments_date) as end_date
-      FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\`
-      WHERE segments_date IS NOT NULL
+      SELECT
+        SUM(total_spend) as total_ad_spend,
+        SUM(total_impressions) as total_impressions,
+        SUM(total_clicks) as total_clicks,
+        SUM(total_conversions) as total_conversions,
+        SUM(total_conversions) * 25.0 as total_conversions_value,
+        AVG(amazon_campaigns) as active_campaigns,
+        MIN(date) as start_date,
+        MAX(date) as end_date
+      FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_ADS\`
+      WHERE date IS NOT NULL
     `;
-    
+
     if (startDate && endDate) {
-      query += ` AND segments_date >= '${startDate}' AND segments_date <= '${endDate}'`;
+      query += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
     }
     
     console.log('Total Ad Spend Query:', query);
@@ -55,22 +55,21 @@ export async function GET(request: NextRequest) {
     
     // Get daily spend for trend
     let trendQuery = `
-      SELECT 
-        segments_date as date,
-        SUM(metrics_cost_micros) / 1000000.0 as daily_spend,
-        SUM(metrics_clicks) as daily_clicks,
-        SUM(metrics_conversions) as daily_conversions
-      FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\`
-      WHERE segments_date IS NOT NULL
+      SELECT
+        date,
+        total_spend as daily_spend,
+        total_clicks as daily_clicks,
+        total_conversions as daily_conversions
+      FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_ADS\`
+      WHERE date IS NOT NULL
     `;
-    
+
     if (startDate && endDate) {
-      trendQuery += ` AND segments_date >= '${startDate}' AND segments_date <= '${endDate}'`;
+      trendQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
     }
-    
+
     trendQuery += `
-      GROUP BY segments_date
-      ORDER BY segments_date ASC
+      ORDER BY date ASC
     `;
     
     const [trendRows] = await bigquery.query(trendQuery);
@@ -81,19 +80,19 @@ export async function GET(request: NextRequest) {
     
     if (startDate && endDate) {
       const previousPeriod = calculatePreviousPeriod(startDate, endDate);
-      
+
       let prevQuery = `
-        SELECT 
-          SUM(metrics_cost_micros) / 1000000.0 as total_ad_spend,
-          SUM(metrics_impressions) as total_impressions,
-          SUM(metrics_clicks) as total_clicks,
-          SUM(metrics_conversions) as total_conversions,
-          SUM(metrics_conversions_value) as total_conversions_value,
-          COUNT(DISTINCT campaign_id) as active_campaigns
-        FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\`
-        WHERE segments_date IS NOT NULL
-          AND segments_date >= '${previousPeriod.startDate}' 
-          AND segments_date <= '${previousPeriod.endDate}'
+        SELECT
+          SUM(total_spend) as total_ad_spend,
+          SUM(total_impressions) as total_impressions,
+          SUM(total_clicks) as total_clicks,
+          SUM(total_conversions) as total_conversions,
+          SUM(total_conversions) * 25.0 as total_conversions_value,
+          AVG(amazon_campaigns) as active_campaigns
+        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_ADS\`
+        WHERE date IS NOT NULL
+          AND date >= '${previousPeriod.startDate}'
+          AND date <= '${previousPeriod.endDate}'
       `;
       
       const [prevRows] = await bigquery.query(prevQuery);
