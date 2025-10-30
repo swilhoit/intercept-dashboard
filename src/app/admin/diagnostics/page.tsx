@@ -366,7 +366,7 @@ export default function DiagnosticsPage() {
                         Data Sources
                       </h3>
                       <div className="space-y-3">
-                        {pipelineFlow.stages.sources.map((node) => (
+                        {(pipelineFlow.stages.sources || []).map((node) => (
                           <div
                             key={node.id}
                             className={`p-3 rounded-lg border-2 ${
@@ -409,7 +409,7 @@ export default function DiagnosticsPage() {
                         Master Tables
                       </h3>
                       <div className="space-y-3">
-                        {pipelineFlow.stages.masterTables.map((node) => (
+                        {(pipelineFlow.stages.masterTables || []).map((node) => (
                           <div
                             key={node.id}
                             className={`p-3 rounded-lg border-2 ${
@@ -450,7 +450,7 @@ export default function DiagnosticsPage() {
                         API Endpoints
                       </h3>
                       <div className="space-y-3">
-                        {pipelineFlow.stages.apis.map((node) => (
+                        {(pipelineFlow.stages.apis || []).map((node) => (
                           <div
                             key={node.id}
                             className={`p-3 rounded-lg border-2 ${
@@ -483,7 +483,7 @@ export default function DiagnosticsPage() {
                         Dashboards
                       </h3>
                       <div className="space-y-3">
-                        {pipelineFlow.stages.dashboards.map((node) => (
+                        {(pipelineFlow.stages.dashboards || []).map((node) => (
                           <div
                             key={node.id}
                             className={`p-3 rounded-lg border-2 ${
@@ -524,9 +524,9 @@ export default function DiagnosticsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {pipelineFlow.edges.slice(0, 15).map((edge, i) => {
-                        const fromNode = pipelineFlow.nodes.find(n => n.id === edge.from);
-                        const toNode = pipelineFlow.nodes.find(n => n.id === edge.to);
+                      {(pipelineFlow.edges || []).slice(0, 15).map((edge, i) => {
+                        const fromNode = (pipelineFlow.nodes || []).find(n => n.id === edge.from);
+                        const toNode = (pipelineFlow.nodes || []).find(n => n.id === edge.to);
                         return (
                           <TableRow key={i}>
                             <TableCell className="font-medium text-sm">
@@ -561,11 +561,11 @@ export default function DiagnosticsPage() {
                     <CardTitle className="text-sm">Pipeline Nodes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{pipelineFlow.nodes.length}</div>
+                    <div className="text-2xl font-bold">{(pipelineFlow.nodes || []).length}</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {pipelineFlow.nodes.filter(n => n.status === 'healthy').length} healthy,{' '}
-                      {pipelineFlow.nodes.filter(n => n.status === 'warning').length} warnings,{' '}
-                      {pipelineFlow.nodes.filter(n => n.status === 'error').length} errors
+                      {(pipelineFlow.nodes || []).filter(n => n.status === 'healthy').length} healthy,{' '}
+                      {(pipelineFlow.nodes || []).filter(n => n.status === 'warning').length} warnings,{' '}
+                      {(pipelineFlow.nodes || []).filter(n => n.status === 'error').length} errors
                     </div>
                   </CardContent>
                 </Card>
@@ -575,11 +575,11 @@ export default function DiagnosticsPage() {
                     <CardTitle className="text-sm">Data Connections</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{pipelineFlow.edges.length}</div>
+                    <div className="text-2xl font-bold">{(pipelineFlow.edges || []).length}</div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {pipelineFlow.edges.filter(e => e.status === 'active').length} active,{' '}
-                      {pipelineFlow.edges.filter(e => e.status === 'stale').length} stale,{' '}
-                      {pipelineFlow.edges.filter(e => e.status === 'broken').length} broken
+                      {(pipelineFlow.edges || []).filter(e => e.status === 'active').length} active,{' '}
+                      {(pipelineFlow.edges || []).filter(e => e.status === 'stale').length} stale,{' '}
+                      {(pipelineFlow.edges || []).filter(e => e.status === 'broken').length} broken
                     </div>
                   </CardContent>
                 </Card>
@@ -590,10 +590,10 @@ export default function DiagnosticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-xs space-y-1">
-                      <div>{pipelineFlow.stages.sources.length} Sources</div>
-                      <div>{pipelineFlow.stages.masterTables.length} Master Tables</div>
-                      <div>{pipelineFlow.stages.apis.length} APIs</div>
-                      <div>{pipelineFlow.stages.dashboards.length} Dashboards</div>
+                      <div>{(pipelineFlow.stages.sources || []).length} Sources</div>
+                      <div>{(pipelineFlow.stages.masterTables || []).length} Master Tables</div>
+                      <div>{(pipelineFlow.stages.apis || []).length} APIs</div>
+                      <div>{(pipelineFlow.stages.dashboards || []).length} Dashboards</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -686,7 +686,7 @@ export default function DiagnosticsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {e2e.checks
+                      {(e2e.checks || [])
                         .filter(c => c.layer === 'api')
                         .map((check, i) => (
                           <TableRow key={i}>
@@ -723,7 +723,7 @@ export default function DiagnosticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {e2e.checks
+                    {(e2e.checks || [])
                       .filter(c => c.layer === 'integration')
                       .map((check, i) => (
                         <div key={i} className="flex items-start gap-4 p-4 rounded-lg border">
@@ -1091,7 +1091,7 @@ export default function DiagnosticsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {schedulers.schedulers.map((scheduler, i) => (
+                    {(schedulers.schedulers || []).map((scheduler, i) => (
                       <TableRow key={i}>
                         <TableCell className="font-medium">{scheduler.name}</TableCell>
                         <TableCell>
@@ -1174,11 +1174,13 @@ export default function DiagnosticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm font-bold">
-                      {new Date(historical.logs[0].timestamp).toLocaleString()}
+                      {historical.logs && historical.logs[0] ? new Date(historical.logs[0].timestamp).toLocaleString() : 'N/A'}
                     </div>
-                    <Badge variant={historical.logs[0].overall_status === 'healthy' ? 'default' : 'destructive'} className="mt-2">
-                      {historical.logs[0].overall_status.toUpperCase()}
-                    </Badge>
+                    {historical.logs && historical.logs[0] && (
+                      <Badge variant={historical.logs[0].overall_status === 'healthy' ? 'default' : 'destructive'} className="mt-2">
+                        {historical.logs[0].overall_status.toUpperCase()}
+                      </Badge>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -1191,7 +1193,7 @@ export default function DiagnosticsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-end gap-2 h-32">
-                    {historical.logs.slice(0, 10).reverse().map((log, i) => {
+                    {(historical.logs || []).slice(0, 10).reverse().map((log, i) => {
                       const healthScore = (
                         (log.data_sources_healthy || 0) * 100 / 10 +
                         (log.e2e_passed || 0) * 100 / (log.e2e_total_checks || 1) +
@@ -1228,7 +1230,7 @@ export default function DiagnosticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {historical.logs.slice(0, 10).map((log, i) => {
+                      {(historical.logs || []).slice(0, 10).map((log, i) => {
                         const total = log.e2e_total_checks || 0;
                         const passed = log.e2e_passed || 0;
                         const successRate = total > 0 ? (passed / total) * 100 : 0;
@@ -1265,7 +1267,7 @@ export default function DiagnosticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {historical.logs.slice(0, 10).map((log, i) => {
+                      {(historical.logs || []).slice(0, 10).map((log, i) => {
                         const total = log.pipeline_total_nodes || 0;
                         const healthy = log.pipeline_healthy_nodes || 0;
                         const healthRate = total > 0 ? (healthy / total) * 100 : 0;
@@ -1302,7 +1304,7 @@ export default function DiagnosticsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {historical.logs.slice(0, 10).map((log, i) => {
+                      {(historical.logs || []).slice(0, 10).map((log, i) => {
                         const responseTime = log.e2e_avg_response_time_ms || 0;
                         const maxTime = 3000; // 3 seconds max for scale
                         const percentage = Math.min((responseTime / maxTime) * 100, 100);
