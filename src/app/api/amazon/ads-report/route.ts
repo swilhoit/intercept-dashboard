@@ -38,12 +38,20 @@ export async function GET(request: NextRequest) {
         FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
         ${detailedDateFilter}
       ),
+      summary_keywords AS (
+        SELECT
+          COUNT(DISTINCT ad_group_name) as total_ad_groups,
+          COUNT(DISTINCT keyword_text) as total_keywords
+        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
+        ${detailedDateFilter}
+        WHERE LENGTH(keyword_text) > 0
+      ),
       summary AS (
         SELECT
           (SELECT total_campaigns FROM summary_campaigns) as total_campaigns,
           (SELECT active_campaigns FROM summary_campaigns) as active_campaigns,
-          0 as total_ad_groups,
-          0 as total_keywords,
+          (SELECT total_ad_groups FROM summary_keywords) as total_ad_groups,
+          (SELECT total_keywords FROM summary_keywords) as total_keywords,
           (SELECT total_portfolios FROM summary_campaigns) as total_portfolios,
           COUNT(DISTINCT date) as active_days,
           SUM(amazon_ads_clicks) as total_clicks,
@@ -78,52 +86,64 @@ export async function GET(request: NextRequest) {
         ORDER BY total_cost DESC
         LIMIT 50
       ),
-      portfolios AS (
+      portfolio_keywords AS (
         SELECT
           COALESCE(portfolio_name, 'No Portfolio') as portfolio,
-          SUM(cost) as cost,
-          SUM(clicks) as clicks,
-          SUM(impressions) as impressions,
-          SUM(conversions_1d_total) as conversions,
-          ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as avg_cpc,
-          ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as ctr,
-          ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate,
-          COUNT(DISTINCT campaign_name) as campaigns,
-          COUNT(DISTINCT ad_group_name) as ad_groups,
-          0 as keywords
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
+          COUNT(DISTINCT keyword_text) as keyword_count
+        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
         ${detailedDateFilter}
+        WHERE LENGTH(keyword_text) > 0
         GROUP BY portfolio_name
+      ),
+      portfolios AS (
+        SELECT
+          COALESCE(c.portfolio_name, 'No Portfolio') as portfolio,
+          SUM(c.cost) as cost,
+          SUM(c.clicks) as clicks,
+          SUM(c.impressions) as impressions,
+          SUM(c.conversions_1d_total) as conversions,
+          ROUND(SAFE_DIVIDE(SUM(c.cost), SUM(c.clicks)), 2) as avg_cpc,
+          ROUND(SAFE_DIVIDE(SUM(c.clicks) * 100.0, SUM(c.impressions)), 2) as ctr,
+          ROUND(SAFE_DIVIDE(SUM(c.conversions_1d_total) * 100.0, SUM(c.clicks)), 2) as conversion_rate,
+          COUNT(DISTINCT c.campaign_name) as campaigns,
+          COUNT(DISTINCT c.ad_group_name) as ad_groups,
+          MAX(COALESCE(k.keyword_count, 0)) as keywords
+        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\` c
+        LEFT JOIN portfolio_keywords k ON COALESCE(c.portfolio_name, 'No Portfolio') = k.portfolio
+        ${detailedDateFilter.replace('date', 'c.date')}
+        GROUP BY c.portfolio_name
         ORDER BY cost DESC
       ),
       top_keywords AS (
         SELECT
           campaign_name as campaign,
-          CAST(NULL AS STRING) as keyword,
-          CAST(NULL AS STRING) as search_term,
-          CAST(NULL AS STRING) as match_type,
+          keyword_text as keyword,
+          search_term,
+          match_type,
           SUM(clicks) as clicks,
           SUM(cost) as cost,
           ROUND(SAFE_DIVIDE(SUM(cost), SUM(clicks)), 2) as cpc,
           ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
+        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
         ${detailedDateFilter}
-        GROUP BY campaign_name
+        WHERE LENGTH(keyword_text) > 0
+        GROUP BY campaign_name, keyword_text, search_term, match_type
         ORDER BY clicks DESC
         LIMIT 20
       ),
       match_type_perf AS (
         SELECT
-          'N/A' as match_type,
+          COALESCE(match_type, 'Unknown') as match_type,
           SUM(cost) as cost,
           SUM(clicks) as clicks,
           SUM(impressions) as impressions,
           ROUND(SAFE_DIVIDE(SUM(clicks) * 100.0, SUM(impressions)), 2) as ctr,
           ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
+        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
         ${detailedDateFilter}
+        WHERE LENGTH(match_type) > 0
         GROUP BY match_type
-        LIMIT 0
+        ORDER BY cost DESC
       ),
       time_series AS (
         SELECT
