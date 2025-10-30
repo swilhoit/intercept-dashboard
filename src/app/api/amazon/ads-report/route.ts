@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
           COALESCE(COUNT(DISTINCT keyword_text), 0) as total_keywords
         FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
         ${detailedDateFilter}
-        WHERE LENGTH(COALESCE(keyword_text, '')) > 0
+        AND LENGTH(COALESCE(keyword_text, '')) > 0
       ),
       summary AS (
         SELECT
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
           COUNT(DISTINCT keyword_text) as keyword_count
         FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
         ${detailedDateFilter}
-        WHERE LENGTH(COALESCE(keyword_text, '')) > 0
+        AND LENGTH(COALESCE(keyword_text, '')) > 0
         GROUP BY portfolio_name
       ),
       portfolios AS (
@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
           ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate
         FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
         ${detailedDateFilter}
-        WHERE LENGTH(COALESCE(keyword_text, '')) > 0
+        AND LENGTH(COALESCE(keyword_text, '')) > 0
         GROUP BY campaign_name, keyword_text, search_term, match_type
         ORDER BY clicks DESC
         LIMIT 20
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
           ROUND(SAFE_DIVIDE(SUM(conversions_1d_total) * 100.0, SUM(clicks)), 2) as conversion_rate
         FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
         ${detailedDateFilter}
-        WHERE LENGTH(COALESCE(match_type, '')) > 0
+        AND LENGTH(COALESCE(match_type, '')) > 0
         GROUP BY match_type
         ORDER BY cost DESC
       ),
