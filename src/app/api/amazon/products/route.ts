@@ -62,9 +62,13 @@ export async function GET(request: NextRequest) {
       LIMIT 50
     `;
 
-    const [rows] = await bigquery.query(query);
-    
-    return cachedResponse(rows, CACHE_STRATEGIES.STANDARD);
+    const cacheKey = `amazon-products-${startDate || 'default'}-${endDate || 'default'}`;
+
+    return await cachedResponse(
+      cacheKey,
+      query,
+      CACHE_STRATEGIES.STANDARD
+    );
   } catch (error) {
     return handleApiError(error);
   }

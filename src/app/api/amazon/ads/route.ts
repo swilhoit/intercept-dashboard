@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
 import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
 
@@ -48,10 +47,15 @@ export async function GET(request: NextRequest) {
       ORDER BY total_cost DESC
       LIMIT 100
     `;
-
-    const [rows] = await bigquery.query(query);
     
-    return cachedResponse(rows, CACHE_STRATEGIES.ANALYTICS);
+    const cacheKey = `amazon-ads-report-${startDate || 'all'}-${endDate || 'all'}`;
+
+    return await cachedResponse(
+      cacheKey,
+      query,
+      CACHE_STRATEGIES.ANALYTICS
+    );
+
   } catch (error) {
     return handleApiError(error);
   }

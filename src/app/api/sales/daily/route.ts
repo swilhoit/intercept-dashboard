@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
+import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -27,24 +28,13 @@ export async function GET(request: NextRequest) {
     
     query += ` ORDER BY date ASC`;
     
-    const [rows] = await bigquery.query(query);
+    return await cachedResponse(
+      'sales-daily',
+      query,
+      CACHE_STRATEGIES.REALTIME
+    );
     
-    const response = {
-      data: rows,
-      _timestamp: Date.now(),
-      _debugInfo: {
-        message: "Daily sales cache fix applied",
-        recordCount: rows.length
-      }
-    };
-
-    return NextResponse.json(response.data, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
   } catch (error) {
     return handleApiError(error);
-  }}
+  }
+}

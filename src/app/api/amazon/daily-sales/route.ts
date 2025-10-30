@@ -56,9 +56,13 @@ export async function GET(request: NextRequest) {
       LIMIT 100
     `;
 
-    const [rows] = await bigquery.query(query);
+    const cacheKey = `amazon-daily-sales-${startDate || 'default'}-${endDate || 'default'}`;
     
-    return cachedResponse(rows, CACHE_STRATEGIES.REALTIME);
+    return await cachedResponse(
+      cacheKey,
+      query,
+      CACHE_STRATEGIES.REALTIME
+    );
   } catch (error) {
     return handleApiError(error);
   }

@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
 import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
 
@@ -22,9 +21,11 @@ export async function GET() {
       LIMIT 1000
     `;
 
-    const [rows] = await bigquery.query(query);
-    
-    return cachedResponse(rows, CACHE_STRATEGIES.STANDARD);
+    return await cachedResponse(
+      'amazon-orders',
+      query,
+      CACHE_STRATEGIES.STANDARD
+    );
   } catch (error) {
     return handleApiError(error);
   }
