@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
           FROM \`${PROJECT_ID}.${dataset}.${table}\`
         `;
 
-        const [rows] = await bigquery.query({ query, timeoutMs: 10000 });
+        const [rows] = await bigquery.query(query);
         const data = rows[0];
 
         const daysSinceUpdate = data.last_date

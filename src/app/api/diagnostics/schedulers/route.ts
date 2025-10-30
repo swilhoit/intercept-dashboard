@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
           FROM \`${PROJECT_ID}.${source.dataset}.${source.table}\`
         `;
 
-        const [rows] = await bigquery.query({ query, timeoutMs: 10000 });
+        const [rows] = await bigquery.query(query);
         const data = rows[0];
 
         const lastUpdate = data.last_update?.value || data.last_update;
