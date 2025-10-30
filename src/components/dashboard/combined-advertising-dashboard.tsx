@@ -111,13 +111,16 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
   const combinedTimeSeries = () => {
     const googleTrend = googleData.trend || []
     const amazonTimeSeries = amazonData.timeSeries || []
-    
+
     // Create a map of dates for easier merging
     const dateMap = new Map()
-    
+
     // Add Google data
     googleTrend.forEach((item: any) => {
       const date = item.date?.value || item.date
+      // Skip entries with null/undefined dates
+      if (!date) return
+
       if (!dateMap.has(date)) {
         dateMap.set(date, { date, googleSpend: 0, amazonSpend: 0, totalSpend: 0 })
       }
@@ -129,19 +132,23 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
         }
       })
     })
-    
+
     // Add Amazon data
     amazonTimeSeries.forEach((item: any) => {
       const date = item.date
+      // Skip entries with null/undefined dates
+      if (!date) return
+
       if (!dateMap.has(date)) {
         dateMap.set(date, { date, googleSpend: 0, amazonSpend: 0, totalSpend: 0 })
       }
       const dayData = dateMap.get(date)
       dayData.amazonSpend = item.spend || 0
     })
-    
-    // Calculate totals and return sorted array
+
+    // Calculate totals and return sorted array, filtering out any null dates
     return Array.from(dateMap.values())
+      .filter(item => item.date != null)
       .map(item => ({
         ...item,
         totalSpend: item.googleSpend + item.amazonSpend
@@ -305,7 +312,10 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={(entry) => `${((entry.spend / combinedMetrics.totalSpend) * 100).toFixed(1)}%`}
+                      label={(entry) => {
+                        if (!entry || !combinedMetrics.totalSpend) return '0%'
+                        return `${((entry.spend / combinedMetrics.totalSpend) * 100).toFixed(1)}%`
+                      }}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="spend"
@@ -367,38 +377,52 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={combinedTrendData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(date) => {
+                      if (!date) return ''
+                      try {
+                        return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      } catch (e) {
+                        return ''
+                      }
+                    }}
                   />
                   <YAxis tickFormatter={formatCurrencyAxis} />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value: any) => formatCurrency(value)}
-                    labelFormatter={(date) => new Date(date).toLocaleDateString('en-US', { 
-                      month: 'long', 
-                      day: 'numeric', 
-                      year: 'numeric' 
-                    })}
+                    labelFormatter={(date) => {
+                      if (!date) return ''
+                      try {
+                        return new Date(date).toLocaleDateString('en-US', {
+                          month: 'long',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })
+                      } catch (e) {
+                        return ''
+                      }
+                    }}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="googleSpend" 
-                    stroke="#4285F4" 
+                  <Line
+                    type="monotone"
+                    dataKey="googleSpend"
+                    stroke="#4285F4"
                     strokeWidth={2}
                     name="Google Ads"
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="amazonSpend" 
-                    stroke="#FF9900" 
+                  <Line
+                    type="monotone"
+                    dataKey="amazonSpend"
+                    stroke="#FF9900"
                     strokeWidth={2}
                     name="Amazon Ads"
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="totalSpend" 
-                    stroke="#7C3AED" 
+                  <Line
+                    type="monotone"
+                    dataKey="totalSpend"
+                    stroke="#7C3AED"
                     strokeWidth={3}
                     name="Total Spend"
                   />
