@@ -6,6 +6,7 @@ import os
 import requests
 from datetime import datetime, date, timedelta
 from google.cloud import bigquery
+from google.cloud import pubsub_v1
 import time
 import logging
 from google.cloud.logging import Client as LoggingClient
@@ -19,6 +20,7 @@ log.setLevel(logging.INFO)
 
 # --- GCP Configuration ---
 PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-2508061117')
+PUBSUB_TOPIC = 'source-data-updated'
 
 # --- WooCommerce Site Configurations ---
 WOOCOMMERCE_SITES = {
@@ -331,6 +333,34 @@ def fetch_all_woocommerce(request):
                 "days_back": days_back
             }
         )
+
+        # --- Publish success message to Pub/Sub ---
+        if overall_status != 'total_failure':
+            try:
+                publisher = pubsub_v1.PublisherClient()
+                topic_path = publisher.topic_path(PROJECT_ID, PUBSUB_TOPIC)
+                
+                message_data = {
+                    "source": "woocommerce",
+                    "status": overall_status, # success or partial_failure
+                    "timestamp": datetime.now().isoformat(),
+                    "successful_sites": len(WOOCOMMERCE_SITES) - error_count,
+                    "failed_sites": error_count,
+                    "days_back": days_back
+                }
+                
+                message_bytes = json.dumps(message_data).encode('utf-8')
+                
+                publish_future = publisher.publish(topic_path, data=message_bytes)
+                publish_future.result() # Wait for publish to complete
+                log.info(f"Successfully published message to Pub/Sub topic: {PUBSUB_TOPIC}")
+
+            except Exception as e:
+                log_structured(
+                    logging.ERROR,
+                    "Failed to publish to Pub/Sub",
+                    {"error": str(e)}
+                )
 
         return json.dumps(results, indent=2)
         
