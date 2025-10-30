@@ -51,8 +51,42 @@ export async function GET(request: NextRequest) {
           UNION ALL
           SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_fireplacesnet.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
         ) all_clicks
+      ),
+      order_counts AS (
+        SELECT
+          COALESCE(SUM(amazon_conversions), 0) as amazon_orders,
+          COALESCE(SUM(woo_orders), 0) as woo_orders,
+          COALESCE(SUM(shopify_orders), 0) as shopify_orders
+        FROM (
+          -- Amazon orders from conversions
+          SELECT
+            SUM(conversions_1d_total) as amazon_conversions,
+            0 as woo_orders,
+            0 as shopify_orders
+          FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
+          WHERE date >= '${start}' AND date <= '${end}'
+
+          UNION ALL
+
+          -- WooCommerce orders
+          SELECT
+            0 as amazon_conversions,
+            SUM(order_count) as woo_orders,
+            0 as shopify_orders
+          FROM (
+            SELECT SUM(order_count) as order_count FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\` WHERE order_date >= '${start}' AND order_date <= '${end}'
+            UNION ALL
+            SELECT SUM(order_count) as order_count FROM \`intercept-sales-2508061117.woocommerce.heatilator_daily_product_sales\` WHERE order_date >= '${start}' AND order_date <= '${end}'
+            UNION ALL
+            SELECT SUM(order_count) as order_count FROM \`intercept-sales-2508061117.woocommerce.superior_daily_product_sales\` WHERE order_date >= '${start}' AND order_date <= '${end}'
+            UNION ALL
+            SELECT SUM(order_count) as order_count FROM \`intercept-sales-2508061117.woocommerce.majestic_daily_product_sales\` WHERE order_date >= '${start}' AND order_date <= '${end}'
+            UNION ALL
+            SELECT SUM(order_count) as order_count FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\` WHERE order_date >= '${start}' AND order_date <= '${end}'
+          ) woo_all
+        )
       )
-      SELECT 
+      SELECT
         m.total_revenue,
         m.avg_daily_sales,
         m.days_with_sales,
@@ -61,9 +95,11 @@ export async function GET(request: NextRequest) {
         m.shopify_revenue,
         m.highest_day,
         m.lowest_day,
-        oc.total_clicks as organic_clicks
+        oc.total_clicks as organic_clicks,
+        (ord.amazon_orders + ord.woo_orders + ord.shopify_orders) as total_orders
       FROM master_data m,
-           organic_clicks oc
+           organic_clicks oc,
+           order_counts ord
     `;
 
     const currentPeriodQuery = buildQuery(startDate, endDate);
@@ -87,6 +123,7 @@ export async function GET(request: NextRequest) {
       woocommerce_revenue: calculatePercentageChange(current.woocommerce_revenue, previous.woocommerce_revenue),
       shopify_revenue: calculatePercentageChange(current.shopify_revenue, previous.shopify_revenue),
       organic_clicks: calculatePercentageChange(current.organic_clicks, previous.organic_clicks),
+      total_orders: calculatePercentageChange(current.total_orders, previous.total_orders),
     };
 
     const response = {
