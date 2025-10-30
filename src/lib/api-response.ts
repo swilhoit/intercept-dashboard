@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
+import { bigquery } from './bigquery';
+import NodeCache from 'node-cache';
+
+// In-memory cache with a standard TTL of 10 minutes, matching the default stale-while-revalidate time.
+const cache = new NodeCache({ stdTTL: 600 });
+
 
 interface CacheOptions {
   maxAge?: number;      // Browser cache in seconds
   sMaxAge?: number;     // CDN cache in seconds  
   staleWhileRevalidate?: number; // Serve stale content while revalidating
-  revalidate?: number;  // ISR revalidation time
 }
 
 const DEFAULT_CACHE: CacheOptions = {
@@ -13,7 +18,30 @@ const DEFAULT_CACHE: CacheOptions = {
   staleWhileRevalidate: 600, // 10 minutes stale-while-revalidate
 };
 
-export function cachedResponse(
+export async function cachedResponse(
+  cacheKey: string,
+  query: string,
+  options: CacheOptions = DEFAULT_CACHE
+) {
+  // Check if we have a cached response
+  const cachedData = cache.get(cacheKey);
+  if (cachedData) {
+    return jsonResponse(cachedData, options, true);
+  }
+
+  // If not in cache, run the BigQuery query
+  const [rows] = await bigquery.query(query);
+  
+  // Store the result in cache. The TTL should align with the CDN cache time.
+  const cacheTtl = options.sMaxAge || 300;
+  cache.set(cacheKey, rows, cacheTtl);
+
+  // Return the newly fetched data
+  return jsonResponse(rows, options, false);
+}
+
+
+function jsonResponse(
   data: any, 
   options: CacheOptions = DEFAULT_CACHE,
   cacheHit: boolean = false
@@ -32,7 +60,8 @@ export function cachedResponse(
       'Cache-Control': cacheControl,
       'CDN-Cache-Control': `max-age=${(sMaxAge || 300) * 2}`, // Longer CDN cache
       'Vercel-CDN-Cache-Control': `max-age=${(sMaxAge || 300) * 4}`, // Even longer Vercel edge cache
-      'X-Cache': cacheHit ? 'HIT' : 'MISS',
+      'X-Cache-Status': cacheHit ? 'HIT' : 'MISS',
+      'X-Cache-Provider': 'In-Memory',
       'X-Response-Time': `${Date.now()}`,
     }
   });

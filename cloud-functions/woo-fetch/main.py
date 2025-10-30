@@ -9,6 +9,7 @@ from google.cloud import bigquery
 from google.cloud import pubsub_v1
 import time
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from google.cloud.logging import Client as LoggingClient
 from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 
@@ -255,8 +256,8 @@ def process_orders_to_bigquery(site_name, orders, table_name):
 
 def fetch_all_woocommerce(request):
     """
-    HTTP Cloud Function to fetch data from all WooCommerce sites
-    Supports ?days_back=N parameter for backfilling historical data
+    HTTP Cloud Function to fetch data from all WooCommerce sites in parallel.
+    Supports ?days_back=N parameter for backfilling historical data.
     """
     try:
         # Get days_back parameter from request (default 7)
@@ -278,46 +279,64 @@ def fetch_all_woocommerce(request):
         overall_status = 'success'
         error_count = 0
 
-        # Process each site
-        for site_name, site_config in WOOCOMMERCE_SITES.items():
-            log.info(f"Processing {site_name} (fetching {days_back} days)...")
+        # --- Process each site in parallel ---
+        with ThreadPoolExecutor(max_workers=len(WOOCOMMERCE_SITES)) as executor:
+            # Create a future for each site's data fetch
+            fetch_futures = {
+                executor.submit(fetch_woocommerce_orders, name, config, days_back): name
+                for name, config in WOOCOMMERCE_SITES.items()
+            }
 
-            # Fetch orders with specified days_back
-            fetch_result = fetch_woocommerce_orders(site_name, site_config, days_back=days_back)
-            results['sites'][site_name] = {'fetch': fetch_result}
+            for future in as_completed(fetch_futures):
+                site_name = fetch_futures[future]
+                try:
+                    fetch_result = future.result()
+                    results['sites'][site_name] = {'fetch': fetch_result}
+                    log.info(f"Fetch completed for {site_name} with status: {fetch_result['status']}")
 
-            # If fetch successful, process to BigQuery
-            if fetch_result['status'] == 'success':
-                if fetch_result['order_count'] > 0:
-                    process_result = process_orders_to_bigquery(
-                        site_name,
-                        fetch_result['orders'],
-                        site_config['table']
-                    )
-                    results['sites'][site_name]['process'] = process_result
-                    if process_result['status'] != 'success':
+                    # If fetch successful, process to BigQuery
+                    if fetch_result['status'] == 'success':
+                        if fetch_result['order_count'] > 0:
+                            process_result = process_orders_to_bigquery(
+                                site_name,
+                                fetch_result['orders'],
+                                WOOCOMMERCE_SITES[site_name]['table']
+                            )
+                            results['sites'][site_name]['process'] = process_result
+                            if process_result['status'] != 'success':
+                                error_count += 1
+                                log_structured(
+                                    logging.ERROR,
+                                    f"BigQuery processing failed for {site_name}",
+                                    {
+                                        "site": site_name,
+                                        "error": process_result.get('message'),
+                                        "details": process_result.get('errors')
+                                    }
+                                )
+                        else:
+                            process_result = {'status': 'skipped', 'message': 'No new orders to process'}
+                            results['sites'][site_name]['process'] = process_result
+                            log.info(f"No new orders for {site_name}, skipping BigQuery processing.")
+                    else:
                         error_count += 1
-                        log_structured(
-                            logging.ERROR,
-                            f"BigQuery processing failed for {site_name}",
-                            {
-                                "site": site_name,
-                                "error": process_result.get('message'),
-                                "details": process_result.get('errors')
-                            }
-                        )
-                else:
-                    process_result = {'status': 'skipped', 'message': 'No new orders to process'}
-                    results['sites'][site_name]['process'] = process_result
-                    log.info(f"No new orders for {site_name}, skipping BigQuery processing.")
-            else:
-                error_count += 1
-                # The detailed error is already logged inside fetch_woocommerce_orders
-                results['sites'][site_name]['process'] = {
-                    'status': 'skipped',
-                    'message': 'Fetch failed'
-                }
-        
+                        # Detailed error is already logged inside fetch_woocommerce_orders
+                        results['sites'][site_name]['process'] = {
+                            'status': 'skipped',
+                            'message': 'Fetch failed'
+                        }
+                except Exception as e:
+                    error_count += 1
+                    log_structured(
+                        logging.ERROR,
+                        f"An error occurred while processing future for {site_name}",
+                        {"site": site_name, "error": str(e)}
+                    )
+                    results['sites'][site_name] = {
+                        'fetch': {'status': 'error', 'error': str(e)},
+                        'process': {'status': 'skipped', 'message': 'Processing future failed'}
+                    }
+
         if error_count > 0:
             overall_status = 'partial_failure' if error_count < len(WOOCOMMERCE_SITES) else 'total_failure'
         
