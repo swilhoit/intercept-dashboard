@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { validateChartData, safeNumber } from "@/lib/data-validation"
 
 interface AmazonAdsReportProps {
   dateRange?: DateRange
@@ -92,6 +94,17 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
     return colors[index % colors.length]
   }
 
+  // Safely get arrays with fallbacks
+  const safePortfolios = Array.isArray(data.portfolios) ? data.portfolios : []
+  const safeMatchTypes = Array.isArray(data.matchTypePerformance) ? data.matchTypePerformance : []
+  const safeMetrics = Array.isArray(data.metrics) ? data.metrics : []
+  const safeKeywords = Array.isArray(data.topKeywords) ? data.topKeywords : []
+
+  // Validate chart data
+  const portfoliosValidation = validateChartData(safePortfolios)
+  const matchTypesValidation = validateChartData(safeMatchTypes)
+  const metricsValidation = validateChartData(safeMetrics)
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -105,7 +118,8 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <ErrorBoundary componentName="AmazonAdsReport">
+      <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
         <Card>
@@ -229,16 +243,20 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={data.portfolios}
+                  data={portfoliosValidation.data}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={(entry) => `${((entry.cost / data.summary?.total_cost) * 100).toFixed(1)}%`}
+                  label={(entry) => {
+                    const totalCost = safeNumber(data.summary?.total_cost)
+                    if (!entry || totalCost === 0) return ''
+                    return `${((safeNumber(entry.cost) / totalCost) * 100).toFixed(1)}%`
+                  }}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="cost"
                 >
-                  {data.portfolios?.map((entry: any, index: number) => (
+                  {portfoliosValidation.data.map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={getPortfolioColor(index)} />
                   ))}
                 </Pie>
@@ -246,7 +264,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-4 space-y-2">
-              {data.portfolios?.slice(0, 5).map((portfolio: any, index: number) => (
+              {safePortfolios.slice(0, 5).map((portfolio: any, index: number) => (
                 <div key={portfolio.portfolio} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div 
@@ -273,7 +291,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.matchTypePerformance}>
+              <BarChart data={matchTypesValidation.data}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="match_type" angle={-45} textAnchor="end" height={80} />
                 <YAxis yAxisId="left" orientation="left" stroke="#8884d8" />
@@ -300,7 +318,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={data.metrics?.slice(0, 10)}>
+            <BarChart data={metricsValidation.data.slice(0, 10)}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                 dataKey="group_name" 
@@ -361,7 +379,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.metrics?.slice(0, 20).map((item: any, index: number) => (
+              {safeMetrics.slice(0, 20).map((item: any, index: number) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium max-w-[300px] truncate">
                     {item.group_name}
@@ -431,7 +449,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.topKeywords?.map((keyword: any, index: number) => (
+              {safeKeywords.map((keyword: any, index: number) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
                     {keyword.keyword || 'N/A'}
@@ -487,7 +505,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.portfolios?.map((portfolio: any, index: number) => (
+              {safePortfolios.map((portfolio: any, index: number) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
@@ -527,6 +545,7 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }
