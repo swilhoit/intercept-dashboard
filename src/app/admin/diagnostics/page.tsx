@@ -878,7 +878,7 @@ export default function DiagnosticsPage() {
                 <TableBody>
                   {Object.entries(data.sources).map(([key, source]) => {
                     // Render different metrics based on source type
-                    let metricsDisplay: string | JSX.Element = 'N/A';
+                    let metricsDisplay: string | React.ReactElement = 'N/A';
                     if (source.metrics?.last7DaysRevenue) {
                       // Sales source
                       metricsDisplay = formatCurrency(source.metrics.last7DaysRevenue);
