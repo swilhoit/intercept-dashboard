@@ -484,13 +484,21 @@ async function performConsistencyChecks(result: PipelineCheck) {
     const [masterAdsRows] = await bigquery.query(masterAdsQuery);
     const masterSpend = parseFloat(masterAdsRows[0]?.total_spend || 0);
 
+    // Amazon Ads uses BOTH conversions_orders AND daily_keywords
     const sourceAdsQuery = `
       SELECT
         SUM(cost) as total_spend,
         SUM(impressions) as total_impressions,
         SUM(clicks) as total_clicks
-      FROM \`${PROJECT_ID}.amazon_ads_sharepoint.conversions_orders\`
-      WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      FROM (
+        SELECT cost, impressions, clicks
+        FROM \`${PROJECT_ID}.amazon_ads_sharepoint.conversions_orders\`
+        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+        UNION ALL
+        SELECT cost, impressions, clicks
+        FROM \`${PROJECT_ID}.amazon_ads_sharepoint.daily_keywords\`
+        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+      )
     `;
     const [sourceAdsRows] = await bigquery.query(sourceAdsQuery);
     const sourceSpend = parseFloat(sourceAdsRows[0]?.total_spend || 0);
