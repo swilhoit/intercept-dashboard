@@ -580,7 +580,7 @@ async function performConsistencyChecks(result: PipelineCheck) {
     } else if (sourcesWithRecentGaps > 0) {
       gapSummaryMessage = `⚠️ ${sourcesWithRecentGaps} source(s) missing recent data (last 7 days): `;
       gapSummaryMessage += criticalGapSources.map(s =>
-        `${s.name} (${s.metrics.dateGaps.recentMissing} dates)`
+        `${s.name} (${s.metrics?.dateGaps?.recentMissing || 0} dates)`
       ).join(', ');
     } else {
       gapSummaryMessage = `${sourcesWithGaps.length} source(s) have older date gaps (>7 days ago)`;
