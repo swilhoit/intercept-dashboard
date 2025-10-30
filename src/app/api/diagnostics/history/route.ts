@@ -125,8 +125,24 @@ export async function GET(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Error fetching diagnostic history:', error);
+
+    // Return graceful error response instead of 500
     return NextResponse.json({
-      error: error.message
-    }, { status: 500 });
+      logs: [],
+      summary: {
+        total_runs: 0,
+        healthy_runs: 0,
+        warning_runs: 0,
+        error_runs: 0,
+        health_percentage: 0,
+        avg_7day_revenue: 0,
+        avg_execution_time_ms: 0,
+        days_analyzed: parseInt(request.nextUrl.searchParams.get('days') || '30')
+      },
+      issues: [],
+      error: 'Failed to fetch diagnostic history',
+      message: error.message,
+      note: 'Diagnostic logs table may not exist or there may be a permissions issue.'
+    }, { status: 200 }); // Return 200 instead of 500 to prevent client errors
   }
 }
