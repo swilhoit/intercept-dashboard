@@ -36,8 +36,21 @@ export async function GET(request: NextRequest) {
       ),
       organic_clicks AS (
         SELECT SUM(clicks) as total_clicks
-        FROM \`intercept-sales-2508061117.searchconsole_ALL.searchdata_site_impression\`
-        WHERE data_date >= '${start}' AND data_date <= '${end}'
+        FROM (
+          SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_brickanew.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
+          UNION ALL
+          SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_heatilator.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
+          UNION ALL
+          SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_superior.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
+          UNION ALL
+          SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_waterwise.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
+          UNION ALL
+          SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_majestic.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
+          UNION ALL
+          SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_fireplacepainting.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
+          UNION ALL
+          SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_fireplacesnet.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
+        ) all_clicks
       ),
       order_count AS (
         SELECT SUM(total_orders) as total_orders
@@ -45,9 +58,19 @@ export async function GET(request: NextRequest) {
         WHERE date >= '${start}' AND date <= '${end}'
       )
       SELECT 
-        (SELECT * FROM master_data),
-        (SELECT total_clicks FROM organic_clicks) as organic_clicks,
-        (SELECT total_orders FROM order_count) as total_orders
+        m.total_revenue,
+        m.avg_daily_sales,
+        m.days_with_sales,
+        m.amazon_revenue,
+        m.woocommerce_revenue,
+        m.shopify_revenue,
+        m.highest_day,
+        m.lowest_day,
+        oc.total_clicks as organic_clicks,
+        oc2.total_orders
+      FROM master_data m,
+           organic_clicks oc,
+           order_count oc2
     `;
 
     const currentPeriodQuery = buildQuery(startDate, endDate);
