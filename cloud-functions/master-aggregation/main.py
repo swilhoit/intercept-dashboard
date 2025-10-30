@@ -7,6 +7,8 @@ import os
 from datetime import datetime
 from google.cloud import bigquery
 import functions_framework
+import base64
+import json
 
 # Get project ID from environment
 PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-2508061117')
@@ -73,11 +75,22 @@ def check_source_freshness(client):
     return stale_sources
 
 
-@functions_framework.http
-def master_aggregation(request):
-    """HTTP Cloud Function to update master aggregation daily"""
+@functions_framework.cloud_event
+def master_aggregation(cloud_event):
+    """
+    Cloud Function triggered by Pub/Sub to update master aggregation.
+    """
+    # Extract message data
+    try:
+        message_data = json.loads(base64.b64decode(cloud_event.data["message"]["data"]).decode('utf-8'))
+        print(f"Received Pub/Sub message: {message_data}")
+        source = message_data.get("source")
+    except Exception as e:
+        print(f"Error decoding Pub/Sub message: {e}")
+        # Acknowledge the message to prevent retries for malformed data
+        return
     
-    print('Starting master aggregation update...')
+    print(f'Starting master aggregation update, triggered by: {source or "Unknown"}...')
     client = bigquery.Client(project=PROJECT_ID)
     
     # 1. Check source data freshness
@@ -85,8 +98,10 @@ def master_aggregation(request):
     if stale_sources:
         error_message = f"Master aggregation skipped. Stale data sources detected: {stale_sources}"
         print(error_message)
-        # Return a non-200 status to indicate failure, which can be monitored.
-        return (error_message, 428, {'Content-Type': 'text/plain'})
+        # In a Pub/Sub function, we don't return an error code,
+        # but logging is crucial for monitoring.
+        # The message is acknowledged and not retried.
+        return
 
     try:
         # 2. Update MASTER table with all channel data
@@ -173,9 +188,11 @@ def master_aggregation(request):
         
         success_message = f"Master aggregation successful. Days updated: {result['days_updated']}"
         print(success_message)
-        return (success_message, 200, {'Content-Type': 'text/plain'})
+        # No return value needed for success in a Pub/Sub trigger
         
     except Exception as e:
         error_message = f"Error during master aggregation: {e}"
         print(error_message)
-        return (error_message, 500, {'Content-Type': 'text/plain'})
+        # Re-raise the exception to signal failure to Cloud Functions.
+        # This will cause the message to be re-delivered (depending on topic settings).
+        raise
