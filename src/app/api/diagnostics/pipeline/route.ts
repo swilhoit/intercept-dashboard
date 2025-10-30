@@ -98,16 +98,16 @@ export async function GET(request: NextRequest) {
     );
 
     // Check Amazon Ads Sources
-    result.sources.amazonAdsKeywords = await checkTable(
-      'amazon_ads_sharepoint.keywords_enhanced',
-      'Amazon Ads Keywords',
+    result.sources.amazonAdsConversions = await checkTable(
+      'amazon_ads_sharepoint.conversions_orders',
+      'Amazon Ads - Conversions & Orders',
       'date',
       3
     );
 
-    result.sources.amazonAdsConversions = await checkTable(
-      'amazon_ads_sharepoint.conversions_orders',
-      'Amazon Ads Conversions',
+    result.sources.amazonAdsDailyKeywords = await checkTable(
+      'amazon_ads_sharepoint.daily_keywords',
+      'Amazon Ads - Daily Keywords',
       'date',
       3
     );
@@ -312,7 +312,8 @@ async function checkTable(
       };
     } else if (tableId.includes('TOTAL_DAILY_ADS') || tableId.includes('amazon_ads')) {
       // Amazon Ads metrics
-      const spendCol = tableId.includes('keywords_enhanced') ? 'cost' : 'spend';
+      // conversions_orders and daily_keywords use 'cost', MASTER table uses 'spend'
+      const spendCol = tableId.includes('MASTER') ? 'amazon_ads_spend' : 'cost';
       const metricsQuery = `
         SELECT
           SUM(${spendCol}) as total_spend,
@@ -488,7 +489,7 @@ async function performConsistencyChecks(result: PipelineCheck) {
         SUM(cost) as total_spend,
         SUM(impressions) as total_impressions,
         SUM(clicks) as total_clicks
-      FROM \`${PROJECT_ID}.amazon_ads_sharepoint.keywords_enhanced\`
+      FROM \`${PROJECT_ID}.amazon_ads_sharepoint.conversions_orders\`
       WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
     `;
     const [sourceAdsRows] = await bigquery.query(sourceAdsQuery);
@@ -651,12 +652,11 @@ async function performConsistencyChecks(result: PipelineCheck) {
 
     // API Endpoint Data Validation
     try {
-      // Test if Amazon Ads API returns campaign data
+      // Test if Amazon Ads API returns campaign data from conversions_orders
       const campaignTestQuery = `
         SELECT COUNT(DISTINCT campaign_name) as campaign_count
-        FROM \`${PROJECT_ID}.amazon_ads_sharepoint.keywords_enhanced\`
-        WHERE has_performance = TRUE
-          AND campaign_name IS NOT NULL
+        FROM \`${PROJECT_ID}.amazon_ads_sharepoint.conversions_orders\`
+        WHERE campaign_name IS NOT NULL
           AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
       `;
       const [campaignTest] = await bigquery.query(campaignTestQuery);

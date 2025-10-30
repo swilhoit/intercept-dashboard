@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     
     caseStatement += `ELSE 'Other' END`;
     
-    // Query for campaign performance using Amazon Ads data
+    // Query for campaign performance using Amazon Ads data from conversions_orders
     let campaignQuery = `
       WITH campaign_performance AS (
         SELECT
@@ -59,9 +59,9 @@ export async function GET(request: NextRequest) {
           CASE WHEN SUM(impressions) > 0 THEN (SUM(clicks) * 100.0) / SUM(impressions) ELSE 0 END as ctr,
           CASE WHEN SUM(clicks) > 0 THEN (SUM(conversions_1d_total) * 100.0) / SUM(clicks) ELSE 0 END as conversion_rate,
           COUNT(DISTINCT date) as active_days
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
-        WHERE has_performance = TRUE
-          AND campaign_name IS NOT NULL
+        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
+        WHERE campaign_name IS NOT NULL
+          AND date IS NOT NULL
     `;
 
     if (startDate && endDate) {
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
     console.log('Campaign Query:', campaignQuery);
     const [campaignRows] = await bigquery.query(campaignQuery);
     
-    // Query for daily trend data using Amazon Ads
+    // Query for daily trend data using Amazon Ads from conversions_orders
     let trendQuery = `
       SELECT
         date,
@@ -94,9 +94,8 @@ export async function GET(request: NextRequest) {
         SUM(impressions) as daily_impressions,
         SUM(clicks) as daily_clicks,
         SUM(conversions_1d_total) as daily_conversions
-      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
-      WHERE has_performance = TRUE
-        AND campaign_name IS NOT NULL
+      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
+      WHERE campaign_name IS NOT NULL
         AND date IS NOT NULL
     `;
 
@@ -111,18 +110,17 @@ export async function GET(request: NextRequest) {
     
     const [trendRows] = await bigquery.query(trendQuery);
     
-    // Query for match type breakdown (Amazon Ads equivalent to channel)
+    // Query for portfolio breakdown (Amazon Ads channel grouping)
     let channelQuery = `
       SELECT
-        COALESCE(match_type, 'Unknown') as channel,
+        COALESCE(portfolio_name, 'No Portfolio') as channel,
         SUM(cost) as total_spend,
         SUM(impressions) as total_impressions,
         SUM(clicks) as total_clicks,
         SUM(conversions_1d_total) as total_conversions,
         COUNT(DISTINCT campaign_name) as campaign_count
-      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced\`
-      WHERE has_performance = TRUE
-        AND date IS NOT NULL
+      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
+      WHERE date IS NOT NULL
     `;
 
     if (startDate && endDate) {
