@@ -21,25 +21,25 @@ export async function GET(request: NextRequest) {
     
     // Build CASE statement for categorization
     let caseStatement = 'CASE ';
-    
+
     // Paint category
-    const paintConditions = categoryKeywords['Paint'].map(keyword => 
-      `LOWER(c.campaign_name) LIKE '%${keyword.toLowerCase()}%'`
+    const paintConditions = categoryKeywords['Paint'].map(keyword =>
+      `LOWER(campaign_name) LIKE '%${keyword.toLowerCase()}%'`
     ).join(' OR ');
     caseStatement += `WHEN ${paintConditions} THEN 'Paint' `;
-    
+
     // Fireplace Doors category
-    const fireplaceConditions = categoryKeywords['Fireplace Doors'].map(keyword => 
-      `LOWER(c.campaign_name) LIKE '%${keyword.toLowerCase()}%'`
+    const fireplaceConditions = categoryKeywords['Fireplace Doors'].map(keyword =>
+      `LOWER(campaign_name) LIKE '%${keyword.toLowerCase()}%'`
     ).join(' OR ');
     caseStatement += `WHEN ${fireplaceConditions} THEN 'Fireplace Doors' `;
-    
+
     // Mantels category
-    const mantelConditions = categoryKeywords['Mantels'].map(keyword => 
-      `LOWER(c.campaign_name) LIKE '%${keyword.toLowerCase()}%'`
+    const mantelConditions = categoryKeywords['Mantels'].map(keyword =>
+      `LOWER(campaign_name) LIKE '%${keyword.toLowerCase()}%'`
     ).join(' OR ');
     caseStatement += `WHEN ${mantelConditions} THEN 'Mantels' `;
-    
+
     caseStatement += `ELSE 'Other' END`;
     
     // Query for campaign performance using Amazon Ads data from conversions_orders
@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
     }
 
     channelQuery += `
-      GROUP BY match_type
+      GROUP BY portfolio_name
       ORDER BY total_spend DESC
     `;
     
