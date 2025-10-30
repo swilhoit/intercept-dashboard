@@ -8,6 +8,8 @@ import { DateRange } from "react-day-picker"
 import { DollarSign, MousePointer, Eye, Target, TrendingUp, Zap } from "lucide-react"
 import { AdvertisingDashboard } from "./advertising-dashboard"
 import { AmazonAdsReport } from "./amazon-ads-report"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { safeNumber } from "@/lib/data-validation"
 
 interface CombinedAdvertisingDashboardProps {
   dateRange?: DateRange
@@ -76,15 +78,15 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
     return `${value?.toFixed(2) || 0}%`
   }
 
-  // Combined metrics
+  // Combined metrics with safe number conversion
   const combinedMetrics = {
-    totalSpend: (googleData.summary?.totalSpend || 0) + (amazonData.summary?.total_cost || 0),
-    totalClicks: (googleData.summary?.totalClicks || 0) + (amazonData.summary?.total_clicks || 0),
-    totalImpressions: (googleData.summary?.totalImpressions || 0) + (amazonData.summary?.total_impressions || 0),
-    totalConversions: (googleData.summary?.totalConversions || 0) + (amazonData.summary?.total_conversions || 0),
-    totalConversionsValue: (googleData.summary?.totalConversionsValue || 0) + (amazonData.summary?.total_conversions_value || 0),
-    googleSpend: googleData.summary?.totalSpend || 0,
-    amazonSpend: amazonData.summary?.total_cost || 0
+    totalSpend: safeNumber(googleData.summary?.totalSpend) + safeNumber(amazonData.summary?.total_cost),
+    totalClicks: safeNumber(googleData.summary?.totalClicks) + safeNumber(amazonData.summary?.total_clicks),
+    totalImpressions: safeNumber(googleData.summary?.totalImpressions) + safeNumber(amazonData.summary?.total_impressions),
+    totalConversions: safeNumber(googleData.summary?.totalConversions) + safeNumber(amazonData.summary?.total_conversions),
+    totalConversionsValue: safeNumber(googleData.summary?.totalConversionsValue) + safeNumber(amazonData.summary?.total_conversions_value),
+    googleSpend: safeNumber(googleData.summary?.totalSpend),
+    amazonSpend: safeNumber(amazonData.summary?.total_cost)
   }
 
   // Platform comparison data
@@ -171,9 +173,9 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
   }
 
   return (
-    <div className="space-y-6">
-
-      <Tabs defaultValue="overview" className="space-y-4">
+    <ErrorBoundary componentName="CombinedAdvertisingDashboard">
+      <div className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="grid w-full max-w-[500px] grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="google">Google Ads</TabsTrigger>
@@ -439,7 +441,8 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
         <TabsContent value="amazon" className="space-y-4">
           <AmazonAdsReport dateRange={dateRange} />
         </TabsContent>
-      </Tabs>
-    </div>
+        </Tabs>
+      </div>
+    </ErrorBoundary>
   )
 }

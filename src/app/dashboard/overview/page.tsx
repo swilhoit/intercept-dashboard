@@ -6,6 +6,7 @@ import { SalesChartWithToggle } from "@/components/dashboard/sales-chart-with-to
 import { ChannelBreakdown } from "@/components/dashboard/channel-breakdown"
 import { ProductTable } from "@/components/dashboard/product-table"
 import { useDashboard } from "../dashboard-context"
+import { validateSummaryData } from "@/lib/data-validation"
 
 export default function OverviewPage() {
   const [loading, setLoading] = useState(true)
@@ -45,18 +46,12 @@ export default function OverviewPage() {
         adSpendRes.json(),
       ])
 
-      // Extract current_period from the API response
+      // Extract and validate current_period from the API response
       const currentPeriod = summaryData.current_period || {}
+      const validatedData = validateSummaryData(currentPeriod)
 
-      setSummary(summaryData.error ? {
-        total_revenue: 0,
-        total_orders: 0,
-        days_with_sales: 0,
-        amazon_revenue: 0,
-        woocommerce_revenue: 0,
-        shopify_revenue: 0
-      } : {
-        ...currentPeriod,
+      setSummary(summaryData.error ? validateSummaryData({}) : {
+        ...validatedData,
         percentage_changes: summaryData.percentage_changes,
         has_comparison: summaryData.has_comparison
       })
@@ -112,9 +107,10 @@ export default function OverviewPage() {
           />
         </div>
         <div className="col-span-full lg:col-span-3">
-          <ChannelBreakdown 
+          <ChannelBreakdown
             amazonRevenue={summary.amazon_revenue}
             woocommerceRevenue={summary.woocommerce_revenue}
+            loading={loading}
           />
         </div>
       </div>
