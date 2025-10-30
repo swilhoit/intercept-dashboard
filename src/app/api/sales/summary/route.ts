@@ -51,11 +51,6 @@ export async function GET(request: NextRequest) {
           UNION ALL
           SELECT SUM(clicks) as clicks FROM \`intercept-sales-2508061117.searchconsole_fireplacesnet.searchdata_site_impression\` WHERE data_date >= '${start}' AND data_date <= '${end}'
         ) all_clicks
-      ),
-      order_count AS (
-        SELECT SUM(total_orders) as total_orders
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
-        WHERE date >= '${start}' AND date <= '${end}'
       )
       SELECT 
         m.total_revenue,
@@ -66,11 +61,9 @@ export async function GET(request: NextRequest) {
         m.shopify_revenue,
         m.highest_day,
         m.lowest_day,
-        oc.total_clicks as organic_clicks,
-        oc2.total_orders
+        oc.total_clicks as organic_clicks
       FROM master_data m,
-           organic_clicks oc,
-           order_count oc2
+           organic_clicks oc
     `;
 
     const currentPeriodQuery = buildQuery(startDate, endDate);
@@ -94,7 +87,6 @@ export async function GET(request: NextRequest) {
       woocommerce_revenue: calculatePercentageChange(current.woocommerce_revenue, previous.woocommerce_revenue),
       shopify_revenue: calculatePercentageChange(current.shopify_revenue, previous.shopify_revenue),
       organic_clicks: calculatePercentageChange(current.organic_clicks, previous.organic_clicks),
-      total_orders: calculatePercentageChange(current.total_orders, previous.total_orders),
     };
 
     const response = {

@@ -53,13 +53,20 @@ export default function OverviewPage() {
       console.log('Total Revenue:', summaryData.total_revenue)
       console.log('Has Error:', !!summaryData.error)
 
+      // Extract current_period from the API response
+      const currentPeriod = summaryData.current_period || {}
+      
       setSummary(summaryData.error ? {
         total_revenue: 0,
         total_orders: 0,
         days_with_sales: 0,
         amazon_revenue: 0,
         woocommerce_revenue: 0
-      } : summaryData)
+      } : {
+        ...currentPeriod,
+        percentage_changes: summaryData.percentage_changes,
+        has_comparison: summaryData.has_comparison
+      })
       setProducts(Array.isArray(productsData) ? productsData : [])
       setAdSpendData(adSpendInfo.error ? { 
         metrics: {}, 
