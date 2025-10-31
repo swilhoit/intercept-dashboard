@@ -449,36 +449,49 @@ export function AmazonAdsReport({ dateRange }: AmazonAdsReportProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {safeKeywords.map((keyword: any, index: number) => (
-                <TableRow key={index}>
-                  <TableCell className="font-medium">
-                    {keyword.keyword || 'N/A'}
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {keyword.search_term || 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{keyword.match_type || 'N/A'}</Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {keyword.campaign}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatNumber(keyword.clicks)}
-                  </TableCell>
-                  <TableCell className="text-right font-medium">
-                    {formatCurrency(keyword.cost)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrency(keyword.cpc)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className={(keyword.conversion_rate || 0) > 5 ? 'text-green-600 font-medium' : ''}>
-                      {formatPercent(keyword.conversion_rate || 0)}
-                    </span>
+              {safeKeywords.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <p className="text-muted-foreground">No keyword data available for this date range</p>
+                      <p className="text-sm text-muted-foreground">
+                        Try selecting a date range between August 6 - September 3, 2025
+                      </p>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                safeKeywords.map((keyword: any, index: number) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">
+                      {keyword.keyword || 'N/A'}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">
+                      {keyword.search_term || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{keyword.match_type || 'N/A'}</Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">
+                      {keyword.campaign}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatNumber(keyword.clicks)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(keyword.cost)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(keyword.cpc)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className={(keyword.conversion_rate || 0) > 5 ? 'text-green-600 font-medium' : ''}>
+                        {formatPercent(keyword.conversion_rate || 0)}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
