@@ -77,10 +77,15 @@ export async function GET(request: NextRequest) {
         ? source.table.split('.')
         : ['', source.table];
 
+      // Determine the correct date column for each table type
+      const dateColumn = source.table.includes('daily_product_sales_clean') || source.table.includes('daily_product_sales')
+        ? 'order_date'
+        : 'date';
+
       const checkQuery = `
         SELECT
           COUNT(*) as count,
-          MAX(date) as last_date
+          MAX(${dateColumn}) as last_date
         FROM \`${PROJECT_ID}.${source.table}\`
       `;
 

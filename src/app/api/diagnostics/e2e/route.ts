@@ -32,27 +32,31 @@ export async function GET(request: NextRequest) {
   const baseUrl = request.headers.get('host') || 'localhost:3000';
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
 
+  // Calculate date range for testing (last 30 days)
+  const endDate = new Date().toISOString().split('T')[0];
+  const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
   // Define critical API endpoints to test
   const apiEndpoints = [
     {
       name: 'Sales Summary API',
-      path: '/api/sales/summary',
+      path: `/api/sales/summary?startDate=${startDate}&endDate=${endDate}`,
       layer: 'api' as const,
-      dataPath: 'sales', // Path to data in response
+      dataPath: 'current_period', // Path to data in response
       minRecords: 1,
-      requiredFields: ['totalSales', 'amazonSales', 'woocommerceSales', 'shopifySales']
+      requiredFields: ['total_revenue', 'amazon_revenue', 'woocommerce_revenue', 'shopify_revenue']
     },
     {
       name: 'Daily Sales API',
-      path: '/api/sales/daily',
+      path: `/api/sales/daily?startDate=${startDate}&endDate=${endDate}`,
       layer: 'api' as const,
-      dataPath: 'sales',
+      dataPath: 'daily',
       minRecords: 7, // Should have at least 7 days of data
       requiredFields: ['date', 'total_sales']
     },
     {
       name: 'Product Breakdown API',
-      path: '/api/sales/product-breakdown',
+      path: `/api/sales/product-breakdown?startDate=${startDate}&endDate=${endDate}`,
       layer: 'api' as const,
       dataPath: 'products',
       minRecords: 1,
@@ -84,11 +88,11 @@ export async function GET(request: NextRequest) {
     },
     {
       name: 'WooCommerce Sites API',
-      path: '/api/sites/woocommerce',
+      path: `/api/sites/woocommerce?startDate=${startDate}&endDate=${endDate}`,
       layer: 'api' as const,
-      dataPath: 'sites',
+      dataPath: 'siteBreakdown',
       minRecords: 1,
-      requiredFields: ['name', 'total_revenue']
+      requiredFields: ['site', 'revenue']
     }
   ];
 
@@ -220,13 +224,13 @@ export async function GET(request: NextRequest) {
   // Check 2: Verify Sales data flows to dashboard
   try {
     const [dailyRes, summaryRes, productRes] = await Promise.all([
-      fetch(`${protocol}://${baseUrl}/api/sales/daily`),
-      fetch(`${protocol}://${baseUrl}/api/sales/summary`),
-      fetch(`${protocol}://${baseUrl}/api/sales/product-breakdown`)
+      fetch(`${protocol}://${baseUrl}/api/sales/daily?startDate=${startDate}&endDate=${endDate}`),
+      fetch(`${protocol}://${baseUrl}/api/sales/summary?startDate=${startDate}&endDate=${endDate}`),
+      fetch(`${protocol}://${baseUrl}/api/sales/product-breakdown?startDate=${startDate}&endDate=${endDate}`)
     ]);
 
-    const hasDaily = dailyRes.ok && (await dailyRes.json()).sales?.length > 0;
-    const hasSummary = summaryRes.ok && (await summaryRes.json()).totalSales > 0;
+    const hasDaily = dailyRes.ok && (await dailyRes.json()).daily?.length > 0;
+    const hasSummary = summaryRes.ok && (await summaryRes.json()).current_period?.total_revenue > 0;
     const hasProducts = productRes.ok && (await productRes.json()).products?.length > 0;
 
     integrationChecks.push({
