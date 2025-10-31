@@ -242,7 +242,7 @@ async function checkTable(
         ORDER BY ds.date
       ),
       recent_missing AS (
-        SELECT date as missing_date
+        SELECT missing_date
         FROM missing_dates
         WHERE missing_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
       )
@@ -312,13 +312,16 @@ async function checkTable(
       };
     } else if (tableId.includes('TOTAL_DAILY_ADS') || tableId.includes('amazon_ads')) {
       // Amazon Ads metrics
-      // conversions_orders and daily_keywords use 'cost', MASTER table uses 'spend'
+      // conversions_orders and daily_keywords use 'cost', 'impressions', 'clicks'
+      // MASTER table uses 'amazon_ads_spend', 'total_impressions', 'total_clicks'
       const spendCol = tableId.includes('MASTER') ? 'amazon_ads_spend' : 'cost';
+      const impressionsCol = tableId.includes('MASTER') ? 'total_impressions' : 'impressions';
+      const clicksCol = tableId.includes('MASTER') ? 'total_clicks' : 'clicks';
       const metricsQuery = `
         SELECT
           SUM(${spendCol}) as total_spend,
-          SUM(impressions) as total_impressions,
-          SUM(clicks) as total_clicks,
+          SUM(${impressionsCol}) as total_impressions,
+          SUM(${clicksCol}) as total_clicks,
           COUNT(DISTINCT ${dateColumn === 'date' ? dateColumn : dateExpression}) as days_with_data
         FROM \`${PROJECT_ID}.${tableId}\`
         WHERE ${dateColumn === 'date' ? dateColumn : dateExpression} >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
@@ -475,9 +478,9 @@ async function performConsistencyChecks(result: PipelineCheck) {
     // Check Amazon Ads spend consistency
     const masterAdsQuery = `
       SELECT
-        SUM(spend) as total_spend,
-        SUM(impressions) as total_impressions,
-        SUM(clicks) as total_clicks
+        SUM(total_spend) as total_spend,
+        SUM(total_impressions) as total_impressions,
+        SUM(total_clicks) as total_clicks
       FROM \`${PROJECT_ID}.MASTER.TOTAL_DAILY_ADS\`
       WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
     `;
@@ -549,7 +552,7 @@ async function performConsistencyChecks(result: PipelineCheck) {
     // ROAS Health Check
     const roasQuery = `
       SELECT
-        SUM(ads.spend) as total_spend,
+        SUM(ads.total_spend) as total_spend,
         SUM(sales.total_sales) as total_sales
       FROM \`${PROJECT_ID}.MASTER.TOTAL_DAILY_ADS\` ads
       INNER JOIN \`${PROJECT_ID}.MASTER.TOTAL_DAILY_SALES\` sales
