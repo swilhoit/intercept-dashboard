@@ -162,7 +162,7 @@ export default function OverviewPage() {
             <div className="border-t pt-2 mt-2">
               <div className="flex justify-between items-center font-semibold">
                 <span className="text-sm">Total Revenue</span>
-                <span className="text-sm font-mono">${(summary.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                <span className="text-sm font-mono">${siteBreakdown.reduce((sum, site) => sum + (site.revenue || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
               </div>
             </div>
           </div>
