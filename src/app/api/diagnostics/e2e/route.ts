@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       name: 'Product Breakdown API',
       path: `/api/sales/product-breakdown?startDate=${startDate}&endDate=${endDate}`,
       layer: 'api' as const,
-      dataPath: 'products',
+      dataPath: 'summary',
       minRecords: 1,
       requiredFields: ['product_name', 'total_revenue']
     },
@@ -74,9 +74,9 @@ export async function GET(request: NextRequest) {
       name: 'Amazon Ads Master Metrics API',
       path: '/api/ads/master-metrics',
       layer: 'api' as const,
-      dataPath: 'metrics',
+      dataPath: 'daily',
       minRecords: 7,
-      requiredFields: ['date', 'spend']
+      requiredFields: ['date', 'total_spend']
     },
     {
       name: 'GA4 Traffic Analytics API',
@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const hasCampaigns = campaignsRes.ok && (await campaignsRes.json()).campaigns?.length > 0;
-    const hasMetrics = metricsRes.ok && (await metricsRes.json()).metrics?.length > 0;
+    const hasMetrics = metricsRes.ok && (await metricsRes.json()).daily?.length > 0;
 
     integrationChecks.push({
       name: 'Amazon Ads Data Flow',
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
 
     const hasDaily = dailyRes.ok && (await dailyRes.json()).daily?.length > 0;
     const hasSummary = summaryRes.ok && (await summaryRes.json()).current_period?.total_revenue > 0;
-    const hasProducts = productRes.ok && (await productRes.json()).products?.length > 0;
+    const hasProducts = productRes.ok && (await productRes.json()).summary?.length > 0;
 
     integrationChecks.push({
       name: 'Sales Data Flow',

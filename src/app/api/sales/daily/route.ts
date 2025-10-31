@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
     }
     
     query += ` ORDER BY date ASC`;
-    
-    return await cachedResponse(
-      'sales-daily',
-      query,
-      CACHE_STRATEGIES.REALTIME
-    );
+
+    const [rows] = await bigquery.query(query);
+
+    return NextResponse.json({
+      daily: rows
+    });
     
   } catch (error) {
     return handleApiError(error);

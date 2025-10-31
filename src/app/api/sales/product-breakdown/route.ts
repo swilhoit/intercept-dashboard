@@ -110,11 +110,15 @@ export async function GET(request: NextRequest) {
             AVG(Item_Price) as avg_price,
             COUNT(*) as transaction_count
           FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
-          WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0${categoryFilter}
+          WHERE Product_Name IS NOT NULL
+            AND Item_Price IS NOT NULL
+            AND Item_Price > 0
+            AND SAFE_CAST(Date AS INT64) IS NOT NULL${categoryFilter}
       `;
-      
+
       if (startDate && endDate) {
-        query += ` AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) >= '${startDate}' AND DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY) <= '${endDate}'`;
+        query += ` AND DATE_ADD('1899-12-30', INTERVAL SAFE_CAST(Date AS INT64) DAY) >= '${startDate}'
+                   AND DATE_ADD('1899-12-30', INTERVAL SAFE_CAST(Date AS INT64) DAY) <= '${endDate}'`;
       }
       
       query += `
