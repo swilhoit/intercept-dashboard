@@ -12,8 +12,9 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const aggregation = searchParams.get('aggregation') || 'daily';
     
-    // Define category keywords - Paint should be checked first since many products contain both keywords
+    // Define category keywords - Check greywater first (most specific), then Paint, then Fireplace Doors
     const categories = {
+      'Greywater': ['greywater', 'grey water', 'graywater', 'gray water', 'water treatment', 'water filter', 'water filtration', 'water purification', 'water recycling', 'water system', 'rainwater', 'rain water'],
       'Paint': ['paint kit', 'paint can', 'gallon paint', 'quart paint', 'primer paint', 'base coat', 'top coat', 'sealant', 'stain', 'varnish', 'enamel paint', 'latex paint', 'acrylic paint'],
       'Fireplace Doors': ['ez door', 'glass door', 'fire screen', 'door steel', 'door plus', 'fireplace door', 'thermo-rite', 'fp door']
     };
@@ -45,22 +46,28 @@ export async function GET(request: NextRequest) {
     
     // Build CASE statement for categorization with exclusions
     let caseStatement = 'CASE ';
-    
-    // Paint category with exclusions for accessories
-    const paintConditions = categories['Paint'].map(keyword => 
+
+    // Greywater category (check first - most specific)
+    const greywaterConditions = categories['Greywater'].map(keyword =>
       `LOWER(product_name) LIKE '%${keyword.toLowerCase()}%'`
     ).join(' OR ');
-    const paintExclusions = paintAccessoryKeywords.map(keyword => 
+    caseStatement += `WHEN ${greywaterConditions} THEN 'Greywater' `;
+
+    // Paint category with exclusions for accessories
+    const paintConditions = categories['Paint'].map(keyword =>
+      `LOWER(product_name) LIKE '%${keyword.toLowerCase()}%'`
+    ).join(' OR ');
+    const paintExclusions = paintAccessoryKeywords.map(keyword =>
       `LOWER(product_name) NOT LIKE '%${keyword.toLowerCase()}%'`
     ).join(' AND ');
     caseStatement += `WHEN (${paintConditions}) AND (${paintExclusions}) THEN 'Paint' `;
-    
+
     // Fireplace Doors category
-    const fireplaceConditions = categories['Fireplace Doors'].map(keyword => 
+    const fireplaceConditions = categories['Fireplace Doors'].map(keyword =>
       `LOWER(product_name) LIKE '%${keyword.toLowerCase()}%'`
     ).join(' OR ');
     caseStatement += `WHEN ${fireplaceConditions} THEN 'Fireplace Doors' `;
-    
+
     caseStatement += `ELSE 'Other' END`;
 
     // Build CASE statement for Amazon data with correct column name
@@ -119,10 +126,31 @@ export async function GET(request: NextRequest) {
     
     query += `
       ),
+      categorized_shopify AS (
+        SELECT
+          order_date as category_date,
+          ${caseStatement} as category,
+          product_name,
+          CAST(product_id AS STRING) as product_id,
+          total_revenue as sales,
+          total_quantity_sold as quantity,
+          'Shopify' as channel
+        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
+        WHERE product_name IS NOT NULL
+    `;
+
+    if (startDate && endDate) {
+      query += ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
+    }
+
+    query += `
+      ),
       all_categorized AS (
         SELECT * FROM categorized_amazon
         UNION ALL
         SELECT * FROM categorized_woocommerce
+        UNION ALL
+        SELECT * FROM categorized_shopify
       ),
       aggregated AS (
         SELECT 
@@ -181,7 +209,7 @@ export async function GET(request: NextRequest) {
         GROUP BY category
       ),
       categorized_woocommerce AS (
-        SELECT 
+        SELECT
           ${caseStatement} as category,
           'WooCommerce' as channel,
           SUM(total_revenue) as total_sales,
@@ -191,11 +219,25 @@ export async function GET(request: NextRequest) {
         WHERE product_name IS NOT NULL
         ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
         GROUP BY category
+      ),
+      categorized_shopify AS (
+        SELECT
+          ${caseStatement} as category,
+          'Shopify' as channel,
+          SUM(total_revenue) as total_sales,
+          SUM(total_quantity_sold) as total_quantity,
+          COUNT(DISTINCT product_id) as unique_products
+        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+        GROUP BY category
       )
       SELECT * FROM (
         SELECT * FROM categorized_amazon
         UNION ALL
         SELECT * FROM categorized_woocommerce
+        UNION ALL
+        SELECT * FROM categorized_shopify
       )
       ORDER BY category, channel
     `;
@@ -236,7 +278,7 @@ export async function GET(request: NextRequest) {
         WHERE Product_Name IS NOT NULL
       ),
       categorized_woocommerce AS (
-        SELECT 
+        SELECT
           order_date as category_date,
           ${caseStatement} as category,
           total_revenue as sales,
@@ -245,12 +287,24 @@ export async function GET(request: NextRequest) {
         WHERE product_name IS NOT NULL
         ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
       ),
+      categorized_shopify AS (
+        SELECT
+          order_date as category_date,
+          ${caseStatement} as category,
+          total_revenue as sales,
+          'Shopify' as channel
+        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+      ),
       all_categorized AS (
         SELECT * FROM categorized_amazon
         UNION ALL
         SELECT * FROM categorized_woocommerce
+        UNION ALL
+        SELECT * FROM categorized_shopify
       )
-      SELECT 
+      SELECT
         ${dateFormat} as period,
         category,
         channel,
@@ -293,10 +347,18 @@ export async function GET(request: NextRequest) {
         WHERE Product_Name IS NOT NULL
       ),
       categorized_woocommerce AS (
-        SELECT 
+        SELECT
           ${caseStatement} as category,
           CAST(product_id AS STRING) as product_id
         FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+      ),
+      categorized_shopify AS (
+        SELECT
+          ${caseStatement} as category,
+          CAST(product_id AS STRING) as product_id
+        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
         WHERE product_name IS NOT NULL
         ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
       ),
@@ -304,6 +366,8 @@ export async function GET(request: NextRequest) {
         SELECT category, product_id FROM categorized_amazon
         UNION ALL
         SELECT category, product_id FROM categorized_woocommerce
+        UNION ALL
+        SELECT category, product_id FROM categorized_shopify
       )
       SELECT
         category,
@@ -334,20 +398,27 @@ export async function GET(request: NextRequest) {
         channelData[key] = {
           amazon: 0,
           woocommerce: 0,
+          shopify: 0,
           amazonQuantity: 0,
           woocommerceQuantity: 0,
+          shopifyQuantity: 0,
           amazonProducts: 0,
-          woocommerceProducts: 0
+          woocommerceProducts: 0,
+          shopifyProducts: 0
         };
       }
       if (row.channel === 'Amazon') {
         channelData[key].amazon = row.total_sales || 0;
         channelData[key].amazonQuantity = row.total_quantity || 0;
         channelData[key].amazonProducts = row.unique_products || 0;
-      } else {
+      } else if (row.channel === 'WooCommerce') {
         channelData[key].woocommerce = row.total_sales || 0;
         channelData[key].woocommerceQuantity = row.total_quantity || 0;
         channelData[key].woocommerceProducts = row.unique_products || 0;
+      } else if (row.channel === 'Shopify') {
+        channelData[key].shopify = row.total_sales || 0;
+        channelData[key].shopifyQuantity = row.total_quantity || 0;
+        channelData[key].shopifyProducts = row.unique_products || 0;
       }
     });
     
@@ -367,10 +438,13 @@ export async function GET(request: NextRequest) {
           channelBreakdown: channelData[category] || {
             amazon: 0,
             woocommerce: 0,
+            shopify: 0,
             amazonQuantity: 0,
             woocommerceQuantity: 0,
+            shopifyQuantity: 0,
             amazonProducts: 0,
-            woocommerceProducts: 0
+            woocommerceProducts: 0,
+            shopifyProducts: 0
           }
         };
       }
@@ -389,27 +463,30 @@ export async function GET(request: NextRequest) {
 
     // Add channel time series to data
     Object.keys(categoryData).forEach(category => {
-      const dateToChannels = new Map<string, {amazon: number, woocommerce: number}>();
-      
+      const dateToChannels = new Map<string, {amazon: number, woocommerce: number, shopify: number}>();
+
       channelTimeRows
         .filter((row: any) => row.category === category)
         .forEach((row: any) => {
           const { period, channel, channel_sales } = row;
           if (!dateToChannels.has(period)) {
-            dateToChannels.set(period, { amazon: 0, woocommerce: 0 });
+            dateToChannels.set(period, { amazon: 0, woocommerce: 0, shopify: 0 });
           }
           const entry = dateToChannels.get(period)!;
           if (channel === 'Amazon') {
             entry.amazon = channel_sales || 0;
-          } else {
+          } else if (channel === 'WooCommerce') {
             entry.woocommerce = channel_sales || 0;
+          } else if (channel === 'Shopify') {
+            entry.shopify = channel_sales || 0;
           }
         });
-      
+
       categoryData[category].data.forEach((item: any) => {
-        const channels = dateToChannels.get(item.date) || { amazon: 0, woocommerce: 0 };
+        const channels = dateToChannels.get(item.date) || { amazon: 0, woocommerce: 0, shopify: 0 };
         item.amazon_sales = channels.amazon;
         item.woocommerce_sales = channels.woocommerce;
+        item.shopify_sales = channels.shopify;
       });
     });
 
@@ -443,10 +520,13 @@ export async function GET(request: NextRequest) {
         categoryData[category].channelBreakdown = channelData[category] || {
           amazon: 0,
           woocommerce: 0,
+          shopify: 0,
           amazonQuantity: 0,
           woocommerceQuantity: 0,
+          shopifyQuantity: 0,
           amazonProducts: 0,
-          woocommerceProducts: 0
+          woocommerceProducts: 0,
+          shopifyProducts: 0
         };
       }
     });

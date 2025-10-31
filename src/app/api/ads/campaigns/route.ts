@@ -42,42 +42,43 @@ export async function GET(request: NextRequest) {
 
     caseStatement += `ELSE 'Other' END`;
     
-    // Query for campaign performance using Amazon Ads data from conversions_orders
+    // Query for campaign performance using Google Ads data
     let campaignQuery = `
       WITH campaign_performance AS (
         SELECT
-          campaign_name,
-          portfolio_name,
-          campaign_status as status,
-          ${caseStatement} as category,
-          SUM(cost) as total_spend,
-          SUM(impressions) as total_impressions,
-          SUM(clicks) as total_clicks,
-          SUM(conversions_1d_total) as total_conversions,
-          SUM(conversions_1d_sku) as sku_conversions,
-          CASE WHEN SUM(clicks) > 0 THEN SUM(cost) / SUM(clicks) ELSE 0 END as cpc,
-          CASE WHEN SUM(impressions) > 0 THEN (SUM(clicks) * 100.0) / SUM(impressions) ELSE 0 END as ctr,
-          CASE WHEN SUM(clicks) > 0 THEN (SUM(conversions_1d_total) * 100.0) / SUM(clicks) ELSE 0 END as conversion_rate,
-          COUNT(DISTINCT date) as active_days
-        FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
-        WHERE campaign_name IS NOT NULL
-          AND date IS NOT NULL
+          c.campaign_name,
+          c.campaign_bidding_strategy_type as bidding_strategy,
+          c.campaign_status as status,
+          ${caseStatement.replace(/campaign_name/g, 'c.campaign_name')} as category,
+          SUM(s.metrics_cost_micros / 1000000) as total_spend,
+          SUM(s.metrics_impressions) as total_impressions,
+          SUM(s.metrics_clicks) as total_clicks,
+          SUM(s.metrics_conversions) as total_conversions,
+          SUM(s.metrics_conversions_value) as total_conversions_value,
+          CASE WHEN SUM(s.metrics_clicks) > 0 THEN SUM(s.metrics_cost_micros / 1000000) / SUM(s.metrics_clicks) ELSE 0 END as cpc,
+          CASE WHEN SUM(s.metrics_impressions) > 0 THEN (SUM(s.metrics_clicks) * 100.0) / SUM(s.metrics_impressions) ELSE 0 END as ctr,
+          CASE WHEN SUM(s.metrics_clicks) > 0 THEN (SUM(s.metrics_conversions) * 100.0) / SUM(s.metrics_clicks) ELSE 0 END as conversion_rate,
+          CASE WHEN SUM(s.metrics_cost_micros / 1000000) > 0 THEN SUM(s.metrics_conversions_value) / SUM(s.metrics_cost_micros / 1000000) ELSE 0 END as roas,
+          COUNT(DISTINCT s.segments_date) as active_days
+        FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\` s
+        JOIN \`intercept-sales-2508061117.googleads_brickanew.ads_Campaign_4221545789\` c
+          ON s.campaign_id = c.campaign_id
+        WHERE c.campaign_name IS NOT NULL
+          AND s.segments_date IS NOT NULL
     `;
 
     if (startDate && endDate) {
-      campaignQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+      campaignQuery += ` AND s.segments_date >= '${startDate}' AND s.segments_date <= '${endDate}'`;
     }
 
     campaignQuery += `
         GROUP BY
-          campaign_name,
-          portfolio_name,
-          campaign_status,
+          c.campaign_name,
+          c.campaign_bidding_strategy_type,
+          c.campaign_status,
           category
       )
-      SELECT
-        *,
-        0 as roas
+      SELECT *
       FROM campaign_performance
       ORDER BY total_spend DESC
     `;
@@ -85,50 +86,54 @@ export async function GET(request: NextRequest) {
     console.log('Campaign Query:', campaignQuery);
     const [campaignRows] = await bigquery.query(campaignQuery);
     
-    // Query for daily trend data using Amazon Ads from conversions_orders
+    // Query for daily trend data using Google Ads
     let trendQuery = `
       SELECT
-        date,
-        ${caseStatement} as category,
-        SUM(cost) as daily_spend,
-        SUM(impressions) as daily_impressions,
-        SUM(clicks) as daily_clicks,
-        SUM(conversions_1d_total) as daily_conversions
-      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
-      WHERE campaign_name IS NOT NULL
-        AND date IS NOT NULL
+        s.segments_date as date,
+        ${caseStatement.replace(/campaign_name/g, 'c.campaign_name')} as category,
+        SUM(s.metrics_cost_micros / 1000000) as daily_spend,
+        SUM(s.metrics_impressions) as daily_impressions,
+        SUM(s.metrics_clicks) as daily_clicks,
+        SUM(s.metrics_conversions) as daily_conversions
+      FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\` s
+      JOIN \`intercept-sales-2508061117.googleads_brickanew.ads_Campaign_4221545789\` c
+        ON s.campaign_id = c.campaign_id
+      WHERE c.campaign_name IS NOT NULL
+        AND s.segments_date IS NOT NULL
     `;
 
     if (startDate && endDate) {
-      trendQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+      trendQuery += ` AND s.segments_date >= '${startDate}' AND s.segments_date <= '${endDate}'`;
     }
 
     trendQuery += `
-      GROUP BY date, category
-      ORDER BY date ASC, category
+      GROUP BY s.segments_date, category
+      ORDER BY s.segments_date ASC, category
     `;
     
     const [trendRows] = await bigquery.query(trendQuery);
     
-    // Query for portfolio breakdown (Amazon Ads channel grouping)
+    // Query for network breakdown (Google Ads channel grouping)
     let channelQuery = `
       SELECT
-        COALESCE(portfolio_name, 'No Portfolio') as channel,
-        SUM(cost) as total_spend,
-        SUM(impressions) as total_impressions,
-        SUM(clicks) as total_clicks,
-        SUM(conversions_1d_total) as total_conversions,
-        COUNT(DISTINCT campaign_name) as campaign_count
-      FROM \`intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders\`
-      WHERE date IS NOT NULL
+        COALESCE(s.segments_ad_network_type, 'Unknown') as channel,
+        SUM(s.metrics_cost_micros / 1000000) as total_spend,
+        SUM(s.metrics_impressions) as total_impressions,
+        SUM(s.metrics_clicks) as total_clicks,
+        SUM(s.metrics_conversions) as total_conversions,
+        COUNT(DISTINCT c.campaign_name) as campaign_count
+      FROM \`intercept-sales-2508061117.googleads_brickanew.ads_CampaignBasicStats_4221545789\` s
+      JOIN \`intercept-sales-2508061117.googleads_brickanew.ads_Campaign_4221545789\` c
+        ON s.campaign_id = c.campaign_id
+      WHERE s.segments_date IS NOT NULL
     `;
 
     if (startDate && endDate) {
-      channelQuery += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+      channelQuery += ` AND s.segments_date >= '${startDate}' AND s.segments_date <= '${endDate}'`;
     }
 
     channelQuery += `
-      GROUP BY portfolio_name
+      GROUP BY s.segments_ad_network_type
       ORDER BY total_spend DESC
     `;
     
@@ -138,15 +143,15 @@ export async function GET(request: NextRequest) {
     const campaigns = campaignRows.map((row: any) => ({
       name: row.campaign_name,
       category: row.category,
-      channelType: 'AMAZON_ADS',
-      channelSubtype: row.portfolio_name || '',
-      biddingStrategy: 'Amazon Sponsored Products',
+      channelType: 'GOOGLE_ADS',
+      channelSubtype: '',
+      biddingStrategy: row.bidding_strategy || 'Unknown',
       status: row.status || 'Unknown',
       spend: parseFloat(row.total_spend) || 0,
       impressions: parseInt(row.total_impressions) || 0,
       clicks: parseInt(row.total_clicks) || 0,
       conversions: parseFloat(row.total_conversions) || 0,
-      conversionsValue: 0, // Not available in keywords table
+      conversionsValue: parseFloat(row.total_conversions_value) || 0,
       cpc: parseFloat(row.cpc) || 0,
       ctr: parseFloat(row.ctr) || 0,
       conversionRate: parseFloat(row.conversion_rate) || 0,

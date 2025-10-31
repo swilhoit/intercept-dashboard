@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
     
     // Define category keywords matching the categories endpoint
     const categories = {
+      'Greywater': ['greywater', 'grey water', 'graywater', 'gray water', 'water treatment', 'water filter', 'water filtration', 'water purification', 'water recycling', 'water system', 'rainwater', 'rain water'],
       'Paint': ['paint kit', 'paint can', 'gallon paint', 'quart paint', 'primer paint', 'base coat', 'top coat', 'sealant', 'stain', 'varnish', 'enamel paint', 'latex paint', 'acrylic paint'],
       'Fireplace Doors': ['ez door', 'glass door', 'fire screen', 'door steel', 'door plus', 'fireplace door', 'thermo-rite', 'fp door']
     };
@@ -21,22 +22,28 @@ export async function GET(request: NextRequest) {
     
     // Build CASE statement for categorization with exclusions
     let caseStatement = 'CASE ';
-    
-    // Paint category with exclusions for accessories
-    const paintConditions = categories['Paint'].map(keyword => 
+
+    // Greywater category (check first - most specific)
+    const greywaterConditions = categories['Greywater'].map(keyword =>
       `LOWER(product_name) LIKE '%${keyword.toLowerCase()}%'`
     ).join(' OR ');
-    const paintExclusions = paintAccessoryKeywords.map(keyword => 
+    caseStatement += `WHEN ${greywaterConditions} THEN 'Greywater' `;
+
+    // Paint category with exclusions for accessories
+    const paintConditions = categories['Paint'].map(keyword =>
+      `LOWER(product_name) LIKE '%${keyword.toLowerCase()}%'`
+    ).join(' OR ');
+    const paintExclusions = paintAccessoryKeywords.map(keyword =>
       `LOWER(product_name) NOT LIKE '%${keyword.toLowerCase()}%'`
     ).join(' AND ');
     caseStatement += `WHEN (${paintConditions}) AND (${paintExclusions}) THEN 'Paint' `;
-    
+
     // Fireplace Doors category
-    const fireplaceConditions = categories['Fireplace Doors'].map(keyword => 
+    const fireplaceConditions = categories['Fireplace Doors'].map(keyword =>
       `LOWER(product_name) LIKE '%${keyword.toLowerCase()}%'`
     ).join(' OR ');
     caseStatement += `WHEN ${fireplaceConditions} THEN 'Fireplace Doors' `;
-    
+
     caseStatement += `ELSE 'Other' END`;
 
     // Build CASE statement for Amazon data with correct column name
@@ -81,13 +88,35 @@ export async function GET(request: NextRequest) {
     wooQuery += `
       GROUP BY product_name, category
     `;
-    
+
+    // Query for Shopify products with categories
+    let shopifyQuery = `
+      SELECT
+        product_name,
+        ${caseStatement} as category,
+        'Shopify' as channel,
+        SUM(total_revenue) as total_sales,
+        SUM(total_quantity_sold) as quantity
+      FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
+      WHERE product_name IS NOT NULL
+    `;
+
+    if (startDate && endDate) {
+      shopifyQuery += ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
+    }
+
+    shopifyQuery += `
+      GROUP BY product_name, category
+    `;
+
     // Combine queries
     const finalQuery = `
       WITH all_products AS (
         ${amazonQuery}
         UNION ALL
         ${wooQuery}
+        UNION ALL
+        ${shopifyQuery}
       )
       SELECT * FROM all_products
       ORDER BY total_sales DESC

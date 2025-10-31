@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { SalesChartWithToggle } from "@/components/dashboard/sales-chart-with-toggle"
-import { ChannelBreakdown } from "@/components/dashboard/channel-breakdown"
+import { CategoryBreakdown } from "@/components/dashboard/category-breakdown"
 import { ProductTable } from "@/components/dashboard/product-table"
 import { useDashboard } from "../dashboard-context"
 import { validateSummaryData } from "@/lib/data-validation"
@@ -13,6 +13,8 @@ export default function OverviewPage() {
   const [summary, setSummary] = useState<any>({})
   const [products, setProducts] = useState<any[]>([])
   const [adSpendData, setAdSpendData] = useState<any>({ metrics: {} })
+  const [categories, setCategories] = useState<any>({})
+  const [siteBreakdown, setSiteBreakdown] = useState<any[]>([])
   const { dateRange, selectedChannel } = useDashboard()
 
   useEffect(() => {
@@ -34,16 +36,20 @@ export default function OverviewPage() {
     }
 
     try {
-      const [summaryRes, productsRes, adSpendRes] = await Promise.all([
+      const [summaryRes, productsRes, adSpendRes, categoriesRes, sitesRes] = await Promise.all([
         fetch(`/api/sales/summary?${params}`),
         fetch(`/api/sales/products?${params}`),
         fetch(`/api/ads/total-spend?${params}`),
+        fetch(`/api/sales/categories?${params}`),
+        fetch(`/api/sites/woocommerce?${params}`),
       ])
 
-      const [summaryData, productsData, adSpendInfo] = await Promise.all([
+      const [summaryData, productsData, adSpendInfo, categoriesData, sitesData] = await Promise.all([
         summaryRes.json(),
         productsRes.json(),
         adSpendRes.json(),
+        categoriesRes.json(),
+        sitesRes.json(),
       ])
 
       // Extract and validate current_period from the API response
@@ -64,9 +70,32 @@ export default function OverviewPage() {
       } else {
         setProducts([])
       }
-      setAdSpendData(adSpendInfo.error ? { 
-        metrics: {}, 
+      setAdSpendData(adSpendInfo.error ? {
+        metrics: {},
       } : adSpendInfo)
+
+      // Set category data
+      setCategories(categoriesData.error ? {} : categoriesData.categories || {})
+
+      // Build site breakdown - combine Amazon with WooCommerce sites
+      const sites = []
+      if (summary.amazon_revenue || summaryData.current_period?.amazon_revenue) {
+        sites.push({
+          site: 'Amazon',
+          revenue: summary.amazon_revenue || summaryData.current_period?.amazon_revenue || 0,
+          color: '#FF9500'
+        })
+      }
+      if (sitesData.siteBreakdown) {
+        sitesData.siteBreakdown.forEach((site: any) => {
+          sites.push({
+            ...site,
+            color: site.site === 'WaterWise' ? '#5AC8FA' : '#7B68EE'
+          })
+        })
+      }
+      setSiteBreakdown(sites)
+
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
@@ -107,9 +136,8 @@ export default function OverviewPage() {
           />
         </div>
         <div className="col-span-full lg:col-span-3">
-          <ChannelBreakdown
-            amazonRevenue={summary.amazon_revenue}
-            woocommerceRevenue={summary.woocommerce_revenue}
+          <CategoryBreakdown
+            categories={categories}
             loading={loading}
           />
         </div>
@@ -117,26 +145,24 @@ export default function OverviewPage() {
       
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         <div className="bg-white rounded-lg border shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-4">Site Breakdown</h3>
+          <h3 className="text-lg font-semibold mb-4">Site & Channel Breakdown</h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#FF9500]"></div>
-                <span className="text-sm font-medium">Amazon</span>
+            {siteBreakdown.map((site) => (
+              <div key={site.site} className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: site.color }}
+                  ></div>
+                  <span className="text-sm font-medium">{site.site}</span>
+                </div>
+                <span className="text-sm font-mono">${(site.revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
               </div>
-              <span className="text-sm font-mono">${(summary.amazon_revenue || 0).toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-[#7B68EE]"></div>
-                <span className="text-sm font-medium">WooCommerce</span>
-              </div>
-              <span className="text-sm font-mono">${(summary.woocommerce_revenue || 0).toLocaleString()}</span>
-            </div>
+            ))}
             <div className="border-t pt-2 mt-2">
               <div className="flex justify-between items-center font-semibold">
                 <span className="text-sm">Total Revenue</span>
-                <span className="text-sm font-mono">${(summary.total_revenue || 0).toLocaleString()}</span>
+                <span className="text-sm font-mono">${(summary.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
               </div>
             </div>
           </div>
