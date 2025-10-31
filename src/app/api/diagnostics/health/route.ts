@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
       { dataset: 'MASTER', table: 'TOTAL_DAILY_SALES', description: 'Master sales data', dateColumn: 'date' },
       { dataset: 'MASTER', table: 'TOTAL_DAILY_ADS', description: 'Master ads data', dateColumn: 'date' },
       { dataset: 'amazon_ads_sharepoint', table: 'conversions_orders', description: 'Amazon conversions', dateColumn: 'date' },
-      { dataset: 'woocommerce', table: 'brickanew_daily_product_sales', description: 'WooCommerce sales', dateColumn: 'order_date' },
+      { dataset: 'googleads_brickanew', table: 'ads_CampaignBasicStats_4221545789', description: 'Google Ads stats', dateColumn: 'segments_date' },
+      { dataset: 'woocommerce', table: 'brickanew_daily_product_sales', description: 'WooCommerce BrickAnew', dateColumn: 'order_date' },
+      { dataset: 'woocommerce', table: 'heatilator_daily_product_sales', description: 'WooCommerce Heatilator', dateColumn: 'order_date' },
+      { dataset: 'woocommerce', table: 'superior_daily_product_sales', description: 'WooCommerce Superior', dateColumn: 'order_date' },
+      { dataset: 'shopify', table: 'waterwise_daily_product_sales_clean', description: 'Shopify WaterWise', dateColumn: 'order_date' },
     ];
 
     const tableHealthChecks: TableHealth[] = [];

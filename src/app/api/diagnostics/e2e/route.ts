@@ -63,12 +63,12 @@ export async function GET(request: NextRequest) {
       requiredFields: ['product_name', 'total_revenue']
     },
     {
-      name: 'Amazon Ads Campaigns API',
+      name: 'Google Ads Campaigns API',
       path: '/api/ads/campaigns',
       layer: 'api' as const,
       dataPath: 'campaigns',
       minRecords: 1,
-      requiredFields: ['name', 'spend', 'clicks', 'impressions']
+      requiredFields: ['name', 'spend', 'clicks', 'impressions', 'channelType']
     },
     {
       name: 'Amazon Ads Master Metrics API',
@@ -93,6 +93,22 @@ export async function GET(request: NextRequest) {
       dataPath: 'siteBreakdown',
       minRecords: 1,
       requiredFields: ['site', 'revenue']
+    },
+    {
+      name: 'Sales Categories API',
+      path: `/api/sales/categories?startDate=${startDate}&endDate=${endDate}`,
+      layer: 'api' as const,
+      dataPath: 'categories',
+      minRecords: 1,
+      requiredFields: ['Paint', 'Fireplace Doors', 'Other'] // Category names as keys
+    },
+    {
+      name: 'Category Products API',
+      path: `/api/sales/category-products?startDate=${startDate}&endDate=${endDate}`,
+      layer: 'api' as const,
+      dataPath: 'products',
+      minRecords: 5,
+      requiredFields: ['product_name', 'category', 'channel', 'total_sales']
     }
   ];
 
@@ -192,28 +208,35 @@ export async function GET(request: NextRequest) {
   // Integration checks - verify data flow
   const integrationChecks: E2ECheck[] = [];
 
-  // Check 1: Verify Amazon Ads data flows to dashboard
+  // Check 1: Verify Google Ads data flows to dashboard
   try {
     const [campaignsRes, metricsRes] = await Promise.all([
       fetch(`${protocol}://${baseUrl}/api/ads/campaigns`),
       fetch(`${protocol}://${baseUrl}/api/ads/master-metrics`)
     ]);
 
-    const hasCampaigns = campaignsRes.ok && (await campaignsRes.json()).campaigns?.length > 0;
+    const campaignsData = campaignsRes.ok ? await campaignsRes.json() : null;
+    const hasCampaigns = campaignsData?.campaigns?.length > 0;
+
+    // Verify it's actually Google Ads data (not Amazon)
+    const isGoogleAds = campaignsData?.campaigns?.[0]?.channelType === 'GOOGLE_ADS';
+
     const hasMetrics = metricsRes.ok && (await metricsRes.json()).daily?.length > 0;
 
     integrationChecks.push({
-      name: 'Amazon Ads Data Flow',
+      name: 'Google Ads Data Flow',
       layer: 'integration',
-      status: hasCampaigns && hasMetrics ? 'healthy' : 'error',
-      message: hasCampaigns && hasMetrics
-        ? '✓ Amazon Ads data flows from BigQuery → API → Dashboard'
-        : '⚠️ Amazon Ads data incomplete or missing',
+      status: hasCampaigns && hasMetrics && isGoogleAds ? 'healthy' : 'error',
+      message: hasCampaigns && hasMetrics && isGoogleAds
+        ? '✓ Google Ads data flows from BigQuery → API → Dashboard'
+        : !isGoogleAds && hasCampaigns
+          ? '⚠️ Campaigns API returning wrong data (not Google Ads)'
+          : '⚠️ Google Ads data incomplete or missing',
       dataReturned: hasCampaigns && hasMetrics
     });
   } catch (error: any) {
     integrationChecks.push({
-      name: 'Amazon Ads Data Flow',
+      name: 'Google Ads Data Flow',
       layer: 'integration',
       status: 'error',
       message: `Failed to verify data flow: ${error.message}`,
@@ -272,6 +295,65 @@ export async function GET(request: NextRequest) {
       layer: 'integration',
       status: 'error',
       message: `Failed to verify data flow: ${error.message}`,
+      dataReturned: false
+    });
+  }
+
+  // Check 4: Verify Category data includes Shopify and has expected categories
+  try {
+    const categoriesRes = await fetch(
+      `${protocol}://${baseUrl}/api/sales/categories?startDate=${startDate}&endDate=${endDate}`
+    );
+
+    if (categoriesRes.ok) {
+      const categoriesData = await categoriesRes.json();
+      const categories = categoriesData.categories || {};
+      const categoryNames = Object.keys(categories);
+
+      const hasGreywater = categoryNames.includes('Greywater');
+      const hasShopifyData = Object.values(categories).some((cat: any) =>
+        cat.channelBreakdown && cat.channelBreakdown.shopify > 0
+      );
+
+      const expectedCategories = ['Paint', 'Fireplace Doors', 'Other'];
+      const missingCategories = expectedCategories.filter(cat => !categoryNames.includes(cat));
+
+      let status: 'healthy' | 'warning' | 'error' = 'healthy';
+      let message = '';
+
+      if (missingCategories.length > 0) {
+        status = 'error';
+        message = `⚠️ Missing categories: ${missingCategories.join(', ')}`;
+      } else if (categoryNames.length >= 3) {
+        status = 'healthy';
+        message = `✓ Categories working (${categoryNames.length} categories${hasGreywater ? ', includes Greywater' : ''}${hasShopifyData ? ', Shopify data present' : ''})`;
+      } else {
+        status = 'warning';
+        message = `⚠️ Only ${categoryNames.length} categories found`;
+      }
+
+      integrationChecks.push({
+        name: 'Category & Shopify Data Flow',
+        layer: 'integration',
+        status,
+        message,
+        dataReturned: true
+      });
+    } else {
+      integrationChecks.push({
+        name: 'Category & Shopify Data Flow',
+        layer: 'integration',
+        status: 'error',
+        message: '⚠️ Categories API failed',
+        dataReturned: false
+      });
+    }
+  } catch (error: any) {
+    integrationChecks.push({
+      name: 'Category & Shopify Data Flow',
+      layer: 'integration',
+      status: 'error',
+      message: `Failed to verify: ${error.message}`,
       dataReturned: false
     });
   }

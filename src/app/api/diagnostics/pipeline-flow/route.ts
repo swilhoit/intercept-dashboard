@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
     const sources = [
       { id: 'amazon-seller-api', name: 'Amazon Seller API', table: 'amazon_seller.amazon_orders_2025' },
       { id: 'amazon-ads-api', name: 'Amazon Ads API', table: 'amazon_ads_sharepoint.keywords_enhanced' },
+      { id: 'google-ads-api', name: 'Google Ads API', table: 'googleads_brickanew.ads_CampaignBasicStats_4221545789' },
       { id: 'shopify-api', name: 'Shopify API', table: 'shopify.waterwise_daily_product_sales_clean' },
       { id: 'woo-brickanew', name: 'WooCommerce BrickAnew', table: 'woocommerce.brickanew_daily_product_sales' },
       { id: 'woo-heatilator', name: 'WooCommerce Heatilator', table: 'woocommerce.heatilator_daily_product_sales' },
@@ -78,9 +79,12 @@ export async function GET(request: NextRequest) {
         : ['', source.table];
 
       // Determine the correct date column for each table type
-      const dateColumn = source.table.includes('daily_product_sales_clean') || source.table.includes('daily_product_sales')
-        ? 'order_date'
-        : 'date';
+      let dateColumn = 'date';
+      if (source.table.includes('daily_product_sales_clean') || source.table.includes('daily_product_sales')) {
+        dateColumn = 'order_date';
+      } else if (source.table.includes('googleads_brickanew')) {
+        dateColumn = 'segments_date';
+      }
 
       const checkQuery = `
         SELECT
@@ -208,9 +212,9 @@ export async function GET(request: NextRequest) {
       },
       {
         id: 'api-ads-campaigns',
-        name: 'Ads Campaigns API',
+        name: 'Google Ads Campaigns API',
         endpoint: '/api/ads/campaigns',
-        dependencies: ['amazon-ads-api']
+        dependencies: ['google-ads-api']
       },
       {
         id: 'api-ads-metrics',
@@ -223,6 +227,18 @@ export async function GET(request: NextRequest) {
         name: 'GA4 Traffic API',
         endpoint: '/api/analytics/traffic',
         dependencies: ['ga4-brickanew', 'ga4-heatilator']
+      },
+      {
+        id: 'api-sales-categories',
+        name: 'Sales Categories API',
+        endpoint: '/api/sales/categories',
+        dependencies: ['amazon-seller-api', 'shopify-api', 'woo-brickanew', 'woo-heatilator', 'woo-superior']
+      },
+      {
+        id: 'api-category-products',
+        name: 'Category Products API',
+        endpoint: '/api/sales/category-products',
+        dependencies: ['amazon-seller-api', 'shopify-api', 'woo-brickanew', 'woo-heatilator', 'woo-superior']
       }
     ];
 
