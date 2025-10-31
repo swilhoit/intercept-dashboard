@@ -66,10 +66,10 @@ export async function GET(request: NextRequest) {
     // Build CASE statement for Amazon data with correct column name
     const amazonCaseStatement = caseStatement.replace(/product_name/g, 'Product_Name');
 
-    // Query for Amazon data with deduplication to fix inflated numbers
+    // Query for Amazon data
     let query = `
-      WITH deduplicated_amazon AS (
-        SELECT DISTINCT
+      WITH amazon_source AS (
+        SELECT
           Product_Name,
           Item_Price,
           ASIN,
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
           Item_Price as sales,
           1 as quantity,
           'Amazon' as channel
-        FROM deduplicated_amazon
+        FROM amazon_source
         WHERE Product_Name IS NOT NULL
     `;
     
@@ -153,10 +153,10 @@ export async function GET(request: NextRequest) {
       throw error;
     }
     
-    // Get channel breakdown per category with deduplication
+    // Get channel breakdown per category
     const channelBreakdownQuery = `
-      WITH deduplicated_amazon_breakdown AS (
-        SELECT DISTINCT
+      WITH amazon_breakdown AS (
+        SELECT
           Product_Name,
           Item_Price,
           ASIN,
@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
           SUM(Item_Price) as total_sales,
           COUNT(*) as total_quantity,
           COUNT(DISTINCT ASIN) as unique_products
-        FROM deduplicated_amazon_breakdown
+        FROM amazon_breakdown
         WHERE Product_Name IS NOT NULL
         GROUP BY category
       ),
@@ -210,10 +210,10 @@ export async function GET(request: NextRequest) {
       channelRows = [];
     }
     
-    // Add channel time series query with deduplication
+    // Add channel time series query
     const channelTimeSeriesQuery = `
-      WITH deduplicated_amazon_ts AS (
-        SELECT DISTINCT
+      WITH amazon_ts AS (
+        SELECT
           Product_Name,
           Item_Price,
           ASIN,
@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
           ${caseStatement.replace(/product_name/g, 'Product_Name')} as category,
           Item_Price as sales,
           'Amazon' as channel
-        FROM deduplicated_amazon_ts
+        FROM amazon_ts
         WHERE Product_Name IS NOT NULL
       ),
       categorized_woocommerce AS (
@@ -270,9 +270,9 @@ export async function GET(request: NextRequest) {
       channelTimeRows = [];
     }
 
-    // Add unique products query with deduplication
+    // Add unique products query - this one CAN use DISTINCT since we only want unique product IDs
     const uniqueProductsQuery = `
-      WITH deduplicated_amazon_unique AS (
+      WITH amazon_unique AS (
         SELECT DISTINCT
           Product_Name,
           ASIN,
@@ -289,7 +289,7 @@ export async function GET(request: NextRequest) {
         SELECT
           ${caseStatement.replace(/product_name/g, 'Product_Name')} as category,
           ASIN as product_id
-        FROM deduplicated_amazon_unique
+        FROM amazon_unique
         WHERE Product_Name IS NOT NULL
       ),
       categorized_woocommerce AS (

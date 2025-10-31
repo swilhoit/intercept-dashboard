@@ -17,9 +17,9 @@ export async function GET(request: NextRequest) {
     if (!channel || channel === 'all' || channel === 'Amazon') {
       // Use both Amazon tables to get complete data coverage with deduplication
       let amazonQuery = `
-        WITH deduplicated_amazon AS (
-          -- Deduplicate amazon_seller data by using DISTINCT on product, price, and parsed date
-          SELECT DISTINCT
+        WITH combined_amazon AS (
+          -- Combined data from both Amazon sources
+          SELECT
             Product_Name as product_name,
             Item_Price as revenue,
             1 as item_quantity,
@@ -31,11 +31,11 @@ export async function GET(request: NextRequest) {
             ASIN
           FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
           WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
-          
+
           UNION ALL
-          
-          -- Historical data from amazon orders table  
-          SELECT DISTINCT
+
+          -- Historical data from amazon orders table
+          SELECT
             product_name,
             revenue,
             item_quantity,
@@ -44,12 +44,12 @@ export async function GET(request: NextRequest) {
           FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
           WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
         )
-        SELECT 
+        SELECT
           product_name,
           'Amazon' as channel,
           SUM(revenue) as total_sales,
           COUNT(*) as quantity
-        FROM deduplicated_amazon
+        FROM combined_amazon
         WHERE product_name IS NOT NULL
       `;
       

@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
 
     const query = `
       WITH combined_amazon AS (
-        -- Deduplicated data from both Amazon sources
-        SELECT DISTINCT
+        -- Combined data from both Amazon sources
+        SELECT
           product_name,
           revenue,
           asin,
