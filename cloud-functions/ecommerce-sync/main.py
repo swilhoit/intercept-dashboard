@@ -25,11 +25,34 @@ def sync_ecommerce(request):
         MERGE `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES` AS master
         USING (
             WITH daily_amazon AS (
+                -- Combine both Amazon data sources for complete revenue
                 SELECT
-                    date,
-                    ordered_product_sales as amazon_sales
-                FROM `{PROJECT_ID}.amazon.daily_total_sales`
-                WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                    order_date as date,
+                    SUM(revenue) as amazon_sales
+                FROM (
+                    -- Amazon Seller Central data
+                    SELECT
+                        CASE
+                            WHEN REGEXP_CONTAINS(Date, r'^\\d{{4}}-\\d{{2}}-\\d{{2}}$') THEN PARSE_DATE('%Y-%m-%d', Date)
+                            WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+                            ELSE NULL
+                        END as order_date,
+                        Item_Price as revenue
+                    FROM `{PROJECT_ID}.amazon_seller.amazon_orders_2025`
+                    WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+
+                    UNION ALL
+
+                    -- Historical Amazon orders data
+                    SELECT
+                        DATE(date) as order_date,
+                        revenue
+                    FROM `{PROJECT_ID}.amazon.orders_jan_2025_present`
+                    WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+                )
+                WHERE order_date IS NOT NULL
+                    AND order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                GROUP BY order_date
             ),
             daily_woo AS (
                 SELECT
@@ -50,6 +73,18 @@ def sync_ecommerce(request):
 
                     SELECT order_date, total_revenue
                     FROM `{PROJECT_ID}.woocommerce.superior_daily_product_sales`
+                    WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+
+                    UNION ALL
+
+                    SELECT order_date, total_revenue
+                    FROM `{PROJECT_ID}.woocommerce.majestic_daily_product_sales`
+                    WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+
+                    UNION ALL
+
+                    SELECT order_date, total_revenue
+                    FROM `{PROJECT_ID}.woocommerce.waterwise_daily_product_sales`
                     WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
                 )
                 GROUP BY order_date

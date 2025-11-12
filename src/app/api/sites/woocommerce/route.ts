@@ -20,25 +20,25 @@ export async function GET(request: NextRequest) {
     
     const consolidatedQuery = `
       WITH summary AS (
-        SELECT 
-          SUM(woocommerce_sales) as total_revenue,
-          AVG(woocommerce_sales) as avg_daily_sales,
+        SELECT
+          SUM(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as total_revenue,
+          AVG(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as avg_daily_sales,
           COUNT(DISTINCT date) as days_with_sales,
-          COUNT(DISTINCT CASE WHEN woocommerce_sales > 0 THEN date END) as active_days,
-          MAX(woocommerce_sales) as highest_day,
-          MIN(CASE WHEN woocommerce_sales > 0 THEN woocommerce_sales END) as lowest_day
+          COUNT(DISTINCT CASE WHEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 THEN date END) as active_days,
+          MAX(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as highest_day,
+          MIN(CASE WHEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 THEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) END) as lowest_day
         FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
-        WHERE woocommerce_sales > 0 ${whereClause}
+        WHERE (woocommerce_sales > 0 OR shopify_sales > 0) ${whereClause}
       ),
       daily AS (
-        SELECT date, woocommerce_sales as sales
+        SELECT date, (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as sales
         FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
-        WHERE woocommerce_sales > 0 ${whereClause}
+        WHERE (woocommerce_sales > 0 OR shopify_sales > 0) ${whereClause}
       ),
       monthly AS (
-        SELECT FORMAT_DATE('%Y-%m', date) as month, SUM(woocommerce_sales) as sales
+        SELECT FORMAT_DATE('%Y-%m', date) as month, SUM(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as sales
         FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
-        WHERE woocommerce_sales > 0 ${whereClause}
+        WHERE (woocommerce_sales > 0 OR shopify_sales > 0) ${whereClause}
         GROUP BY month
       ),
       all_woo_products AS (
@@ -49,7 +49,9 @@ export async function GET(request: NextRequest) {
         SELECT product_name, 'Superior' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
         FROM \`intercept-sales-2508061117.woocommerce.superior_daily_product_sales\` WHERE 1=1 ${wooWhereClause} UNION ALL
         SELECT product_name, 'Majestic' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
-        FROM \`intercept-sales-2508061117.woocommerce.majestic_daily_product_sales\` WHERE 1=1 ${wooWhereClause}
+        FROM \`intercept-sales-2508061117.woocommerce.majestic_daily_product_sales\` WHERE 1=1 ${wooWhereClause} UNION ALL
+        SELECT product_name, 'WaterWise' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
+        FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\` WHERE 1=1 ${wooWhereClause}
       ),
       products AS (
         SELECT product_name, SUM(total_revenue) as revenue, SUM(total_quantity_sold) as quantity
@@ -75,15 +77,6 @@ export async function GET(request: NextRequest) {
           COUNT(DISTINCT product_name) as products
         FROM all_woo_products
         GROUP BY site
-      ),
-      shopify_breakdown AS (
-        SELECT
-          'WaterWise' as site,
-          SUM(total_revenue) as revenue,
-          COUNT(DISTINCT order_date) as active_days,
-          COUNT(DISTINCT product_name) as products
-        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
-        WHERE 1=1 ${wooWhereClause.replace('order_date', 'order_date')}
       )
       SELECT
         (SELECT TO_JSON_STRING(s) FROM summary s) as summary,
@@ -91,7 +84,7 @@ export async function GET(request: NextRequest) {
         (SELECT TO_JSON_STRING(ARRAY_AGG(m ORDER BY month DESC LIMIT 12)) FROM monthly m) as monthly,
         (SELECT TO_JSON_STRING(ARRAY_AGG(p ORDER BY revenue DESC LIMIT 20)) FROM products p) as products,
         (SELECT TO_JSON_STRING(ARRAY_AGG(c ORDER BY revenue DESC LIMIT 10)) FROM categories c) as categories,
-        (SELECT TO_JSON_STRING(ARRAY_AGG(sb ORDER BY revenue DESC)) FROM (SELECT * FROM site_breakdown UNION ALL SELECT * FROM shopify_breakdown) sb) as siteBreakdown
+        (SELECT TO_JSON_STRING(ARRAY_AGG(sb ORDER BY revenue DESC)) FROM site_breakdown sb) as siteBreakdown
     `;
     
     const cacheKey = `sites-woocommerce-${startDate || 'default'}-${endDate || 'default'}`;

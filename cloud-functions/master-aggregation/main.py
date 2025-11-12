@@ -16,19 +16,25 @@ PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-25080611
 # --- Configuration for data freshness checks ---
 # Max days since the last update for a source table to be considered "fresh"
 SOURCE_FRESHNESS_THRESHOLDS = {
-    'amazon.daily_total_sales': 2,
+    'amazon_seller.amazon_orders_2025': 2,
+    'amazon.orders_jan_2025_present': 2,
     'woocommerce.brickanew_daily_product_sales': 2,
     'woocommerce.heatilator_daily_product_sales': 2,
     'woocommerce.superior_daily_product_sales': 5, # Lower volume site
+    'woocommerce.majestic_daily_product_sales': 5, # Lower volume site
+    'woocommerce.waterwise_daily_product_sales': 3,
     'shopify.waterwise_daily_product_sales_clean': 3,
 }
 
 # Date columns for each table
 DATE_COLUMNS = {
-    'amazon.daily_total_sales': 'date',
+    'amazon_seller.amazon_orders_2025': 'Date',
+    'amazon.orders_jan_2025_present': 'date',
     'woocommerce.brickanew_daily_product_sales': 'order_date',
     'woocommerce.heatilator_daily_product_sales': 'order_date',
     'woocommerce.superior_daily_product_sales': 'order_date',
+    'woocommerce.majestic_daily_product_sales': 'order_date',
+    'woocommerce.waterwise_daily_product_sales': 'order_date',
     'shopify.waterwise_daily_product_sales_clean': 'order_date',
 }
 
@@ -109,44 +115,88 @@ def master_aggregation(cloud_event):
         MERGE `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES` AS master
         USING (
             WITH daily_amazon AS (
-                SELECT 
-                    date,
-                    ordered_product_sales as amazon_sales
-                FROM `{PROJECT_ID}.amazon.daily_total_sales`
-                WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                -- Combine both Amazon data sources for complete revenue
+                SELECT
+                    order_date as date,
+                    SUM(revenue) as amazon_sales
+                FROM (
+                    -- Amazon Seller Central data
+                    SELECT
+                        CASE
+                            WHEN REGEXP_CONTAINS(Date, r'^\\d{{4}}-\\d{{2}}-\\d{{2}}$') THEN PARSE_DATE('%Y-%m-%d', Date)
+                            WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+                            ELSE NULL
+                        END as order_date,
+                        Item_Price as revenue
+                    FROM `{PROJECT_ID}.amazon_seller.amazon_orders_2025`
+                    WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+
+                    UNION ALL
+
+                    -- Historical Amazon orders data
+                    SELECT
+                        DATE(date) as order_date,
+                        revenue
+                    FROM `{PROJECT_ID}.amazon.orders_jan_2025_present`
+                    WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+                )
+                WHERE order_date IS NOT NULL
+                    AND order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                GROUP BY order_date
             ),
             daily_woo AS (
-                SELECT 
+                SELECT
                     order_date as date,
                     SUM(total_revenue) as woocommerce_sales
                 FROM (
-                    SELECT order_date, total_revenue 
+                    SELECT order_date, total_revenue
                     FROM `{PROJECT_ID}.woocommerce.brickanew_daily_product_sales`
                     WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-                    
+
                     UNION ALL
-                    
-                    SELECT order_date, total_revenue 
+
+                    SELECT order_date, total_revenue
                     FROM `{PROJECT_ID}.woocommerce.heatilator_daily_product_sales`
                     WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-                    
+
                     UNION ALL
-                    
-                    SELECT order_date, total_revenue 
+
+                    SELECT order_date, total_revenue
                     FROM `{PROJECT_ID}.woocommerce.superior_daily_product_sales`
+                    WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+
+                    UNION ALL
+
+                    SELECT order_date, total_revenue
+                    FROM `{PROJECT_ID}.woocommerce.majestic_daily_product_sales`
+                    WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+
+                    UNION ALL
+
+                    SELECT order_date, total_revenue
+                    FROM `{PROJECT_ID}.woocommerce.waterwise_daily_product_sales`
                     WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
                 )
                 GROUP BY order_date
+            ),
+            daily_shopify AS (
+                SELECT
+                    order_date as date,
+                    SUM(total_revenue) as shopify_sales
+                FROM `{PROJECT_ID}.shopify.waterwise_daily_product_sales_clean`
+                WHERE order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
+                GROUP BY order_date
             )
-            SELECT 
-                COALESCE(a.date, w.date) as date,
+            SELECT
+                COALESCE(a.date, w.date, s.date) as date,
                 COALESCE(a.amazon_sales, 0) as amazon_sales,
                 COALESCE(w.woocommerce_sales, 0) as woocommerce_sales,
-                0.0 as shopify_sales,
-                COALESCE(a.amazon_sales, 0) + COALESCE(w.woocommerce_sales, 0) as total_sales
+                COALESCE(s.shopify_sales, 0) as shopify_sales,
+                COALESCE(a.amazon_sales, 0) + COALESCE(w.woocommerce_sales, 0) + COALESCE(s.shopify_sales, 0) as total_sales
             FROM daily_amazon a
             FULL OUTER JOIN daily_woo w ON a.date = w.date
-            WHERE COALESCE(a.date, w.date) IS NOT NULL
+            FULL OUTER JOIN daily_shopify s ON COALESCE(a.date, w.date) = s.date
+            WHERE COALESCE(a.date, w.date, s.date) IS NOT NULL
         ) AS daily
         ON master.date = daily.date
         WHEN MATCHED THEN

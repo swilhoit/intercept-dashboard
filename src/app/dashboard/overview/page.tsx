@@ -36,28 +36,42 @@ export default function OverviewPage() {
     }
 
     try {
-      const [summaryRes, productsRes, adSpendRes, categoriesRes, sitesRes] = await Promise.all([
+      const [summaryRes, productsRes, adSpendRes, categoriesRes, sitesRes, amazonDailyRes] = await Promise.all([
         fetch(`/api/sales/summary?${params}`),
         fetch(`/api/sales/products?${params}`),
         fetch(`/api/ads/total-spend?${params}`),
         fetch(`/api/sales/categories?${params}`),
         fetch(`/api/sites/woocommerce?${params}`),
+        fetch(`/api/amazon/daily-sales?${params}`),
       ])
 
-      const [summaryData, productsData, adSpendInfo, categoriesData, sitesData] = await Promise.all([
+      const [summaryData, productsData, adSpendInfo, categoriesData, sitesData, amazonDailyData] = await Promise.all([
         summaryRes.json(),
         productsRes.json(),
         adSpendRes.json(),
         categoriesRes.json(),
         sitesRes.json(),
+        amazonDailyRes.json(),
       ])
+
+      // Calculate accurate Amazon revenue from direct API
+      const accurateAmazonRevenue = Array.isArray(amazonDailyData)
+        ? amazonDailyData.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0)
+        : 0
 
       // Extract and validate current_period from the API response
       const currentPeriod = summaryData.current_period || {}
       const validatedData = validateSummaryData(currentPeriod)
 
+      // Calculate accurate total revenue using direct Amazon data + WooCommerce + Shopify
+      const woocommerceRevenue = validatedData.woocommerce_revenue || 0
+      const shopifyRevenue = validatedData.shopify_revenue || 0
+      const accurateTotalRevenue = accurateAmazonRevenue + woocommerceRevenue + shopifyRevenue
+
       setSummary(summaryData.error ? validateSummaryData({}) : {
         ...validatedData,
+        amazon_revenue: accurateAmazonRevenue,
+        total_revenue: accurateTotalRevenue,
         percentage_changes: summaryData.percentage_changes,
         has_comparison: summaryData.has_comparison
       })
@@ -77,23 +91,36 @@ export default function OverviewPage() {
       // Set category data
       setCategories(categoriesData.error ? {} : categoriesData.categories || {})
 
-      // Build site breakdown - combine Amazon with WooCommerce sites
+      // Build site breakdown - combine all channels
       const sites = []
-      if (summary.amazon_revenue || summaryData.current_period?.amazon_revenue) {
+
+      // Add Amazon (using accurate revenue calculated above)
+      if (accurateAmazonRevenue > 0) {
         sites.push({
           site: 'Amazon',
-          revenue: summary.amazon_revenue || summaryData.current_period?.amazon_revenue || 0,
+          revenue: accurateAmazonRevenue,
           color: '#FF9500'
         })
       }
+
+      // Add WooCommerce sites from siteBreakdown
       if (sitesData.siteBreakdown) {
         sitesData.siteBreakdown.forEach((site: any) => {
+          // Assign colors to each site
+          let color = '#7B68EE' // Default purple
+          if (site.site === 'WaterWise') color = '#5AC8FA' // Cyan
+          else if (site.site === 'BrickAnew') color = '#AF52DE' // Purple
+          else if (site.site === 'Heatilator') color = '#FF2D55' // Pink
+          else if (site.site === 'Superior') color = '#32D74B' // Green
+          else if (site.site === 'Majestic') color = '#FFD60A' // Yellow
+
           sites.push({
             ...site,
-            color: site.site === 'WaterWise' ? '#5AC8FA' : '#7B68EE'
+            color: color
           })
         })
       }
+
       setSiteBreakdown(sites)
 
     } catch (error) {
