@@ -54,8 +54,13 @@ export async function GET(request: NextRequest) {
         FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\` WHERE 1=1 ${wooWhereClause}
       ),
       products AS (
-        SELECT product_name, SUM(total_revenue) as revenue, SUM(total_quantity_sold) as quantity
-        FROM all_woo_products GROUP BY product_name
+        SELECT
+          product_name,
+          'WooCommerce' as channel,
+          SUM(total_revenue) as revenue,
+          SUM(total_quantity_sold) as quantity
+        FROM all_woo_products
+        GROUP BY product_name
       ),
       categories AS (
         SELECT
@@ -64,6 +69,7 @@ export async function GET(request: NextRequest) {
             WHEN UPPER(product_name) LIKE '%PAINT%' THEN 'Paint Products'
             ELSE 'Other'
           END as name,
+          'WooCommerce' as channel,
           SUM(total_revenue) as revenue,
           SUM(total_quantity_sold) as quantity,
           COUNT(DISTINCT product_name) as product_count
@@ -77,6 +83,28 @@ export async function GET(request: NextRequest) {
           COUNT(DISTINCT product_name) as products
         FROM all_woo_products
         GROUP BY site
+      ),
+      site_time_series AS (
+        SELECT
+          order_date as date,
+          site,
+          SUM(total_revenue) as revenue
+        FROM all_woo_products
+        GROUP BY order_date, site
+      ),
+      shopify_time_series AS (
+        SELECT
+          order_date as date,
+          'WaterWise' as site,
+          SUM(total_revenue) as revenue
+        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
+        WHERE 1=1 ${wooWhereClause}
+        GROUP BY order_date
+      ),
+      all_time_series AS (
+        SELECT * FROM site_time_series
+        UNION ALL
+        SELECT * FROM shopify_time_series
       )
       SELECT
         (SELECT TO_JSON_STRING(s) FROM summary s) as summary,
@@ -84,7 +112,8 @@ export async function GET(request: NextRequest) {
         (SELECT TO_JSON_STRING(ARRAY_AGG(m ORDER BY month DESC LIMIT 12)) FROM monthly m) as monthly,
         (SELECT TO_JSON_STRING(ARRAY_AGG(p ORDER BY revenue DESC LIMIT 20)) FROM products p) as products,
         (SELECT TO_JSON_STRING(ARRAY_AGG(c ORDER BY revenue DESC LIMIT 10)) FROM categories c) as categories,
-        (SELECT TO_JSON_STRING(ARRAY_AGG(sb ORDER BY revenue DESC)) FROM site_breakdown sb) as siteBreakdown
+        (SELECT TO_JSON_STRING(ARRAY_AGG(sb ORDER BY revenue DESC)) FROM site_breakdown sb) as siteBreakdown,
+        (SELECT TO_JSON_STRING(ARRAY_AGG(ts ORDER BY date ASC)) FROM all_time_series ts) as siteTimeSeries
     `;
     
     const cacheKey = `sites-woocommerce-${startDate || 'default'}-${endDate || 'default'}`;
@@ -105,6 +134,7 @@ export async function GET(request: NextRequest) {
       products: JSON.parse(resultRow.products || '[]'),
       categories: JSON.parse(resultRow.categories || '[]'),
       siteBreakdown: JSON.parse(resultRow.siteBreakdown || '[]'),
+      siteTimeSeries: JSON.parse(resultRow.siteTimeSeries || '[]'),
       metrics: {
         total_revenue: summaryData.total_revenue || 0,
         avg_daily_sales: summaryData.avg_daily_sales || 0,

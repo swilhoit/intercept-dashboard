@@ -56,8 +56,8 @@ export function WebsitesDashboard({
         sales: Number(item.sales) || 0
       }))
 
-  const topProducts = productData?.filter((p: any) => p.channel === 'WooCommerce').slice(0, 10) || []
-  const categories = categoryData?.filter((c: any) => c.channel === 'WooCommerce') || []
+  const topProducts = (salesData?.products || []).slice(0, 10)
+  const categories = salesData?.categories || []
 
   // Create site metrics from real API data
   const siteBreakdownData = salesData?.siteBreakdown || []
@@ -174,34 +174,70 @@ export function WebsitesDashboard({
     )
   }
 
-  // Create time series data for multi-line chart with real Heatilator data
-  const groupedChartData = groupData(chartData, chartGroupBy)
-  const siteTimeSeriesData = groupedChartData.map((item: any) => {
-    const date = item.date
-    const dateStr = new Date(date).toISOString().split('T')[0]
-    const brickAnewSales = Number(item.sales) || 0
-    
-    // Add real Heatilator data for specific dates (only for daily view)
-    let heatilatorSales = 0
-    if (chartGroupBy === 'day') {
-      if (dateStr === '2025-09-05') heatilatorSales = 589
-      else if (dateStr === '2025-08-23') heatilatorSales = 269
-      else if (dateStr === '2025-08-20') heatilatorSales = 738
-      else if (dateStr === '2025-08-19') heatilatorSales = 269
-      else if (dateStr === '2025-08-15') heatilatorSales = 269
+  // Create time series data for multi-line chart using real API data
+  const rawSiteTimeSeries = salesData?.siteTimeSeries || []
+
+  // Group site time series data if needed
+  const groupSiteTimeSeries = (data: any[], groupBy: 'day' | 'week' | 'month') => {
+    if (groupBy === 'day') {
+      return data
     }
-    
-    return {
-      date,
-      BrickAnew: brickAnewSales,
-      Heatilator: heatilatorSales,
-      Superior: 0,   // Will be populated when data is available
-      WaterWise: 0,  // Will be populated when Shopify integration is complete
-      Majestic: 0    // Will be populated when API access is resolved
-    }
-  }).sort((a: any, b: any) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  )
+
+    const grouped = data.reduce((acc: any, item: any) => {
+      const date = new Date(item.date)
+      let key: string
+
+      if (groupBy === 'week') {
+        const monday = new Date(date)
+        monday.setDate(date.getDate() - date.getDay() + 1)
+        key = monday.toISOString().split('T')[0]
+      } else {
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`
+      }
+
+      const existingIndex = acc.findIndex((a: any) => a.date === key && a.site === item.site)
+      if (existingIndex >= 0) {
+        acc[existingIndex].revenue += Number(item.revenue) || 0
+      } else {
+        acc.push({
+          date: key,
+          site: item.site,
+          revenue: Number(item.revenue) || 0
+        })
+      }
+
+      return acc
+    }, [])
+
+    return grouped.sort((a: any, b: any) =>
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
+  }
+
+  const groupedSiteData = groupSiteTimeSeries(rawSiteTimeSeries, chartGroupBy)
+
+  // Get all unique dates
+  const allDates = [...new Set(groupedSiteData.map((item: any) => item.date))].sort()
+
+  // Transform into format for recharts
+  const siteTimeSeriesData = allDates.map(date => {
+    const dataPoint: any = { date }
+
+    // Add revenue for each site
+    const brickAnewItem = groupedSiteData.find((item: any) => item.date === date && item.site === 'BrickAnew')
+    const heatilatorItem = groupedSiteData.find((item: any) => item.date === date && item.site === 'Heatilator')
+    const superiorItem = groupedSiteData.find((item: any) => item.date === date && item.site === 'Superior')
+    const waterWiseItem = groupedSiteData.find((item: any) => item.date === date && item.site === 'WaterWise')
+    const majesticItem = groupedSiteData.find((item: any) => item.date === date && item.site === 'Majestic')
+
+    dataPoint.BrickAnew = brickAnewItem ? Number(brickAnewItem.revenue) : 0
+    dataPoint.Heatilator = heatilatorItem ? Number(heatilatorItem.revenue) : 0
+    dataPoint.Superior = superiorItem ? Number(superiorItem.revenue) : 0
+    dataPoint.WaterWise = waterWiseItem ? Number(waterWiseItem.revenue) : 0
+    dataPoint.Majestic = majesticItem ? Number(majesticItem.revenue) : 0
+
+    return dataPoint
+  })
 
   const stats = [
     {
