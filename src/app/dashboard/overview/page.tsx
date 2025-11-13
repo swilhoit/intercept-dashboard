@@ -54,19 +54,20 @@ export default function OverviewPage() {
         amazonDailyRes.json(),
       ])
 
+      // Extract and validate current_period from the API response
+      const currentPeriod = summaryData.current_period || {}
+      const validatedData = validateSummaryData(currentPeriod)
+
+      // Calculate site breakdown total for verification
+      const siteBreakdownTotal = (sitesData.siteBreakdown || []).reduce((sum: number, site: any) => sum + (site.revenue || 0), 0)
+
       // Calculate accurate Amazon revenue from direct API
       const accurateAmazonRevenue = Array.isArray(amazonDailyData)
         ? amazonDailyData.reduce((sum: number, day: any) => sum + (day.total_sales || 0), 0)
         : 0
 
-      // Extract and validate current_period from the API response
-      const currentPeriod = summaryData.current_period || {}
-      const validatedData = validateSummaryData(currentPeriod)
-
-      // Calculate accurate total revenue using direct Amazon data + WooCommerce + Shopify
-      const woocommerceRevenue = validatedData.woocommerce_revenue || 0
-      const shopifyRevenue = validatedData.shopify_revenue || 0
-      const accurateTotalRevenue = accurateAmazonRevenue + woocommerceRevenue + shopifyRevenue
+      // Calculate accurate total revenue: Amazon + all WooCommerce/Shopify sites
+      const accurateTotalRevenue = accurateAmazonRevenue + siteBreakdownTotal
 
       setSummary(summaryData.error ? validateSummaryData({}) : {
         ...validatedData,
