@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, BarChart, Bar } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useCachedFetchMultiple } from "@/hooks/use-cached-fetch"
 
 interface CategoryAnalysisProps {
   dateRange?: DateRange
@@ -22,21 +23,12 @@ interface CategoryAnalysisProps {
 
 export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
   const [aggregation, setAggregation] = useState<string>("daily")
-  const [data, setData] = useState<any>({ categories: {}, aggregated: [], dates: [] })
-  const [products, setProducts] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
-  const [loading, setLoading] = useState(false)
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set())
-  const [adsData, setAdsData] = useState<any>({ categories: {}, dates: [] })
   const [adMetricView, setAdMetricView] = useState<'tacos' | 'spend'>('tacos')
 
-  useEffect(() => {
-    fetchData()
-  }, [dateRange, aggregation])
-
-  const fetchData = async () => {
-    setLoading(true)
-    
+  // Build API URLs with parameters
+  const apiUrls = useMemo(() => {
     const params = new URLSearchParams()
     if (dateRange?.from) {
       params.append("startDate", dateRange.from.toISOString().split("T")[0])
@@ -46,51 +38,23 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
     }
     params.append("aggregation", aggregation)
 
-    try {
-      const [categoryResponse, productsResponse, adsResponse] = await Promise.all([
-        fetch(`/api/sales/categories?${params}`),
-        fetch(`/api/sales/category-products?${params}`),
-        fetch(`/api/ads/category-metrics?${params}`)
-      ])
-      
-      // Check if responses are ok and log errors
-      if (!categoryResponse.ok) {
-        console.error("Categories API error:", categoryResponse.status, categoryResponse.statusText)
-        const errorText = await categoryResponse.text()
-        console.error("Categories API error details:", errorText)
-      }
-      if (!productsResponse.ok) {
-        console.error("Products API error:", productsResponse.status, productsResponse.statusText)
-        const errorText = await productsResponse.text()
-        console.error("Products API error details:", errorText)
-      }
-      if (!adsResponse.ok) {
-        console.error("Ads API error:", adsResponse.status, adsResponse.statusText)
-        const errorText = await adsResponse.text()
-        console.error("Ads API error details:", errorText)
-      }
-      
-      const categoryData = categoryResponse.ok ? await categoryResponse.json() : { categories: {}, aggregated: [], dates: [] }
-      const productsData = productsResponse.ok ? await productsResponse.json() : { products: [] }
-      const adsMetrics = adsResponse.ok ? await adsResponse.json() : { categories: {}, dates: [] }
-      
-      console.log("Category data received:", categoryData)
-      console.log("Products data received:", productsData)
-      console.log("Ads data received:", adsMetrics)
-      
-      setData(categoryData)
-      setProducts(productsData.products || [])
-      setAdsData(adsMetrics)
-    } catch (error) {
-      console.error("Error fetching category data:", error)
-      // Set empty data on error
-      setData({ categories: {}, aggregated: [], dates: [] })
-      setProducts([])
-      setAdsData({ categories: {}, dates: [] })
-    } finally {
-      setLoading(false)
-    }
-  }
+    const paramString = params.toString()
+
+    return [
+      // All requests are critical for category analysis
+      { url: `/api/sales/categories?${paramString}`, critical: true, ttl: 120000 },
+      { url: `/api/sales/category-products?${paramString}`, critical: true, ttl: 120000 },
+      { url: `/api/ads/category-metrics?${paramString}`, critical: true, ttl: 120000 },
+    ]
+  }, [dateRange, aggregation])
+
+  const { data: apiData, loading } = useCachedFetchMultiple(apiUrls)
+
+  // Extract data from responses with fallbacks
+  const data = apiData[apiUrls[0].url] || { categories: {}, aggregated: [], dates: [] }
+  const productsData = apiData[apiUrls[1].url] || { products: [] }
+  const adsData = apiData[apiUrls[2].url] || { categories: {}, dates: [] }
+  const products = productsData.products || []
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -228,6 +192,19 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                         )}
                       </span>
                     </div>
+                    {category.channelBreakdown.shopify > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Shopify:</span>
+                        <span className="font-medium text-purple-600">
+                          {formatCurrency(category.channelBreakdown.shopify)}
+                          {category.totalSales > 0 && (
+                            <span className="text-muted-foreground ml-1">
+                              ({((category.channelBreakdown.shopify / category.totalSales) * 100).toFixed(0)}%)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -270,6 +247,19 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                         )}
                       </span>
                     </div>
+                    {otherCategory.channelBreakdown.shopify > 0 && (
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Shopify:</span>
+                        <span className="font-medium text-purple-600">
+                          {formatCurrency(otherCategory.channelBreakdown.shopify)}
+                          {otherCategory.totalSales > 0 && (
+                            <span className="text-muted-foreground ml-1">
+                              ({((otherCategory.channelBreakdown.shopify / otherCategory.totalSales) * 100).toFixed(0)}%)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -418,23 +408,24 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
       <Card>
         <CardHeader>
           <CardTitle>Channel Distribution by Category</CardTitle>
-          <CardDescription>Sales breakdown between Amazon and WooCommerce for each category</CardDescription>
+          <CardDescription>Sales breakdown between Amazon, WooCommerce, and Shopify for each category</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart 
+            <BarChart
               data={categories.map((cat: any) => ({
                 name: cat.name,
                 Amazon: cat.channelBreakdown?.amazon || 0,
-                WooCommerce: cat.channelBreakdown?.woocommerce || 0
+                WooCommerce: cat.channelBreakdown?.woocommerce || 0,
+                Shopify: cat.channelBreakdown?.shopify || 0
               }))}
             >
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="name" className="text-xs" />
               <YAxis tickFormatter={formatCurrency} className="text-xs" />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: any) => formatCurrency(value)}
-                contentStyle={{ 
+                contentStyle={{
                   backgroundColor: 'hsl(var(--background))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '6px'
@@ -443,6 +434,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
               <Legend />
               <Bar dataKey="Amazon" fill="#FF9500" />
               <Bar dataKey="WooCommerce" fill="#007AFF" />
+              <Bar dataKey="Shopify" fill="#9333EA" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -705,19 +697,27 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                     }}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
+                  <Line
+                    type="monotone"
                     dataKey="amazon_sales"
                     name="Amazon"
                     stroke="#FF9500"
                     strokeWidth={2}
                     dot={aggregation !== "daily" || category.data.length <= 20}
                   />
-                  <Line 
-                    type="monotone" 
+                  <Line
+                    type="monotone"
                     dataKey="woocommerce_sales"
                     name="WooCommerce"
                     stroke="#007AFF"
+                    strokeWidth={2}
+                    dot={aggregation !== "daily" || category.data.length <= 20}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="shopify_sales"
+                    name="Shopify"
+                    stroke="#9333EA"
                     strokeWidth={2}
                     dot={aggregation !== "daily" || category.data.length <= 20}
                   />

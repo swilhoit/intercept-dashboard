@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { DashboardProvider, useDashboard } from "./dashboard-context"
+import { DataCacheProvider } from "@/contexts/data-cache-context"
 
 function DashboardLayoutContent({
   children,
@@ -129,9 +130,11 @@ export default function DashboardLayout({
 }) {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
-      <DashboardProvider>
-        <DashboardLayoutContent>{children}</DashboardLayoutContent>
-      </DashboardProvider>
+      <DataCacheProvider>
+        <DashboardProvider>
+          <DashboardLayoutContent>{children}</DashboardLayoutContent>
+        </DashboardProvider>
+      </DataCacheProvider>
     </Suspense>
   )
 }

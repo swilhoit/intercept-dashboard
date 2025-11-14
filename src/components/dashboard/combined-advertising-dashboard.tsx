@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Legend, BarChart, Bar, PieChart, Pie, Cell } from "recharts"
@@ -10,23 +10,15 @@ import { AdvertisingDashboard } from "./advertising-dashboard"
 import { AmazonAdsReport } from "./amazon-ads-report"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { safeNumber } from "@/lib/data-validation"
+import { useCachedFetchMultiple } from "@/hooks/use-cached-fetch"
 
 interface CombinedAdvertisingDashboardProps {
   dateRange?: DateRange
 }
 
 export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingDashboardProps) {
-  const [googleData, setGoogleData] = useState<any>({ summary: {}, trend: [], channels: [] })
-  const [amazonData, setAmazonData] = useState<any>({ summary: {}, timeSeries: [] })
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    fetchCombinedData()
-  }, [dateRange])
-
-  const fetchCombinedData = async () => {
-    setLoading(true)
-    
+  // Build API URLs with parameters
+  const apiUrls = useMemo(() => {
     const params = new URLSearchParams()
     if (dateRange?.from) {
       params.append("startDate", dateRange.from.toISOString().split("T")[0])
@@ -35,24 +27,19 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
       params.append("endDate", dateRange.to.toISOString().split("T")[0])
     }
 
-    try {
-      // Fetch Google Ads data
-      const googleResponse = await fetch(`/api/ads/campaigns?${params}`)
-      const googleResult = await googleResponse.json()
-      setGoogleData(googleResult)
+    const amazonParams = new URLSearchParams(params)
+    amazonParams.append("timeSeries", "true")
 
-      // Fetch Amazon Ads data
-      const amazonParams = new URLSearchParams(params)
-      amazonParams.append("timeSeries", "true")
-      const amazonResponse = await fetch(`/api/amazon/ads-report?${amazonParams}`)
-      const amazonResult = await amazonResponse.json()
-      setAmazonData(amazonResult)
-    } catch (error) {
-      console.error("Error fetching combined advertising data:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+    return [
+      { url: `/api/ads/campaigns?${params.toString()}`, critical: true, ttl: 60000 },
+      { url: `/api/amazon/ads-report?${amazonParams.toString()}`, critical: true, ttl: 60000 },
+    ]
+  }, [dateRange])
+
+  const { data: apiData, loading } = useCachedFetchMultiple(apiUrls)
+
+  const googleData = apiData[apiUrls[0].url] || { summary: {}, trend: [], channels: [] }
+  const amazonData = apiData[apiUrls[1].url] || { summary: {}, timeSeries: [] }
 
   const formatCurrency = (value: number, decimals: number = 0) => {
     return new Intl.NumberFormat('en-US', {

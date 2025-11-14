@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import {
   Table,
   TableBody,
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { DateRange } from "react-day-picker"
+import { useCachedFetch } from "@/hooks/use-cached-fetch"
 
 interface ProductTableWithFilterProps {
   dateRange?: DateRange
@@ -26,22 +27,15 @@ interface ProductTableWithFilterProps {
   description?: string
 }
 
-export function ProductTableWithFilter({ 
+export function ProductTableWithFilter({
   dateRange,
-  title = "Top Performing Products", 
-  description = "Products ranked by total revenue" 
+  title = "Top Performing Products",
+  description = "Products ranked by total revenue"
 }: ProductTableWithFilterProps) {
   const [channel, setChannel] = useState<string>("all")
-  const [products, setProducts] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    fetchProducts()
-  }, [dateRange, channel])
-
-  const fetchProducts = async () => {
-    setLoading(true)
-    
+  // Build API URL with parameters
+  const apiUrl = useMemo(() => {
     const params = new URLSearchParams()
     if (dateRange?.from) {
       params.append("startDate", dateRange.from.toISOString().split("T")[0])
@@ -52,17 +46,11 @@ export function ProductTableWithFilter({
     if (channel !== "all") {
       params.append("channel", channel)
     }
+    return `/api/sales/products?${params.toString()}`
+  }, [dateRange, channel])
 
-    try {
-      const response = await fetch(`/api/sales/products?${params}`)
-      const data = await response.json()
-      setProducts(data.slice(0, 20))
-    } catch (error) {
-      console.error("Error fetching products:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data, loading } = useCachedFetch<any[]>(apiUrl, { ttl: 120000 })
+  const products = (data || []).slice(0, 20)
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
