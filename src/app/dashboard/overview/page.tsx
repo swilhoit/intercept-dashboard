@@ -129,7 +129,7 @@ export default function OverviewPage() {
             totalRevenue={summary.total_revenue}
             avgDailySales={summary.avg_daily_sales}
             daysWithSales={summary.days_with_sales}
-            highestDay={summary.highest_day}
+            highestDay={summary.highest_day || 0}
             totalAdSpend={adSpendInfo.metrics?.totalAdSpend || 0}
             tacos={
               adSpendInfo.metrics?.totalAdSpend && summary.total_revenue > 0
