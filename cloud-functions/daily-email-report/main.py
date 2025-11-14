@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Daily Email Report Cloud Function - Enhanced Version
-Sends comprehensive daily summary with top products, trends, and actionable insights
+Daily Email Report Cloud Function - Enhanced Version with Weekly/Monthly Tracking
+Sends comprehensive summary with 2-column layout and minimal styling
 """
 
 import os
@@ -70,7 +70,7 @@ def check_data_freshness(client):
     try:
         shopify_query = f"""
         SELECT MAX(order_date) as last_date
-        FROM `{PROJECT_ID}.shopify.waterwise_daily_product_sales`
+        FROM `{PROJECT_ID}.shopify.waterwise_daily_product_sales_clean`
         """
         result = list(client.query(shopify_query).result())[0]
         shopify_last = result.last_date
@@ -103,11 +103,22 @@ def check_data_freshness(client):
     return freshness
 
 def get_daily_summary(client):
-    """Get comprehensive summary statistics"""
+    """Get comprehensive summary statistics including weekly and monthly tracking"""
     today = date.today()
     yesterday = today - timedelta(days=1)
-    week_ago = today - timedelta(days=7)
-    two_weeks_ago = today - timedelta(days=14)
+
+    # Calculate rolling 7-day windows
+    last_7_days_start = today - timedelta(days=7)  # Last 7 days
+    prev_7_days_start = today - timedelta(days=14)  # Previous 7 days (8-14 days ago)
+    prev_7_days_end = today - timedelta(days=8)
+
+    # Calculate month boundaries
+    current_month_start = today.replace(day=1)
+    if current_month_start.month == 1:
+        last_month_start = current_month_start.replace(year=current_month_start.year - 1, month=12)
+    else:
+        last_month_start = current_month_start.replace(month=current_month_start.month - 1)
+    last_month_end = current_month_start - timedelta(days=1)
 
     # Get yesterday's and previous periods' performance
     summary_query = f"""
@@ -120,28 +131,67 @@ def get_daily_summary(client):
         FROM `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES`
         WHERE date = '{yesterday}'
     ),
-    last_7_days AS (
+    last_7_days_data AS (
         SELECT
-            AVG(total_sales) as avg_revenue,
-            SUM(total_sales) as total_revenue_7d,
-            MIN(total_sales) as min_revenue,
-            MAX(total_sales) as max_revenue
+            SUM(total_sales) as total_revenue,
+            SUM(amazon_sales) as amazon_revenue,
+            SUM(woocommerce_sales) as woo_revenue,
+            SUM(shopify_sales) as shopify_revenue,
+            COUNT(DISTINCT date) as days_count
         FROM `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES`
-        WHERE date >= '{week_ago}' AND date < '{today}'
+        WHERE date >= '{last_7_days_start}' AND date < '{today}'
     ),
-    prev_7_days AS (
+    prev_7_days_data AS (
         SELECT
-            SUM(total_sales) as total_revenue_prev_7d
+            SUM(total_sales) as total_revenue,
+            SUM(amazon_sales) as amazon_revenue,
+            SUM(woocommerce_sales) as woo_revenue,
+            SUM(shopify_sales) as shopify_revenue
         FROM `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES`
-        WHERE date >= '{two_weeks_ago}' AND date < '{week_ago}'
+        WHERE date >= '{prev_7_days_start}' AND date <= '{prev_7_days_end}'
     ),
-    last_30_days AS (
+    current_month_data AS (
         SELECT
-            AVG(total_sales) as avg_revenue_30d
+            SUM(total_sales) as total_revenue,
+            SUM(amazon_sales) as amazon_revenue,
+            SUM(woocommerce_sales) as woo_revenue,
+            SUM(shopify_sales) as shopify_revenue,
+            COUNT(DISTINCT date) as days_count
         FROM `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES`
-        WHERE date >= DATE_SUB('{today}', INTERVAL 30 DAY) AND date < '{today}'
+        WHERE date >= '{current_month_start}' AND date < '{today}'
+    ),
+    last_month_data AS (
+        SELECT
+            SUM(total_sales) as total_revenue,
+            SUM(amazon_sales) as amazon_revenue,
+            SUM(woocommerce_sales) as woo_revenue,
+            SUM(shopify_sales) as shopify_revenue
+        FROM `{PROJECT_ID}.MASTER.TOTAL_DAILY_SALES`
+        WHERE date >= '{last_month_start}' AND date <= '{last_month_end}'
     )
-    SELECT * FROM yesterday_data, last_7_days, prev_7_days, last_30_days
+    SELECT
+        (SELECT total_revenue FROM yesterday_data) as yesterday_total_revenue,
+        (SELECT amazon_revenue FROM yesterday_data) as yesterday_amazon_revenue,
+        (SELECT woo_revenue FROM yesterday_data) as yesterday_woo_revenue,
+        (SELECT shopify_revenue FROM yesterday_data) as yesterday_shopify_revenue,
+        (SELECT total_revenue FROM last_7_days_data) as last_7_days_total,
+        (SELECT amazon_revenue FROM last_7_days_data) as last_7_days_amazon,
+        (SELECT woo_revenue FROM last_7_days_data) as last_7_days_woo,
+        (SELECT shopify_revenue FROM last_7_days_data) as last_7_days_shopify,
+        (SELECT days_count FROM last_7_days_data) as last_7_days_count,
+        (SELECT total_revenue FROM prev_7_days_data) as prev_7_days_total,
+        (SELECT amazon_revenue FROM prev_7_days_data) as prev_7_days_amazon,
+        (SELECT woo_revenue FROM prev_7_days_data) as prev_7_days_woo,
+        (SELECT shopify_revenue FROM prev_7_days_data) as prev_7_days_shopify,
+        (SELECT total_revenue FROM current_month_data) as current_month_total,
+        (SELECT amazon_revenue FROM current_month_data) as current_month_amazon,
+        (SELECT woo_revenue FROM current_month_data) as current_month_woo,
+        (SELECT shopify_revenue FROM current_month_data) as current_month_shopify,
+        (SELECT days_count FROM current_month_data) as current_month_days,
+        (SELECT total_revenue FROM last_month_data) as last_month_total,
+        (SELECT amazon_revenue FROM last_month_data) as last_month_amazon,
+        (SELECT woo_revenue FROM last_month_data) as last_month_woo,
+        (SELECT shopify_revenue FROM last_month_data) as last_month_shopify
     """
 
     result = list(client.query(summary_query).result())[0]
@@ -160,7 +210,16 @@ def get_daily_summary(client):
             SELECT order_date, order_count, total_revenue FROM `{PROJECT_ID}.woocommerce.superior_daily_product_sales` WHERE order_date = '{yesterday}'
             UNION ALL
             SELECT order_date, order_count, total_revenue FROM `{PROJECT_ID}.woocommerce.majestic_daily_product_sales` WHERE order_date = '{yesterday}'
+            UNION ALL
+            SELECT order_date, order_count, total_revenue FROM `{PROJECT_ID}.woocommerce.waterwise_daily_product_sales` WHERE order_date = '{yesterday}'
         )
+    ),
+    shopify_orders AS (
+        SELECT
+            COALESCE(SUM(order_count), 0) as orders,
+            COALESCE(SUM(total_revenue), 0) as revenue
+        FROM `{PROJECT_ID}.shopify.waterwise_daily_product_sales_clean`
+        WHERE order_date = '{yesterday}'
     ),
     amazon_orders AS (
         SELECT
@@ -176,60 +235,81 @@ def get_daily_summary(client):
     SELECT
         (SELECT orders FROM woo_orders) as woo_orders,
         (SELECT revenue FROM woo_orders) as woo_revenue_check,
+        (SELECT orders FROM shopify_orders) as shopify_orders,
+        (SELECT revenue FROM shopify_orders) as shopify_revenue_check,
         (SELECT orders FROM amazon_orders) as amazon_orders,
         (SELECT revenue FROM amazon_orders) as amazon_revenue_check
     """
 
     try:
         orders_result = list(client.query(orders_query).result())[0]
-        total_orders = int((orders_result.get('woo_orders') or 0) + (orders_result.get('amazon_orders') or 0))
+        total_orders = int((orders_result.get('woo_orders') or 0) + (orders_result.get('shopify_orders') or 0) + (orders_result.get('amazon_orders') or 0))
         amazon_orders = int(orders_result.get('amazon_orders') or 0)
         woo_orders = int(orders_result.get('woo_orders') or 0)
+        shopify_orders = int(orders_result.get('shopify_orders') or 0)
     except Exception as e:
         print(f"Error getting order counts: {e}")
         total_orders = 0
         amazon_orders = 0
         woo_orders = 0
+        shopify_orders = 0
 
     # Calculate AOV
-    yesterday_rev = float(result.total_revenue or 0)
+    yesterday_rev = float(result.yesterday_total_revenue or 0)
     aov = (yesterday_rev / total_orders) if total_orders > 0 else 0
 
-    # Get Top Products from yesterday
-    top_products = get_top_products(client, yesterday)
-
-    # Get WooCommerce site breakdown
-    woo_sites = get_woo_site_breakdown(client, yesterday)
+    # Get Top Products from different periods
+    top_products_yesterday = get_top_products(client, yesterday, yesterday)
+    last_7_days_start = today - timedelta(days=7)
+    top_products_week = get_top_products(client, last_7_days_start, yesterday)
+    current_month_start = today.replace(day=1)
+    top_products_month = get_top_products(client, current_month_start, yesterday)
 
     return {
         'yesterday': {
             'total_revenue': yesterday_rev,
-            'amazon_revenue': float(result.amazon_revenue or 0),
-            'woo_revenue': float(result.woo_revenue or 0),
-            'shopify_revenue': float(result.shopify_revenue or 0),
+            'amazon_revenue': float(result.yesterday_amazon_revenue or 0),
+            'woo_revenue': float(result.yesterday_woo_revenue or 0),
+            'shopify_revenue': float(result.yesterday_shopify_revenue or 0),
             'total_orders': total_orders,
             'amazon_orders': amazon_orders,
             'woo_orders': woo_orders,
+            'shopify_orders': shopify_orders,
             'aov': aov
         },
         'last_7_days': {
-            'avg_revenue': float(result.avg_revenue or 0),
-            'total_revenue': float(result.total_revenue_7d or 0),
-            'min_revenue': float(result.min_revenue or 0),
-            'max_revenue': float(result.max_revenue or 0)
+            'total_revenue': float(result.last_7_days_total or 0),
+            'amazon_revenue': float(result.last_7_days_amazon or 0),
+            'woo_revenue': float(result.last_7_days_woo or 0),
+            'shopify_revenue': float(result.last_7_days_shopify or 0),
+            'days_count': int(result.last_7_days_count or 0)
         },
         'prev_7_days': {
-            'total_revenue': float(result.total_revenue_prev_7d or 0)
+            'total_revenue': float(result.prev_7_days_total or 0),
+            'amazon_revenue': float(result.prev_7_days_amazon or 0),
+            'woo_revenue': float(result.prev_7_days_woo or 0),
+            'shopify_revenue': float(result.prev_7_days_shopify or 0)
         },
-        'last_30_days': {
-            'avg_revenue': float(result.avg_revenue_30d or 0)
+        'current_month': {
+            'total_revenue': float(result.current_month_total or 0),
+            'amazon_revenue': float(result.current_month_amazon or 0),
+            'woo_revenue': float(result.current_month_woo or 0),
+            'shopify_revenue': float(result.current_month_shopify or 0),
+            'days_count': int(result.current_month_days or 0)
         },
-        'top_products': top_products,
-        'woo_sites': woo_sites
+        'last_month': {
+            'total_revenue': float(result.last_month_total or 0),
+            'amazon_revenue': float(result.last_month_amazon or 0),
+            'woo_revenue': float(result.last_month_woo or 0),
+            'shopify_revenue': float(result.last_month_shopify or 0)
+        },
+        'top_products_yesterday': top_products_yesterday,
+        'top_products_week': top_products_week,
+        'top_products_month': top_products_month
     }
 
-def get_top_products(client, target_date):
-    """Get top 5 selling products from yesterday"""
+def get_top_products(client, start_date, end_date):
+    """Get top 5 selling products for a date range"""
     query = f"""
     WITH all_products AS (
         -- Amazon products
@@ -243,7 +323,7 @@ def get_top_products(client, target_date):
             WHEN REGEXP_CONTAINS(Date, r'^[0-9]{{5}}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
             WHEN REGEXP_CONTAINS(Date, r'^[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}$') THEN DATE(Date)
             ELSE PARSE_DATE('%m/%e/%y', Date)
-        END = '{target_date}'
+        END BETWEEN '{start_date}' AND '{end_date}'
         GROUP BY Product_Name
 
         UNION ALL
@@ -255,14 +335,28 @@ def get_top_products(client, target_date):
             SUM(total_revenue) as revenue,
             SUM(total_quantity_sold) as quantity
         FROM (
-            SELECT * FROM `{PROJECT_ID}.woocommerce.brickanew_daily_product_sales` WHERE order_date = '{target_date}'
+            SELECT * FROM `{PROJECT_ID}.woocommerce.brickanew_daily_product_sales` WHERE order_date BETWEEN '{start_date}' AND '{end_date}'
             UNION ALL
-            SELECT * FROM `{PROJECT_ID}.woocommerce.heatilator_daily_product_sales` WHERE order_date = '{target_date}'
+            SELECT * FROM `{PROJECT_ID}.woocommerce.heatilator_daily_product_sales` WHERE order_date BETWEEN '{start_date}' AND '{end_date}'
             UNION ALL
-            SELECT * FROM `{PROJECT_ID}.woocommerce.superior_daily_product_sales` WHERE order_date = '{target_date}'
+            SELECT * FROM `{PROJECT_ID}.woocommerce.superior_daily_product_sales` WHERE order_date BETWEEN '{start_date}' AND '{end_date}'
             UNION ALL
-            SELECT * FROM `{PROJECT_ID}.woocommerce.majestic_daily_product_sales` WHERE order_date = '{target_date}'
+            SELECT * FROM `{PROJECT_ID}.woocommerce.majestic_daily_product_sales` WHERE order_date BETWEEN '{start_date}' AND '{end_date}'
+            UNION ALL
+            SELECT * FROM `{PROJECT_ID}.woocommerce.waterwise_daily_product_sales` WHERE order_date BETWEEN '{start_date}' AND '{end_date}'
         )
+        GROUP BY product_name
+
+        UNION ALL
+
+        -- Shopify products
+        SELECT
+            product_name as product,
+            'Shopify' as channel,
+            SUM(total_revenue) as revenue,
+            SUM(total_quantity_sold) as quantity
+        FROM `{PROJECT_ID}.shopify.waterwise_daily_product_sales_clean`
+        WHERE order_date BETWEEN '{start_date}' AND '{end_date}'
         GROUP BY product_name
     )
     SELECT
@@ -290,92 +384,42 @@ def get_top_products(client, target_date):
         print(f"Error getting top products: {e}")
         return []
 
-def get_woo_site_breakdown(client, target_date):
-    """Get individual WooCommerce site performance"""
-    query = f"""
-    SELECT
-        'BrickAnew' as site,
-        COALESCE(SUM(total_revenue), 0) as revenue,
-        COALESCE(SUM(order_count), 0) as orders
-    FROM `{PROJECT_ID}.woocommerce.brickanew_daily_product_sales`
-    WHERE order_date = '{target_date}'
-
-    UNION ALL
-
-    SELECT
-        'Heatilator' as site,
-        COALESCE(SUM(total_revenue), 0) as revenue,
-        COALESCE(SUM(order_count), 0) as orders
-    FROM `{PROJECT_ID}.woocommerce.heatilator_daily_product_sales`
-    WHERE order_date = '{target_date}'
-
-    UNION ALL
-
-    SELECT
-        'Superior' as site,
-        COALESCE(SUM(total_revenue), 0) as revenue,
-        COALESCE(SUM(order_count), 0) as orders
-    FROM `{PROJECT_ID}.woocommerce.superior_daily_product_sales`
-    WHERE order_date = '{target_date}'
-
-    UNION ALL
-
-    SELECT
-        'Majestic' as site,
-        COALESCE(SUM(total_revenue), 0) as revenue,
-        COALESCE(SUM(order_count), 0) as orders
-    FROM `{PROJECT_ID}.woocommerce.majestic_daily_product_sales`
-    WHERE order_date = '{target_date}'
-    """
-
-    try:
-        results = list(client.query(query).result())
-        return [
-            {
-                'site': row.site,
-                'revenue': float(row.revenue),
-                'orders': int(row.orders)
-            }
-            for row in results
-            if float(row.revenue) > 0  # Only show sites with sales
-        ]
-    except Exception as e:
-        print(f"Error getting WooCommerce site breakdown: {e}")
-        return []
-
 def format_html_email(freshness, summary):
-    """Format comprehensive HTML email with enhanced data"""
+    """Format minimal HTML email with 2-column layout and weekly/monthly tracking"""
     today = date.today()
     yesterday = today - timedelta(days=1)
 
     # Determine overall status
     all_fresh = all(source['is_fresh'] for source in freshness.values())
     status_emoji = "✅" if all_fresh else "⚠️"
-    status_text = "All Data Current" if all_fresh else "Some Data Stale"
 
-    # Format currency
+    # Format helpers
     def fmt_curr(val):
-        return f"${val:,.2f}"
+        return f"${val:,.0f}"
+
+    def fmt_pct(val):
+        color = 'green' if val > 0 else 'red' if val < 0 else ''
+        return f"<span class='{color}'>{val:+.0f}%</span>"
 
     # Calculate changes
     yesterday_rev = summary['yesterday']['total_revenue']
-    avg_rev_7d = summary['last_7_days']['avg_revenue']
-    avg_rev_30d = summary['last_30_days']['avg_revenue']
-    prev_7d_total = summary['prev_7_days']['total_revenue']
-    curr_7d_total = summary['last_7_days']['total_revenue']
+    last_7_days_rev = summary['last_7_days']['total_revenue']
+    prev_7_days_rev = summary['prev_7_days']['total_revenue']
+    current_month_rev = summary['current_month']['total_revenue']
+    last_month_rev = summary['last_month']['total_revenue']
 
-    vs_7d_avg = ((yesterday_rev - avg_rev_7d) / avg_rev_7d * 100) if avg_rev_7d > 0 else 0
-    vs_30d_avg = ((yesterday_rev - avg_rev_30d) / avg_rev_30d * 100) if avg_rev_30d > 0 else 0
-    wow_change = ((curr_7d_total - prev_7d_total) / prev_7d_total * 100) if prev_7d_total > 0 else 0
+    wow_change = ((last_7_days_rev - prev_7_days_rev) / prev_7_days_rev * 100) if prev_7_days_rev > 0 else 0
+    mom_change = ((current_month_rev - last_month_rev) / last_month_rev * 100) if last_month_rev > 0 else 0
 
-    # Trend indicators
-    def trend_indicator(val):
-        if val > 5:
-            return "📈 +"
-        elif val < -5:
-            return "📉 "
-        else:
-            return "➡️ "
+    # Date formatting
+    last_7_days_start = yesterday - timedelta(days=6)  # 7 days including yesterday
+    prev_7_days_start = yesterday - timedelta(days=13)
+    prev_7_days_end = yesterday - timedelta(days=7)
+    current_month_name = today.strftime('%B')
+    if today.month == 1:
+        last_month_name = 'December'
+    else:
+        last_month_name = (today.replace(day=1) - timedelta(days=1)).strftime('%B')
 
     html = f"""
     <!DOCTYPE html>
@@ -384,225 +428,161 @@ def format_html_email(freshness, summary):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }}
-            .container {{ background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
-            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; }}
-            .header h1 {{ margin: 0 0 10px 0; font-size: 32px; font-weight: 700; }}
-            .header .date {{ font-size: 18px; opacity: 0.95; font-weight: 400; }}
-            .content {{ padding: 30px; }}
-            .status-banner {{ background: {'#d4edda' if all_fresh else '#fff3cd'}; border-left: 5px solid {'#28a745' if all_fresh else '#ffc107'}; padding: 18px 20px; margin-bottom: 30px; border-radius: 8px; }}
-            .status-banner h2 {{ margin: 0 0 8px 0; color: {'#155724' if all_fresh else '#856404'}; font-size: 20px; }}
-            .status-banner p {{ margin: 0; color: {'#155724' if all_fresh else '#856404'}; opacity: 0.9; }}
-
-            .section-title {{ font-size: 22px; font-weight: 700; margin: 35px 0 20px 0; color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 10px; }}
-
-            .metric-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 35px; }}
-            .metric-card {{ background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 24px; border-radius: 10px; border-left: 5px solid #667eea; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }}
-            .metric-card.highlight {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-left: 5px solid #fff; }}
-            .metric-card h3 {{ margin: 0 0 12px 0; font-size: 13px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }}
-            .metric-card.highlight h3 {{ color: rgba(255,255,255,0.9); }}
-            .metric-card .value {{ font-size: 32px; font-weight: 700; color: #2c3e50; margin-bottom: 8px; }}
-            .metric-card.highlight .value {{ color: white; }}
-            .metric-card .subtext {{ font-size: 14px; color: #666; }}
-            .metric-card.highlight .subtext {{ color: rgba(255,255,255,0.85); }}
-            .trend-up {{ color: #28a745; }}
-            .trend-down {{ color: #dc3545; }}
-
-            .channel-list {{ background: #f8f9fa; border-radius: 10px; padding: 5px; margin-bottom: 35px; }}
-            .channel-row {{ display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: white; margin-bottom: 5px; border-radius: 8px; transition: all 0.2s; }}
-            .channel-row:last-child {{ margin-bottom: 0; }}
-            .channel-row:hover {{ background: #f1f3f5; transform: translateX(5px); }}
-            .channel-name {{ font-weight: 600; font-size: 16px; color: #2c3e50; }}
-            .channel-value {{ font-weight: 700; font-size: 16px; color: #667eea; }}
-            .channel-details {{ font-size: 13px; color: #666; margin-left: 10px; }}
-
-            .products-table {{ width: 100%; border-collapse: collapse; margin-bottom: 35px; background: white; border-radius: 10px; overflow: hidden; }}
-            .products-table thead {{ background: #667eea; color: white; }}
-            .products-table th {{ padding: 14px 16px; text-align: left; font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }}
-            .products-table td {{ padding: 14px 16px; border-bottom: 1px solid #f0f0f0; }}
-            .products-table tr:last-child td {{ border-bottom: none; }}
-            .products-table tr:hover {{ background: #f8f9fa; }}
-            .product-name {{ font-weight: 600; color: #2c3e50; max-width: 300px; }}
-            .channel-badge {{ display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }}
-            .badge-amazon {{ background: #ff9900; color: white; }}
-            .badge-woo {{ background: #7952b3; color: white; }}
-
-            .freshness-table {{ width: 100%; border-collapse: collapse; margin-bottom: 35px; background: white; border-radius: 10px; overflow: hidden; }}
-            .freshness-table thead {{ background: #2c3e50; color: white; }}
-            .freshness-table th {{ padding: 14px 16px; text-align: left; font-weight: 600; font-size: 13px; text-transform: uppercase; }}
-            .freshness-table td {{ padding: 14px 16px; border-bottom: 1px solid #f0f0f0; }}
-            .freshness-table tr:last-child td {{ border-bottom: none; }}
-            .fresh-status {{ color: #28a745; font-weight: 700; }}
-            .stale-status {{ color: #dc3545; font-weight: 700; }}
-
-            .insights-box {{ background: #fff3cd; border-left: 5px solid #ffc107; padding: 20px; border-radius: 8px; margin-bottom: 30px; }}
-            .insights-box h3 {{ margin: 0 0 12px 0; color: #856404; font-size: 18px; }}
-            .insights-box p {{ margin: 8px 0; color: #856404; line-height: 1.6; }}
-
-            .footer {{ text-align: center; padding: 30px 20px; color: #999; font-size: 13px; border-top: 2px solid #f0f0f0; margin-top: 30px; }}
-            .footer p {{ margin: 5px 0; }}
-            .footer strong {{ color: #667eea; }}
-
-            @media only screen and (max-width: 600px) {{
-                .metric-grid {{ grid-template-columns: 1fr; }}
-                .channel-row {{ flex-direction: column; align-items: flex-start; }}
-                .channel-value {{ margin-top: 8px; }}
-            }}
+            body {{ font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; line-height: 1.4; color: #333; max-width: 800px; margin: 0 auto; padding: 15px; background: #f8f8f8; }}
+            .container {{ background: white; border-radius: 4px; overflow: hidden; }}
+            .header {{ background: #667eea; color: white; padding: 20px; border-bottom: 3px solid #5568d3; }}
+            .header h1 {{ margin: 0; font-size: 22px; }}
+            .header p {{ margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }}
+            .content {{ padding: 20px; }}
+            .row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }}
+            .col-full {{ grid-column: 1 / -1; }}
+            .metric {{ background: #f8f9fa; padding: 12px; border-left: 3px solid #667eea; }}
+            .metric h3 {{ margin: 0 0 5px 0; font-size: 11px; color: #666; text-transform: uppercase; }}
+            .metric .val {{ font-size: 24px; font-weight: bold; color: #333; }}
+            .metric .sub {{ font-size: 12px; color: #888; margin-top: 3px; }}
+            .section-title {{ font-size: 14px; font-weight: bold; margin: 20px 0 10px 0; color: #667eea; text-transform: uppercase; border-bottom: 2px solid #667eea; padding-bottom: 5px; }}
+            .table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
+            .table th {{ background: #667eea; color: white; padding: 8px; text-align: left; font-size: 11px; }}
+            .table td {{ padding: 8px; border-bottom: 1px solid #f0f0f0; }}
+            .table tr:last-child td {{ border-bottom: none; }}
+            .green {{ color: #28a745; }}
+            .red {{ color: #dc3545; }}
+            .footer {{ text-align: center; padding: 15px; color: #999; font-size: 11px; border-top: 1px solid #f0f0f0; margin-top: 20px; }}
+            @media only screen and (max-width: 600px) {{ .row {{ grid-template-columns: 1fr; }} }}
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <h1>{status_emoji} Daily Sales Report</h1>
-                <div class="date">{yesterday.strftime('%A, %B %d, %Y')}</div>
+                <h1>{status_emoji} Sales Report</h1>
+                <p>{yesterday.strftime('%A, %B %d, %Y')}</p>
             </div>
 
             <div class="content">
-                <div class="status-banner">
-                    <h2>{status_text}</h2>
-                    <p>Report generated: {datetime.now().strftime('%B %d, %Y at %I:%M %p ET')}</p>
-                </div>
-
-                <div class="section-title">💰 Yesterday's Performance</div>
-                <div class="metric-grid">
-                    <div class="metric-card highlight">
+                <!-- Yesterday's Performance -->
+                <div class="section-title">Yesterday</div>
+                <div class="row">
+                    <div class="metric">
                         <h3>Total Revenue</h3>
-                        <div class="value">{fmt_curr(yesterday_rev)}</div>
-                        <div class="subtext">{trend_indicator(vs_7d_avg)}{vs_7d_avg:+.1f}% vs 7-day avg</div>
+                        <div class="val">{fmt_curr(yesterday_rev)}</div>
+                        <div class="sub">{summary['yesterday']['total_orders']} orders</div>
                     </div>
-                    <div class="metric-card">
-                        <h3>Total Orders</h3>
-                        <div class="value">{summary['yesterday']['total_orders']}</div>
-                        <div class="subtext">All channels combined</div>
-                    </div>
-                    <div class="metric-card">
-                        <h3>Average Order Value</h3>
-                        <div class="value">{fmt_curr(summary['yesterday']['aov'])}</div>
-                        <div class="subtext">Per order average</div>
-                    </div>
-                    <div class="metric-card">
-                        <h3>7-Day Average</h3>
-                        <div class="value">{fmt_curr(avg_rev_7d)}</div>
-                        <div class="subtext">{fmt_curr(curr_7d_total)} total</div>
+                    <div class="metric">
+                        <h3>Avg Order Value</h3>
+                        <div class="val">{fmt_curr(summary['yesterday']['aov'])}</div>
+                        <div class="sub">Per order</div>
                     </div>
                 </div>
 
-                <div class="insights-box">
-                    <h3>📊 Quick Insights</h3>
-                    <p><strong>Week-over-Week:</strong> {trend_indicator(wow_change)}{wow_change:+.1f}% change in 7-day total revenue</p>
-                    <p><strong>30-Day Comparison:</strong> Yesterday was {vs_30d_avg:+.1f}% vs 30-day average</p>
-                    <p><strong>7-Day Range:</strong> {fmt_curr(summary['last_7_days']['min_revenue'])} (low) to {fmt_curr(summary['last_7_days']['max_revenue'])} (high)</p>
-                </div>
-
-                <div class="section-title">📊 Revenue by Channel</div>
-                <div class="channel-list">
-                    <div class="channel-row">
-                        <div>
-                            <span class="channel-name">🛒 Amazon</span>
-                            <span class="channel-details">{summary['yesterday']['amazon_orders']} orders</span>
-                        </div>
-                        <div class="channel-value">{fmt_curr(summary['yesterday']['amazon_revenue'])}</div>
+                <!-- Weekly Tracking -->
+                <div class="section-title">Last 7 Days ({last_7_days_start.strftime('%b %d')} - {yesterday.strftime('%b %d')})</div>
+                <div class="row">
+                    <div class="metric">
+                        <h3>Last 7 Days</h3>
+                        <div class="val">{fmt_curr(last_7_days_rev)}</div>
+                        <div class="sub">{summary['last_7_days']['days_count']} days</div>
                     </div>
-                    <div class="channel-row">
-                        <div>
-                            <span class="channel-name">🏪 WooCommerce</span>
-                            <span class="channel-details">{summary['yesterday']['woo_orders']} orders</span>
-                        </div>
-                        <div class="channel-value">{fmt_curr(summary['yesterday']['woo_revenue'])}</div>
-                    </div>
-    """
-
-    # Add WooCommerce site breakdown if there are sales
-    if summary['woo_sites']:
-        html += """
-                    <div style="margin-left: 30px; padding-top: 10px;">
-        """
-        for site in summary['woo_sites']:
-            html += f"""
-                        <div class="channel-row" style="background: #f8f9fa; padding: 10px 15px;">
-                            <div>
-                                <span class="channel-name" style="font-size: 14px;">↳ {site['site']}</span>
-                                <span class="channel-details">{site['orders']} orders</span>
-                            </div>
-                            <div class="channel-value" style="font-size: 14px;">{fmt_curr(site['revenue'])}</div>
-                        </div>
-            """
-        html += """
-                    </div>
-        """
-
-    html += f"""
-                    <div class="channel-row">
-                        <div>
-                            <span class="channel-name">🛍️ Shopify (WaterWise)</span>
-                        </div>
-                        <div class="channel-value">{fmt_curr(summary['yesterday']['shopify_revenue'])}</div>
+                    <div class="metric">
+                        <h3>Previous 7 Days</h3>
+                        <div class="val">{fmt_curr(prev_7_days_rev)}</div>
+                        <div class="sub">{fmt_pct(wow_change)} change</div>
                     </div>
                 </div>
-    """
 
-    # Add Top Products section if we have data
-    if summary['top_products']:
-        html += """
-                <div class="section-title">🏆 Top 5 Products Yesterday</div>
-                <table class="products-table">
+                <!-- Channel Breakdown (Week) -->
+                <div class="row">
+                    <div class="metric">
+                        <h3>🛒 Amazon (7d)</h3>
+                        <div class="val">{fmt_curr(summary['last_7_days']['amazon_revenue'])}</div>
+                    </div>
+                    <div class="metric">
+                        <h3>🏪 WooCommerce (7d)</h3>
+                        <div class="val">{fmt_curr(summary['last_7_days']['woo_revenue'])}</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="metric">
+                        <h3>🛍️ Shopify (7d)</h3>
+                        <div class="val">{fmt_curr(summary['last_7_days']['shopify_revenue'])}</div>
+                        <div class="sub">WaterWise</div>
+                    </div>
+                    <div class="metric">
+                        <h3>Yesterday Breakdown</h3>
+                        <div class="val">{summary['yesterday']['amazon_orders'] + summary['yesterday']['woo_orders'] + summary['yesterday']['shopify_orders']} orders</div>
+                        <div class="sub">AMZ: {summary['yesterday']['amazon_orders']}, WC: {summary['yesterday']['woo_orders']}, SP: {summary['yesterday']['shopify_orders']}</div>
+                    </div>
+                </div>
+
+                <!-- Monthly Tracking -->
+                <div class="section-title">{current_month_name} (Month-to-Date)</div>
+                <div class="row">
+                    <div class="metric">
+                        <h3>This Month</h3>
+                        <div class="val">{fmt_curr(current_month_rev)}</div>
+                        <div class="sub">{summary['current_month']['days_count']} days tracked</div>
+                    </div>
+                    <div class="metric">
+                        <h3>vs {last_month_name}</h3>
+                        <div class="val">{fmt_curr(last_month_rev)}</div>
+                        <div class="sub">{fmt_pct(mom_change)} change</div>
+                    </div>
+                </div>
+
+                <!-- Channel Breakdown (Month) -->
+                <div class="row">
+                    <div class="metric">
+                        <h3>🛒 Amazon (Month)</h3>
+                        <div class="val">{fmt_curr(summary['current_month']['amazon_revenue'])}</div>
+                    </div>
+                    <div class="metric">
+                        <h3>🏪 WooCommerce (Month)</h3>
+                        <div class="val">{fmt_curr(summary['current_month']['woo_revenue'])}</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-full metric">
+                        <h3>🛍️ Shopify (Month)</h3>
+                        <div class="val">{fmt_curr(summary['current_month']['shopify_revenue'])}</div>
+                        <div class="sub">WaterWise total for {current_month_name}</div>
+                    </div>
+                </div>
+
+                <!-- Top Products Yesterday -->
+                {_format_top_products_table(summary['top_products_yesterday'], 'Top Products Yesterday')}
+
+                <!-- Top Products Last 7 Days -->
+                {_format_top_products_table(summary['top_products_week'], 'Top Products Last 7 Days')}
+
+                <!-- Data Freshness -->
+                <div class="section-title">Data Freshness</div>
+                <table class="table">
                     <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Channel</th>
-                            <th style="text-align: right;">Quantity</th>
-                            <th style="text-align: right;">Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        """
-        for product in summary['top_products']:
-            badge_class = 'badge-amazon' if product['channel'] == 'Amazon' else 'badge-woo'
-            html += f"""
-                        <tr>
-                            <td class="product-name">{product['product'][:60]}{'...' if len(product['product']) > 60 else ''}</td>
-                            <td><span class="channel-badge {badge_class}">{product['channel']}</span></td>
-                            <td style="text-align: right;">{product['quantity']}</td>
-                            <td style="text-align: right; font-weight: 700;">{fmt_curr(product['revenue'])}</td>
-                        </tr>
-            """
-        html += """
-                    </tbody>
-                </table>
-        """
-
-    # Data Freshness Table
-    html += """
-                <div class="section-title">🔄 Data Freshness Status</div>
-                <table class="freshness-table">
-                    <thead>
-                        <tr>
-                            <th>Data Source</th>
+                            <th>Source</th>
                             <th>Last Updated</th>
                             <th>Status</th>
-                            <th>Age</th>
                         </tr>
                     </thead>
                     <tbody>
     """
 
+    # Data freshness rows
     source_names = {
-        'amazon': '🛒 Amazon Orders',
+        'amazon': '🛒 Amazon',
         'woocommerce': '🏪 WooCommerce',
         'shopify': '🛍️ Shopify',
-        'master': '📊 Master Table'
+        'master': '📊 Master'
     }
 
     for source, data in freshness.items():
-        status_class = 'fresh-status' if data['is_fresh'] else 'stale-status'
-        status_text = '✅ Fresh' if data['is_fresh'] else f'⚠️ Stale'
+        status_class = 'green' if data['is_fresh'] else 'red'
+        status_text = '✅' if data['is_fresh'] else f"⚠️ {data['days_old']}d old"
 
         html += f"""
                         <tr>
-                            <td style="font-weight: 600;">{source_names.get(source, source.title())}</td>
+                            <td>{source_names.get(source, source.title())}</td>
                             <td>{data['last_date']}</td>
                             <td class="{status_class}">{status_text}</td>
-                            <td>{data['days_old']} {'day' if data['days_old'] == 1 else 'days'} ago</td>
                         </tr>
         """
 
@@ -611,14 +591,52 @@ def format_html_email(freshness, summary):
                 </table>
 
                 <div class="footer">
-                    <p><strong>🤖 Intercept Sales Dashboard</strong></p>
-                    <p>Automated Daily Report • Cloud Functions • BigQuery • Gmail</p>
-                    <p style="margin-top: 15px; color: #ccc;">Report ID: {datetime.now().strftime('%Y%m%d_%H%M%S')}</p>
+                    <p>🤖 Intercept Sales Dashboard • {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
                 </div>
             </div>
         </div>
     </body>
     </html>
+    """
+
+    return html
+
+def _format_top_products_table(products, title):
+    """Helper to format top products table"""
+    if not products:
+        return ""
+
+    def fmt_curr(val):
+        return f"${val:,.0f}"
+
+    html = f"""
+                <div class="section-title">{title}</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Channel</th>
+                            <th style="text-align: right;">Qty</th>
+                            <th style="text-align: right;">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    """
+
+    for product in products:
+        product_name = product['product'][:50] + ('...' if len(product['product']) > 50 else '')
+        html += f"""
+                        <tr>
+                            <td>{product_name}</td>
+                            <td>{product['channel']}</td>
+                            <td style="text-align: right;">{product['quantity']}</td>
+                            <td style="text-align: right;">{fmt_curr(product['revenue'])}</td>
+                        </tr>
+        """
+
+    html += """
+                    </tbody>
+                </table>
     """
 
     return html
@@ -666,16 +684,16 @@ def daily_email_report(request):
         freshness = check_data_freshness(client)
 
         # Get comprehensive summary data
-        print("Getting daily summary with top products...")
+        print("Getting daily/weekly/monthly summary...")
         summary = get_daily_summary(client)
 
         # Format email
-        print("Formatting enhanced email...")
+        print("Formatting minimal 2-column email...")
         yesterday = date.today() - timedelta(days=1)
         all_fresh = all(source['is_fresh'] for source in freshness.values())
         status_emoji = "✅" if all_fresh else "⚠️"
 
-        subject = f"{status_emoji} Sales Report - {yesterday.strftime('%b %d')} - ${summary['yesterday']['total_revenue']:,.2f} ({summary['yesterday']['total_orders']} orders)"
+        subject = f"{status_emoji} Sales {yesterday.strftime('%b %d')} - {summary['yesterday']['total_revenue']:,.0f} ({summary['yesterday']['total_orders']} orders)"
         html_content = format_html_email(freshness, summary)
 
         # Send email
@@ -688,8 +706,10 @@ def daily_email_report(request):
             'report_date': str(yesterday),
             'email_status': email_result,
             'summary': summary['yesterday'],
+            'last_7_days': summary['last_7_days'],
+            'monthly': summary['current_month'],
             'data_freshness': {k: v['is_fresh'] for k, v in freshness.items()},
-            'top_products_count': len(summary['top_products'])
+            'top_products_count': len(summary['top_products_yesterday'])
         }
 
         print(f"Enhanced daily report completed: {json.dumps(response, indent=2)}")
