@@ -33,6 +33,12 @@ FILES_TO_SYNC = [
         'file_id': 'BDBC5289-A91B-4A22-91BF-21B443C1EE12',
         'table_id': f'{PROJECT_ID}.amazon_ads_sharepoint.daily_keywords',
         'sheet_name': 'Funnel data'
+    },
+    {
+        'name': 'Amazon Ads - Keywords Report',
+        'file_id': 'D9672FE7-EE73-413E-8448-9E876D17F1BA',
+        'table_id': f'{PROJECT_ID}.amazon_ads_sharepoint.keywords',
+        'sheet_name': 'Funnel data'
     }
 ]
 
@@ -124,6 +130,12 @@ def parse_excel_data(content, sheet_name):
             'Ad Group ID': 'ad_group_id',
             'Portfolio Name': 'portfolio_name',
             'Campaign Status': 'campaign_status',
+            # Keyword-specific columns
+            'Search Term': 'search_term',
+            'Keyword ID': 'keyword_id',
+            'Keyword Text': 'keyword_text',
+            'Match Type': 'match_type',
+            'Targeting': 'keyword_text',  # Alternative name
             # Conversions
             '1 Day Advertised SKU Conversions': 'conversions_1d_sku',
             '1 Day Total Conversions': 'conversions_1d_total',
@@ -160,6 +172,7 @@ def parse_excel_data(content, sheet_name):
             'date', 'cost', 'clicks', 'impressions',
             'campaign_id', 'campaign_name', 'campaign_status',
             'ad_group_id', 'ad_group_name', 'portfolio_name',
+            'search_term', 'keyword_id', 'keyword_text', 'match_type',
             'conversions_1d_sku', 'conversions_1d_total',
             'conversions_7d_sku', 'conversions_7d_total',
             'conversions_14d_sku', 'conversions_14d_total',
@@ -184,13 +197,13 @@ def parse_excel_data(content, sheet_name):
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
         # Fill NaN values for string columns
-        string_cols = ['campaign_name', 'ad_group_name', 'portfolio_name', 'campaign_status']
+        string_cols = ['campaign_name', 'ad_group_name', 'portfolio_name', 'campaign_status', 'search_term', 'keyword_text', 'match_type']
         for col in string_cols:
             if col in df.columns:
                 df[col] = df[col].fillna('')
 
         # Fill NaN values for ID columns
-        id_cols = ['campaign_id', 'ad_group_id']
+        id_cols = ['campaign_id', 'ad_group_id', 'keyword_id']
         for col in id_cols:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype('int64')
@@ -262,6 +275,10 @@ def update_master_ads_table():
             UNION ALL
             SELECT date, cost, clicks, impressions, conversions_1d_total, campaign_id
             FROM `{PROJECT_ID}.amazon_ads_sharepoint.daily_keywords`
+            WHERE date IS NOT NULL
+            UNION ALL
+            SELECT CAST(date AS DATETIME) as date, cost, clicks, impressions, conversions_1d_total, campaign_id
+            FROM `{PROJECT_ID}.amazon_ads_sharepoint.keywords`
             WHERE date IS NOT NULL
           )
           WHERE clicks > 0 OR impressions > 0 OR cost > 0
