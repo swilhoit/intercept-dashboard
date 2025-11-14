@@ -385,7 +385,7 @@ def get_top_products(client, start_date, end_date):
         return []
 
 def format_html_email(freshness, summary):
-    """Format minimal HTML email with 2-column layout and weekly/monthly tracking"""
+    """Format simple HTML email with clean tables"""
     today = date.today()
     yesterday = today - timedelta(days=1)
 
@@ -398,8 +398,12 @@ def format_html_email(freshness, summary):
         return f"${val:,.0f}"
 
     def fmt_pct(val):
-        color = 'green' if val > 0 else 'red' if val < 0 else ''
-        return f"<span class='{color}'>{val:+.0f}%</span>"
+        if val > 0:
+            return f"+{val:.0f}%"
+        elif val < 0:
+            return f"{val:.0f}%"
+        else:
+            return "0%"
 
     # Calculate changes
     yesterday_rev = summary['yesterday']['total_revenue']
@@ -412,192 +416,152 @@ def format_html_email(freshness, summary):
     mom_change = ((current_month_rev - last_month_rev) / last_month_rev * 100) if last_month_rev > 0 else 0
 
     # Date formatting
-    last_7_days_start = yesterday - timedelta(days=6)  # 7 days including yesterday
-    prev_7_days_start = yesterday - timedelta(days=13)
-    prev_7_days_end = yesterday - timedelta(days=7)
+    last_7_days_start = yesterday - timedelta(days=6)
     current_month_name = today.strftime('%B')
     if today.month == 1:
         last_month_name = 'December'
     else:
         last_month_name = (today.replace(day=1) - timedelta(days=1)).strftime('%B')
 
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; line-height: 1.4; color: #333; max-width: 800px; margin: 0 auto; padding: 15px; background: #f8f8f8; }}
-            .container {{ background: white; border-radius: 4px; overflow: hidden; }}
-            .header {{ background: #667eea; color: white; padding: 20px; border-bottom: 3px solid #5568d3; }}
-            .header h1 {{ margin: 0; font-size: 22px; }}
-            .header p {{ margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }}
-            .content {{ padding: 20px; }}
-            .row {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }}
-            .col-full {{ grid-column: 1 / -1; }}
-            .metric {{ background: #f8f9fa; padding: 12px; border-left: 3px solid #667eea; }}
-            .metric h3 {{ margin: 0 0 5px 0; font-size: 11px; color: #666; text-transform: uppercase; }}
-            .metric .val {{ font-size: 24px; font-weight: bold; color: #333; }}
-            .metric .sub {{ font-size: 12px; color: #888; margin-top: 3px; }}
-            .section-title {{ font-size: 14px; font-weight: bold; margin: 20px 0 10px 0; color: #667eea; text-transform: uppercase; border-bottom: 2px solid #667eea; padding-bottom: 5px; }}
-            .table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
-            .table th {{ background: #667eea; color: white; padding: 8px; text-align: left; font-size: 11px; }}
-            .table td {{ padding: 8px; border-bottom: 1px solid #f0f0f0; }}
-            .table tr:last-child td {{ border-bottom: none; }}
-            .green {{ color: #28a745; }}
-            .red {{ color: #dc3545; }}
-            .footer {{ text-align: center; padding: 15px; color: #999; font-size: 11px; border-top: 1px solid #f0f0f0; margin-top: 20px; }}
-            @media only screen and (max-width: 600px) {{ .row {{ grid-template-columns: 1fr; }} }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>{status_emoji} Sales Report</h1>
-                <p>{yesterday.strftime('%A, %B %d, %Y')}</p>
-            </div>
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        h2 {{ margin-top: 20px; margin-bottom: 10px; }}
+        table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; }}
+        th {{ background: #f0f0f0; padding: 8px; text-align: left; border: 1px solid #ddd; }}
+        td {{ padding: 8px; border: 1px solid #ddd; }}
+        .right {{ text-align: right; }}
+    </style>
+</head>
+<body>
+    <h1>{status_emoji} Sales Report - {yesterday.strftime('%B %d, %Y')}</h1>
 
-            <div class="content">
-                <!-- Yesterday's Performance -->
-                <div class="section-title">Yesterday</div>
-                <div class="row">
-                    <div class="metric">
-                        <h3>Total Revenue</h3>
-                        <div class="val">{fmt_curr(yesterday_rev)}</div>
-                        <div class="sub">{summary['yesterday']['total_orders']} orders</div>
-                    </div>
-                    <div class="metric">
-                        <h3>Avg Order Value</h3>
-                        <div class="val">{fmt_curr(summary['yesterday']['aov'])}</div>
-                        <div class="sub">Per order</div>
-                    </div>
-                </div>
+    <h2>Yesterday ({yesterday.strftime('%b %d')})</h2>
+    <table>
+        <tr>
+            <th>Metric</th>
+            <th class="right">Value</th>
+        </tr>
+        <tr>
+            <td>Total Revenue</td>
+            <td class="right">{fmt_curr(yesterday_rev)}</td>
+        </tr>
+        <tr>
+            <td>Orders</td>
+            <td class="right">{summary['yesterday']['total_orders']} (AMZ: {summary['yesterday']['amazon_orders']}, WC: {summary['yesterday']['woo_orders']}, SP: {summary['yesterday']['shopify_orders']})</td>
+        </tr>
+        <tr>
+            <td>Avg Order Value</td>
+            <td class="right">{fmt_curr(summary['yesterday']['aov'])}</td>
+        </tr>
+    </table>
 
-                <!-- Weekly Tracking -->
-                <div class="section-title">Last 7 Days ({last_7_days_start.strftime('%b %d')} - {yesterday.strftime('%b %d')})</div>
-                <div class="row">
-                    <div class="metric">
-                        <h3>Last 7 Days</h3>
-                        <div class="val">{fmt_curr(last_7_days_rev)}</div>
-                        <div class="sub">{summary['last_7_days']['days_count']} days</div>
-                    </div>
-                    <div class="metric">
-                        <h3>Previous 7 Days</h3>
-                        <div class="val">{fmt_curr(prev_7_days_rev)}</div>
-                        <div class="sub">{fmt_pct(wow_change)} change</div>
-                    </div>
-                </div>
+    <h2>Last 7 Days ({last_7_days_start.strftime('%b %d')} - {yesterday.strftime('%b %d')})</h2>
+    <table>
+        <tr>
+            <th>Metric</th>
+            <th class="right">Last 7 Days</th>
+            <th class="right">Previous 7 Days</th>
+            <th class="right">Change</th>
+        </tr>
+        <tr>
+            <td>Total Revenue</td>
+            <td class="right">{fmt_curr(last_7_days_rev)}</td>
+            <td class="right">{fmt_curr(prev_7_days_rev)}</td>
+            <td class="right">{fmt_pct(wow_change)}</td>
+        </tr>
+        <tr>
+            <td>Amazon</td>
+            <td class="right">{fmt_curr(summary['last_7_days']['amazon_revenue'])}</td>
+            <td class="right">{fmt_curr(summary['prev_7_days']['amazon_revenue'])}</td>
+            <td class="right">-</td>
+        </tr>
+        <tr>
+            <td>WooCommerce</td>
+            <td class="right">{fmt_curr(summary['last_7_days']['woo_revenue'])}</td>
+            <td class="right">{fmt_curr(summary['prev_7_days']['woo_revenue'])}</td>
+            <td class="right">-</td>
+        </tr>
+        <tr>
+            <td>Shopify</td>
+            <td class="right">{fmt_curr(summary['last_7_days']['shopify_revenue'])}</td>
+            <td class="right">{fmt_curr(summary['prev_7_days']['shopify_revenue'])}</td>
+            <td class="right">-</td>
+        </tr>
+    </table>
 
-                <!-- Channel Breakdown (Week) -->
-                <div class="row">
-                    <div class="metric">
-                        <h3>🛒 Amazon (7d)</h3>
-                        <div class="val">{fmt_curr(summary['last_7_days']['amazon_revenue'])}</div>
-                    </div>
-                    <div class="metric">
-                        <h3>🏪 WooCommerce (7d)</h3>
-                        <div class="val">{fmt_curr(summary['last_7_days']['woo_revenue'])}</div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="metric">
-                        <h3>🛍️ Shopify (7d)</h3>
-                        <div class="val">{fmt_curr(summary['last_7_days']['shopify_revenue'])}</div>
-                        <div class="sub">WaterWise</div>
-                    </div>
-                    <div class="metric">
-                        <h3>Yesterday Breakdown</h3>
-                        <div class="val">{summary['yesterday']['amazon_orders'] + summary['yesterday']['woo_orders'] + summary['yesterday']['shopify_orders']} orders</div>
-                        <div class="sub">AMZ: {summary['yesterday']['amazon_orders']}, WC: {summary['yesterday']['woo_orders']}, SP: {summary['yesterday']['shopify_orders']}</div>
-                    </div>
-                </div>
+    <h2>{current_month_name} (Month-to-Date)</h2>
+    <table>
+        <tr>
+            <th>Metric</th>
+            <th class="right">This Month</th>
+            <th class="right">{last_month_name}</th>
+            <th class="right">Change</th>
+        </tr>
+        <tr>
+            <td>Total Revenue</td>
+            <td class="right">{fmt_curr(current_month_rev)}</td>
+            <td class="right">{fmt_curr(last_month_rev)}</td>
+            <td class="right">{fmt_pct(mom_change)}</td>
+        </tr>
+        <tr>
+            <td>Amazon</td>
+            <td class="right">{fmt_curr(summary['current_month']['amazon_revenue'])}</td>
+            <td class="right">{fmt_curr(summary['last_month']['amazon_revenue'])}</td>
+            <td class="right">-</td>
+        </tr>
+        <tr>
+            <td>WooCommerce</td>
+            <td class="right">{fmt_curr(summary['current_month']['woo_revenue'])}</td>
+            <td class="right">{fmt_curr(summary['last_month']['woo_revenue'])}</td>
+            <td class="right">-</td>
+        </tr>
+        <tr>
+            <td>Shopify</td>
+            <td class="right">{fmt_curr(summary['current_month']['shopify_revenue'])}</td>
+            <td class="right">{fmt_curr(summary['last_month']['shopify_revenue'])}</td>
+            <td class="right">-</td>
+        </tr>
+    </table>
 
-                <!-- Monthly Tracking -->
-                <div class="section-title">{current_month_name} (Month-to-Date)</div>
-                <div class="row">
-                    <div class="metric">
-                        <h3>This Month</h3>
-                        <div class="val">{fmt_curr(current_month_rev)}</div>
-                        <div class="sub">{summary['current_month']['days_count']} days tracked</div>
-                    </div>
-                    <div class="metric">
-                        <h3>vs {last_month_name}</h3>
-                        <div class="val">{fmt_curr(last_month_rev)}</div>
-                        <div class="sub">{fmt_pct(mom_change)} change</div>
-                    </div>
-                </div>
+    {_format_top_products_table(summary['top_products_yesterday'], 'Top Products Yesterday')}
+    {_format_top_products_table(summary['top_products_week'], 'Top Products Last 7 Days')}
 
-                <!-- Channel Breakdown (Month) -->
-                <div class="row">
-                    <div class="metric">
-                        <h3>🛒 Amazon (Month)</h3>
-                        <div class="val">{fmt_curr(summary['current_month']['amazon_revenue'])}</div>
-                    </div>
-                    <div class="metric">
-                        <h3>🏪 WooCommerce (Month)</h3>
-                        <div class="val">{fmt_curr(summary['current_month']['woo_revenue'])}</div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-full metric">
-                        <h3>🛍️ Shopify (Month)</h3>
-                        <div class="val">{fmt_curr(summary['current_month']['shopify_revenue'])}</div>
-                        <div class="sub">WaterWise total for {current_month_name}</div>
-                    </div>
-                </div>
+    <h2>Data Freshness</h2>
+    <table>
+        <tr>
+            <th>Source</th>
+            <th>Last Updated</th>
+            <th>Status</th>
+        </tr>
+"""
 
-                <!-- Top Products Yesterday -->
-                {_format_top_products_table(summary['top_products_yesterday'], 'Top Products Yesterday')}
-
-                <!-- Top Products Last 7 Days -->
-                {_format_top_products_table(summary['top_products_week'], 'Top Products Last 7 Days')}
-
-                <!-- Data Freshness -->
-                <div class="section-title">Data Freshness</div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Last Updated</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    """
-
-    # Data freshness rows
     source_names = {
-        'amazon': '🛒 Amazon',
-        'woocommerce': '🏪 WooCommerce',
-        'shopify': '🛍️ Shopify',
-        'master': '📊 Master'
+        'amazon': 'Amazon',
+        'woocommerce': 'WooCommerce',
+        'shopify': 'Shopify',
+        'master': 'Master Table'
     }
 
     for source, data in freshness.items():
-        status_class = 'green' if data['is_fresh'] else 'red'
-        status_text = '✅' if data['is_fresh'] else f"⚠️ {data['days_old']}d old"
+        status_text = '✅ Fresh' if data['is_fresh'] else f"⚠️ {data['days_old']} days old"
+        html += f"""        <tr>
+            <td>{source_names.get(source, source.title())}</td>
+            <td>{data['last_date']}</td>
+            <td>{status_text}</td>
+        </tr>
+"""
 
-        html += f"""
-                        <tr>
-                            <td>{source_names.get(source, source.title())}</td>
-                            <td>{data['last_date']}</td>
-                            <td class="{status_class}">{status_text}</td>
-                        </tr>
-        """
+    html += f"""    </table>
 
-    html += f"""
-                    </tbody>
-                </table>
-
-                <div class="footer">
-                    <p>🤖 Intercept Sales Dashboard • {datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
+    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+        Generated by Intercept Sales Dashboard on {datetime.now().strftime('%Y-%m-%d at %H:%M')}
+    </p>
+</body>
+</html>"""
 
     return html
 
@@ -609,35 +573,28 @@ def _format_top_products_table(products, title):
     def fmt_curr(val):
         return f"${val:,.0f}"
 
-    html = f"""
-                <div class="section-title">{title}</div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Channel</th>
-                            <th style="text-align: right;">Qty</th>
-                            <th style="text-align: right;">Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    """
+    html = f"""    <h2>{title}</h2>
+    <table>
+        <tr>
+            <th>Product</th>
+            <th>Channel</th>
+            <th class="right">Qty</th>
+            <th class="right">Revenue</th>
+        </tr>
+"""
 
     for product in products:
-        product_name = product['product'][:50] + ('...' if len(product['product']) > 50 else '')
-        html += f"""
-                        <tr>
-                            <td>{product_name}</td>
-                            <td>{product['channel']}</td>
-                            <td style="text-align: right;">{product['quantity']}</td>
-                            <td style="text-align: right;">{fmt_curr(product['revenue'])}</td>
-                        </tr>
-        """
+        product_name = product['product'][:60] + ('...' if len(product['product']) > 60 else '')
+        html += f"""        <tr>
+            <td>{product_name}</td>
+            <td>{product['channel']}</td>
+            <td class="right">{product['quantity']}</td>
+            <td class="right">{fmt_curr(product['revenue'])}</td>
+        </tr>
+"""
 
-    html += """
-                    </tbody>
-                </table>
-    """
+    html += """    </table>
+"""
 
     return html
 
