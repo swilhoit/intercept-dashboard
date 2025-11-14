@@ -70,22 +70,25 @@ export async function GET(request: NextRequest) {
 
     caseStatement += `ELSE 'Other' END`;
 
-    // Build CASE statement for Amazon data with correct column name
-    const amazonCaseStatement = caseStatement.replace(/product_name/g, 'Product_Name');
+    // Amazon uses lowercase product_name, so no replacement needed
+    const amazonCaseStatement = caseStatement;
 
-    // Query for Amazon data - Use aggregated amazon.daily_total_sales instead of raw orders
+    // Query for Amazon data - Use product-level data for proper categorization
     let query = `
       WITH amazon_source AS (
         SELECT
-          date as category_date,
-          ordered_product_sales as sales,
+          CAST(date AS DATE) as category_date,
+          product_name,
+          asin as product_id,
+          revenue as sales,
+          item_quantity as quantity,
           'Amazon' as channel
-        FROM \`intercept-sales-2508061117.amazon.daily_total_sales\`
-        WHERE date IS NOT NULL
+        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+        WHERE date IS NOT NULL AND product_name IS NOT NULL
     `;
 
     if (startDate && endDate) {
-      query += ` AND date >= '${startDate}' AND date <= '${endDate}'`;
+      query += ` AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'`;
     }
 
     query += `
@@ -93,11 +96,11 @@ export async function GET(request: NextRequest) {
       categorized_amazon AS (
         SELECT
           category_date,
-          'Other' as category,
-          'Amazon Orders' as product_name,
-          'amazon_aggregate' as product_id,
+          ${amazonCaseStatement} as category,
+          product_name,
+          product_id,
           sales,
-          1 as quantity,
+          quantity,
           channel
         FROM amazon_source
       ),
@@ -221,23 +224,25 @@ export async function GET(request: NextRequest) {
       throw error;
     }
     
-    // Get channel breakdown per category - Use aggregated amazon data
+    // Get channel breakdown per category - Use product-level amazon data
     const channelBreakdownQuery = `
       WITH amazon_breakdown AS (
         SELECT
-          date,
-          ordered_product_sales as sales
-        FROM \`intercept-sales-2508061117.amazon.daily_total_sales\`
-        WHERE date IS NOT NULL
-        ${startDate && endDate ? `AND date >= '${startDate}' AND date <= '${endDate}'` : ''}
+          product_name,
+          asin,
+          revenue as sales,
+          item_quantity as quantity
+        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+        WHERE date IS NOT NULL AND product_name IS NOT NULL
+        ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
       ),
       categorized_amazon AS (
         SELECT
-          'Other' as category,
+          ${amazonCaseStatement} as category,
           'Amazon' as channel,
           SUM(sales) as total_sales,
-          COUNT(*) as total_quantity,
-          COUNT(DISTINCT date) as unique_products
+          SUM(quantity) as total_quantity,
+          COUNT(DISTINCT asin) as unique_products
         FROM amazon_breakdown
         GROUP BY category
       ),
@@ -337,20 +342,21 @@ export async function GET(request: NextRequest) {
       channelRows = [];
     }
     
-    // Add channel time series query - Use aggregated amazon data
+    // Add channel time series query - Use product-level amazon data
     const channelTimeSeriesQuery = `
       WITH amazon_ts AS (
         SELECT
-          date as category_date,
-          ordered_product_sales as sales
-        FROM \`intercept-sales-2508061117.amazon.daily_total_sales\`
-        WHERE date IS NOT NULL
-        ${startDate && endDate ? `AND date >= '${startDate}' AND date <= '${endDate}'` : ''}
+          CAST(date AS DATE) as category_date,
+          product_name,
+          revenue as sales
+        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+        WHERE date IS NOT NULL AND product_name IS NOT NULL
+        ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
       ),
       categorized_amazon AS (
         SELECT
           category_date,
-          'Other' as category,
+          ${amazonCaseStatement} as category,
           sales,
           'Amazon' as channel
         FROM amazon_ts
@@ -449,19 +455,19 @@ export async function GET(request: NextRequest) {
       channelTimeRows = [];
     }
 
-    // Add unique products query - Amazon goes into "Other" category since it's aggregated
+    // Add unique products query - Use product-level amazon data
     const uniqueProductsQuery = `
       WITH amazon_unique AS (
-        SELECT DISTINCT
-          date,
-          'amazon_aggregate' as product_id
-        FROM \`intercept-sales-2508061117.amazon.daily_total_sales\`
-        WHERE date IS NOT NULL
-        ${startDate && endDate ? `AND date >= '${startDate}' AND date <= '${endDate}'` : ''}
+        SELECT
+          product_name,
+          asin as product_id
+        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+        WHERE date IS NOT NULL AND product_name IS NOT NULL
+        ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
       ),
       categorized_amazon AS (
         SELECT
-          'Other' as category,
+          ${amazonCaseStatement} as category,
           product_id
         FROM amazon_unique
       ),
