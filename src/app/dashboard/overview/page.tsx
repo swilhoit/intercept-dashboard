@@ -10,6 +10,7 @@ import { validateSummaryData } from "@/lib/data-validation"
 
 export default function OverviewPage() {
   const [loading, setLoading] = useState(true)
+  const [criticalLoading, setCriticalLoading] = useState(true) // For critical data (stats cards)
   const [summary, setSummary] = useState<any>({})
   const [products, setProducts] = useState<any[]>([])
   const [adSpendData, setAdSpendData] = useState<any>({ metrics: {} })
@@ -23,7 +24,8 @@ export default function OverviewPage() {
 
   const fetchData = async () => {
     setLoading(true)
-    
+    setCriticalLoading(true)
+
     const params = new URLSearchParams()
     if (dateRange?.from) {
       params.append("startDate", dateRange.from.toISOString().split("T")[0])
@@ -36,22 +38,29 @@ export default function OverviewPage() {
     }
 
     try {
-      const [summaryRes, productsRes, adSpendRes, categoriesRes, sitesRes, amazonDailyRes] = await Promise.all([
+      // Priority 1: Critical data for stats cards (load first for perceived performance)
+      const criticalPromises = Promise.all([
         fetch(`/api/sales/summary?${params}`),
-        fetch(`/api/sales/products?${params}`),
         fetch(`/api/ads/total-spend?${params}`),
-        fetch(`/api/sales/categories?${params}`),
-        fetch(`/api/sites/woocommerce?${params}`),
         fetch(`/api/amazon/daily-sales?${params}`),
+        fetch(`/api/sites/woocommerce?${params}`),
       ])
 
-      const [summaryData, productsData, adSpendInfo, categoriesData, sitesData, amazonDailyData] = await Promise.all([
+      // Priority 2: Secondary data (can load in background)
+      const secondaryPromises = Promise.all([
+        fetch(`/api/sales/products?${params}`),
+        fetch(`/api/sales/categories?${params}`),
+      ])
+
+      // Fetch critical data first
+      const [summaryRes, adSpendRes, amazonDailyRes, sitesRes] = await criticalPromises
+
+      // Parse critical data
+      const [summaryData, adSpendInfo, amazonDailyData, sitesData] = await Promise.all([
         summaryRes.json(),
-        productsRes.json(),
         adSpendRes.json(),
-        categoriesRes.json(),
-        sitesRes.json(),
         amazonDailyRes.json(),
+        sitesRes.json(),
       ])
 
       // Extract and validate current_period from the API response
@@ -69,6 +78,7 @@ export default function OverviewPage() {
       // Calculate accurate total revenue: Amazon + all WooCommerce/Shopify sites
       const accurateTotalRevenue = accurateAmazonRevenue + siteBreakdownTotal
 
+      // Set critical data immediately (stats cards appear first)
       setSummary(summaryData.error ? validateSummaryData({}) : {
         ...validatedData,
         amazon_revenue: accurateAmazonRevenue,
@@ -77,20 +87,9 @@ export default function OverviewPage() {
         has_comparison: summaryData.has_comparison
       })
 
-      // Safely handle products data
-      if (Array.isArray(productsData)) {
-        setProducts(productsData)
-      } else if (productsData && !productsData.error) {
-        setProducts([])
-      } else {
-        setProducts([])
-      }
       setAdSpendData(adSpendInfo.error ? {
         metrics: {},
       } : adSpendInfo)
-
-      // Set category data
-      setCategories(categoriesData.error ? {} : categoriesData.categories || {})
 
       // Build site breakdown - combine all channels
       const sites = []
@@ -124,6 +123,28 @@ export default function OverviewPage() {
 
       setSiteBreakdown(sites)
 
+      // Mark critical loading as complete (stats cards can render)
+      setCriticalLoading(false)
+
+      // Now fetch secondary data (products & categories) in background
+      const [productsRes, categoriesRes] = await secondaryPromises
+
+      const [productsData, categoriesData] = await Promise.all([
+        productsRes.json(),
+        categoriesRes.json(),
+      ])
+
+      // Set secondary data
+      if (Array.isArray(productsData)) {
+        setProducts(productsData)
+      } else if (productsData && !productsData.error) {
+        setProducts([])
+      } else {
+        setProducts([])
+      }
+
+      setCategories(categoriesData.error ? {} : categoriesData.categories || {})
+
     } catch (error) {
       console.error("Error fetching data:", error)
     } finally {
@@ -131,34 +152,41 @@ export default function OverviewPage() {
     }
   }
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
-  }
-
   return (
     <>
-      <StatsCards
-        totalRevenue={summary.total_revenue}
-        avgDailySales={summary.avg_daily_sales}
-        daysWithSales={summary.days_with_sales}
-        highestDay={summary.highest_day}
-        totalAdSpend={adSpendData.metrics?.totalAdSpend || 0}
-        tacos={(adSpendData.metrics?.totalAdSpend && summary.total_revenue > 0)
-          ? (adSpendData.metrics.totalAdSpend / summary.total_revenue * 100)
-          : 0}
-        organicClicks={summary.organic_clicks}
-        percentageChanges={{
-          total_revenue: summary.percentage_changes?.total_revenue,
-          avg_daily_sales: summary.percentage_changes?.avg_daily_sales,
-          totalAdSpend: adSpendData.metrics?.percentage_changes?.totalAdSpend,
-          organicClicks: summary.percentage_changes?.organicClicks
-        }}
-        hasComparison={summary.has_comparison || adSpendData.metrics?.has_comparison}
-      />
-      
+      {criticalLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-sm text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <StatsCards
+            totalRevenue={summary.total_revenue}
+            avgDailySales={summary.avg_daily_sales}
+            daysWithSales={summary.days_with_sales}
+            highestDay={summary.highest_day}
+            totalAdSpend={adSpendData.metrics?.totalAdSpend || 0}
+            tacos={(adSpendData.metrics?.totalAdSpend && summary.total_revenue > 0)
+              ? (adSpendData.metrics.totalAdSpend / summary.total_revenue * 100)
+              : 0}
+            organicClicks={summary.organic_clicks}
+            percentageChanges={{
+              total_revenue: summary.percentage_changes?.total_revenue,
+              avg_daily_sales: summary.percentage_changes?.avg_daily_sales,
+              totalAdSpend: adSpendData.metrics?.percentage_changes?.totalAdSpend,
+              organicClicks: summary.percentage_changes?.organicClicks
+            }}
+            hasComparison={summary.has_comparison || adSpendData.metrics?.has_comparison}
+          />
+        </>
+      )}
+
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
         <div className="col-span-full lg:col-span-4">
-          <SalesChartWithToggle 
+          <SalesChartWithToggle
             dateRange={dateRange}
             channel={selectedChannel === "all" ? undefined : selectedChannel}
           />
