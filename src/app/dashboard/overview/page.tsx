@@ -67,13 +67,13 @@ export default function OverviewPage() {
 
   const summary = summaryData.error
     ? validateSummaryData({})
-    : {
+    : ({
         ...validatedData,
         amazon_revenue: accurateAmazonRevenue,
         total_revenue: accurateTotalRevenue,
         percentage_changes: summaryData.percentage_changes,
         has_comparison: summaryData.has_comparison,
-      }
+      } as any)
 
   const adSpendInfo = adSpendData.error ? { metrics: {} } : adSpendData
 
