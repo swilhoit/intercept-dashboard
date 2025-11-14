@@ -97,8 +97,12 @@ export async function GET(request: NextRequest) {
       
       query = `
         WITH amazon_breakdown AS (
-          -- Recent data from amazon_seller table
-          SELECT 
+          -- Combined data from both Amazon sources, avoiding overlap
+          -- amazon_seller is more current (Jan 1 2025 - Nov 13 2025)
+          -- orders_jan only for dates before 2025-01-01
+
+          -- Recent data from amazon_seller table (2025 onwards)
+          SELECT
             ${sellerDateFormat} as period,
             MIN(${sellerDateField}) as period_date,
             Product_Name as product_name,
@@ -117,17 +121,17 @@ export async function GET(request: NextRequest) {
       `;
 
       if (startDate && endDate) {
-        query += ` AND DATE_ADD('1899-12-30', INTERVAL SAFE_CAST(Date AS INT64) DAY) >= '${startDate}'
-                   AND DATE_ADD('1899-12-30', INTERVAL SAFE_CAST(Date AS INT64) DAY) <= '${endDate}'`;
+        query += ` AND DATE_ADD(DATE '1899-12-30', INTERVAL SAFE_CAST(Date AS INT64) DAY) >= '${startDate}'
+                   AND DATE_ADD(DATE '1899-12-30', INTERVAL SAFE_CAST(Date AS INT64) DAY) <= '${endDate}'`;
       }
-      
+
       query += `
           GROUP BY period, Product_Name, ASIN
-          
+
           UNION ALL
-          
-          -- Historical data from amazon orders table  
-          SELECT 
+
+          -- Historical data from amazon orders table (before 2025)
+          SELECT
             ${amazonDateFormat} as period,
             MIN(${amazonDateField}) as period_date,
             product_name,
@@ -139,13 +143,16 @@ export async function GET(request: NextRequest) {
             AVG(price) as avg_price,
             COUNT(*) as transaction_count
           FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-          WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0${categoryFilter}
+          WHERE product_name IS NOT NULL
+            AND revenue IS NOT NULL
+            AND revenue > 0
+            AND DATE(date) < '2025-01-01'${categoryFilter}
       `;
-      
+
       if (startDate && endDate) {
         query += ` AND DATE(date) >= '${startDate}' AND DATE(date) <= '${endDate}'`;
       }
-      
+
       query += `
           GROUP BY period, product_name, asin, sku
         )

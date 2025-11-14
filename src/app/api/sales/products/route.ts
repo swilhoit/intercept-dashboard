@@ -18,13 +18,15 @@ export async function GET(request: NextRequest) {
       // Use both Amazon tables to get complete data coverage with deduplication
       let amazonQuery = `
         WITH combined_amazon AS (
-          -- Combined data from both Amazon sources
+          -- Combined data from both Amazon sources, avoiding overlap
+          -- amazon_seller is more current (Jan 1 2025 - Nov 13 2025)
+          -- orders_jan only for dates before 2025-01-01
           SELECT
             Product_Name as product_name,
             Item_Price as revenue,
             1 as item_quantity,
             CASE
-              WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+              WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
               WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
               ELSE PARSE_DATE('%m/%e/%y', Date)
             END as order_date,
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
 
           UNION ALL
 
-          -- Historical data from amazon orders table
+          -- Historical data from amazon orders table (before 2025)
           SELECT
             product_name,
             revenue,
@@ -42,7 +44,10 @@ export async function GET(request: NextRequest) {
             DATE(date) as order_date,
             asin
           FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-          WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+          WHERE product_name IS NOT NULL
+            AND revenue IS NOT NULL
+            AND revenue > 0
+            AND DATE(date) < '2025-01-01'
         )
         SELECT
           product_name,

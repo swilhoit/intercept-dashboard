@@ -14,19 +14,21 @@ export async function GET(request: NextRequest) {
 
     const query = `
       WITH combined_amazon AS (
-        -- Combined data from both Amazon sources
+        -- Combined data from both Amazon sources, avoiding overlap
+        -- amazon_seller is more current (Jan 1 2025 - Nov 13 2025)
+        -- orders_jan only for dates before 2025-01-01
         SELECT
           product_name,
           revenue,
           order_date
         FROM (
-          -- Recent data from amazon_seller table
+          -- Recent data from amazon_seller table (2025 onwards)
           SELECT
             Product_Name as product_name,
             Item_Price as revenue,
             CASE
               WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date)
-              WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD('1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+              WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
               ELSE NULL
             END as order_date
           FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
@@ -34,13 +36,16 @@ export async function GET(request: NextRequest) {
 
           UNION ALL
 
-          -- Historical data from amazon orders table
+          -- Historical data from amazon orders table (before 2025)
           SELECT
             product_name,
             revenue,
             DATE(date) as order_date
           FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-          WHERE product_name IS NOT NULL AND revenue IS NOT NULL AND revenue > 0
+          WHERE product_name IS NOT NULL
+            AND revenue IS NOT NULL
+            AND revenue > 0
+            AND DATE(date) < '2025-01-01'
         )
       )
       SELECT

@@ -49,23 +49,45 @@ export async function GET(request: NextRequest) {
     // Build CASE statement for Amazon data with correct column name
     const amazonCaseStatement = caseStatement.replace(/product_name/g, 'Product_Name');
 
-    // Query for Amazon products using amazon_seller.amazon_orders_2025 which has current data
+    // Query for Amazon products using both amazon tables with deduplication
+    // amazon_seller is more current (Jan 1 2025 - Nov 13 2025)
+    // orders_jan only for dates before 2025-01-01
     let amazonQuery = `
+      WITH combined_amazon AS (
+        -- Recent data from amazon_seller table (2025 onwards)
+        SELECT
+          Product_Name,
+          Item_Price,
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{4}-[0-9]{2}-[0-9]{2}$') THEN DATE(Date)
+            WHEN REGEXP_CONTAINS(Date, r'^[0-9]{5}$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            ELSE NULL
+          END as order_date
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+
+        UNION ALL
+
+        -- Historical data from amazon orders table (before 2025)
+        SELECT
+          product_name as Product_Name,
+          revenue as Item_Price,
+          DATE(date) as order_date
+        FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
+        WHERE product_name IS NOT NULL
+          AND revenue IS NOT NULL
+          AND revenue > 0
+          AND DATE(date) < '2025-01-01'
+      )
       SELECT
         Product_Name as product_name,
         ${amazonCaseStatement} as category,
         'Amazon' as channel,
         SUM(Item_Price) as total_sales,
         COUNT(*) as quantity
-      FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
-      WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
-    `;
-    
-    if (startDate && endDate) {
-      amazonQuery += ` AND DATE(Purchase_Date) >= '${startDate}' AND DATE(Purchase_Date) <= '${endDate}'`;
-    }
-
-    amazonQuery += `
+      FROM combined_amazon
+      WHERE Product_Name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
       GROUP BY Product_Name, category
     `;
     

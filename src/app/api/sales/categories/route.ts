@@ -73,7 +73,10 @@ export async function GET(request: NextRequest) {
     // Amazon uses lowercase product_name, so no replacement needed
     const amazonCaseStatement = caseStatement;
 
-    // Query for Amazon data - Use product-level data for proper categorization
+    // Query for Amazon data - Combine both amazon sources, avoiding overlap
+    // amazon_seller is more current (Jan 1 2025 - Nov 13 2025)
+    // orders_jan only for dates before 2025-01-01
+    const amazonCutoffDate = '2025-01-01';
     let query = `
       WITH amazon_source AS (
         SELECT
@@ -84,14 +87,27 @@ export async function GET(request: NextRequest) {
           item_quantity as quantity,
           'Amazon' as channel
         FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE date IS NOT NULL AND product_name IS NOT NULL
-    `;
+        WHERE date IS NOT NULL
+          AND product_name IS NOT NULL
+          AND CAST(date AS DATE) < '${amazonCutoffDate}'
+          ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
 
-    if (startDate && endDate) {
-      query += ` AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'`;
-    }
+        UNION ALL
 
-    query += `
+        SELECT
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date)
+            WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            ELSE NULL
+          END as category_date,
+          Product_Name as product_name,
+          ASIN as product_id,
+          Item_Price as sales,
+          1 as quantity,
+          'Amazon' as channel
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+          ${startDate && endDate ? `AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END >= '${startDate}' AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END <= '${endDate}'` : ''}
       ),
       categorized_amazon AS (
         SELECT
@@ -224,7 +240,7 @@ export async function GET(request: NextRequest) {
       throw error;
     }
     
-    // Get channel breakdown per category - Use product-level amazon data
+    // Get channel breakdown per category - Use both amazon sources, avoiding overlap
     const channelBreakdownQuery = `
       WITH amazon_breakdown AS (
         SELECT
@@ -233,8 +249,21 @@ export async function GET(request: NextRequest) {
           revenue as sales,
           item_quantity as quantity
         FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE date IS NOT NULL AND product_name IS NOT NULL
-        ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
+        WHERE date IS NOT NULL
+          AND product_name IS NOT NULL
+          AND CAST(date AS DATE) < '${amazonCutoffDate}'
+          ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
+
+        UNION ALL
+
+        SELECT
+          Product_Name as product_name,
+          ASIN as asin,
+          Item_Price as sales,
+          1 as quantity
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+          ${startDate && endDate ? `AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END >= '${startDate}' AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END <= '${endDate}'` : ''}
       ),
       categorized_amazon AS (
         SELECT
@@ -342,7 +371,7 @@ export async function GET(request: NextRequest) {
       channelRows = [];
     }
     
-    // Add channel time series query - Use product-level amazon data
+    // Add channel time series query - Use both amazon sources, avoiding overlap
     const channelTimeSeriesQuery = `
       WITH amazon_ts AS (
         SELECT
@@ -350,8 +379,24 @@ export async function GET(request: NextRequest) {
           product_name,
           revenue as sales
         FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE date IS NOT NULL AND product_name IS NOT NULL
-        ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
+        WHERE date IS NOT NULL
+          AND product_name IS NOT NULL
+          AND CAST(date AS DATE) < '${amazonCutoffDate}'
+          ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
+
+        UNION ALL
+
+        SELECT
+          CASE
+            WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date)
+            WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY)
+            ELSE NULL
+          END as category_date,
+          Product_Name as product_name,
+          Item_Price as sales
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+          ${startDate && endDate ? `AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END >= '${startDate}' AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END <= '${endDate}'` : ''}
       ),
       categorized_amazon AS (
         SELECT
@@ -455,15 +500,26 @@ export async function GET(request: NextRequest) {
       channelTimeRows = [];
     }
 
-    // Add unique products query - Use product-level amazon data
+    // Add unique products query - Use both amazon sources, avoiding overlap
     const uniqueProductsQuery = `
       WITH amazon_unique AS (
         SELECT
           product_name,
           asin as product_id
         FROM \`intercept-sales-2508061117.amazon.orders_jan_2025_present\`
-        WHERE date IS NOT NULL AND product_name IS NOT NULL
-        ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
+        WHERE date IS NOT NULL
+          AND product_name IS NOT NULL
+          AND CAST(date AS DATE) < '${amazonCutoffDate}'
+          ${startDate && endDate ? `AND CAST(date AS DATE) >= '${startDate}' AND CAST(date AS DATE) <= '${endDate}'` : ''}
+
+        UNION ALL
+
+        SELECT
+          Product_Name as product_name,
+          ASIN as product_id
+        FROM \`intercept-sales-2508061117.amazon_seller.amazon_orders_2025\`
+        WHERE Product_Name IS NOT NULL AND Item_Price IS NOT NULL AND Item_Price > 0
+          ${startDate && endDate ? `AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END >= '${startDate}' AND CASE WHEN REGEXP_CONTAINS(Date, r'^\\d{4}-\\d{2}-\\d{2}$') THEN PARSE_DATE('%Y-%m-%d', Date) WHEN REGEXP_CONTAINS(Date, r'^\\d+$') THEN DATE_ADD(DATE '1899-12-30', INTERVAL CAST(Date AS INT64) DAY) END <= '${endDate}'` : ''}
       ),
       categorized_amazon AS (
         SELECT
