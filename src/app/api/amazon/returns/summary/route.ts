@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
 
-    // Build date filtering
+    // Build date filtering - use DATE() to compare dates properly
     let dateFilter = '';
     if (startDate && endDate) {
-      dateFilter = `AND return_date >= TIMESTAMP('${startDate}') AND return_date <= TIMESTAMP('${endDate}')`;
+      dateFilter = `AND DATE(return_date) >= '${startDate}' AND DATE(return_date) <= '${endDate}'`;
     }
 
     const query = `

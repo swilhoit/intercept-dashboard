@@ -71,6 +71,16 @@ export default function OverviewPage() {
   const totalRefunds = returnsData.total_refund_amount || 0
   const netRevenue = accurateTotalRevenue - totalRefunds
 
+  // Debug returns data and revenue totals
+  console.log('Overview Page - Revenue Breakdown:', {
+    accurateAmazonRevenue,
+    siteBreakdownTotal,
+    accurateTotalRevenue,
+    totalRefunds,
+    netRevenue,
+    siteBreakdownSites: sitesData.siteBreakdown?.map((s: any) => ({ site: s.site, revenue: s.revenue }))
+  })
+
   const summary = summaryData.error
     ? validateSummaryData({})
     : ({
@@ -170,7 +180,7 @@ export default function OverviewPage() {
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
         <ReturnsImpactCard
-          totalRevenue={accurateAmazonRevenue}
+          totalRevenue={accurateTotalRevenue}
           totalRefunds={totalRefunds}
           totalReturns={returnsData.total_returns || 0}
           affectedOrders={returnsData.affected_orders || 0}
