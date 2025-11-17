@@ -21,7 +21,8 @@ import {
   Target,
   Layers,
   Search,
-  Store
+  Store,
+  PackageX
 } from "lucide-react"
 
 interface NavItem {
@@ -40,7 +41,7 @@ interface SidebarNavProps {
 export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: SidebarNavProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['sales', 'marketing', 'sites']))
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['sales', 'marketing', 'sites', 'site-woocommerce']))
 
   const navItems: NavItem[] = [
     {
@@ -59,9 +60,41 @@ export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: Sid
           icon: <ShoppingCart className="h-4 w-4" />
         },
         {
+          title: "Amazon Returns",
+          value: "amazon-returns",
+          icon: <PackageX className="h-4 w-4" />
+        },
+        {
           title: "Websites",
           value: "site-woocommerce",
-          icon: <Globe className="h-4 w-4" />
+          icon: <Globe className="h-4 w-4" />,
+          children: [
+            {
+              title: "BrickAnew",
+              value: "site-brickanew",
+              icon: <Store className="h-4 w-4" />
+            },
+            {
+              title: "Heatilator",
+              value: "site-heatilator",
+              icon: <Store className="h-4 w-4" />
+            },
+            {
+              title: "Superior",
+              value: "site-superior",
+              icon: <Store className="h-4 w-4" />
+            },
+            {
+              title: "Majestic",
+              value: "site-majestic",
+              icon: <Store className="h-4 w-4" />
+            },
+            {
+              title: "Waterwise",
+              value: "site-waterwise",
+              icon: <Store className="h-4 w-4" />
+            }
+          ]
         }
       ]
     },
@@ -138,17 +171,25 @@ export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: Sid
   const renderNavItem = (item: NavItem, level: number = 0) => {
     const hasChildren = item.children && item.children.length > 0
     const isExpanded = expandedItems.has(item.value)
-    const isActive = currentView === item.value || 
-                    (hasChildren && item.children?.some(child => child.value === currentView))
+
+    // Check if this item or any descendant is active
+    const isActiveRecursive = (navItem: NavItem): boolean => {
+      if (navItem.value === currentView) return true
+      return navItem.children?.some(child => isActiveRecursive(child)) || false
+    }
+
+    const isActive = isActiveRecursive(item)
+    const isDirectlyActive = currentView === item.value
 
     return (
       <div key={item.value}>
         <Button
           variant="ghost"
           className={cn(
-            "w-full justify-start",
-            level > 0 && "pl-8",
-            isActive && !hasChildren && "bg-accent",
+            "w-full justify-start text-sm",
+            level === 1 && "pl-8",
+            level === 2 && "pl-12",
+            isDirectlyActive && "bg-accent",
             isCollapsed && level === 0 && "justify-center px-2"
           )}
           onClick={() => handleItemClick(item)}
@@ -156,7 +197,7 @@ export function SidebarNav({ currentView, onViewChange, onCollapsedChange }: Sid
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               {item.icon}
-              {!isCollapsed && <span>{item.title}</span>}
+              {!isCollapsed && <span className={cn(level === 2 && "text-xs")}>{item.title}</span>}
             </div>
             {!isCollapsed && hasChildren && (
               <div className="ml-auto">

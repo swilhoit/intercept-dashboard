@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
           COUNT(DISTINCT product_name) as product_count
         FROM all_woo_products GROUP BY name
       ),
-      site_breakdown AS (
+      woo_site_breakdown AS (
         SELECT
           site,
           SUM(total_revenue) as revenue,
@@ -83,6 +83,20 @@ export async function GET(request: NextRequest) {
           COUNT(DISTINCT product_name) as products
         FROM all_woo_products
         GROUP BY site
+      ),
+      shopify_site_breakdown AS (
+        SELECT
+          'WaterWise (Shopify)' as site,
+          SUM(total_revenue) as revenue,
+          COUNT(DISTINCT order_date) as active_days,
+          COUNT(DISTINCT product_id) as products
+        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
+        WHERE 1=1 ${wooWhereClause}
+      ),
+      site_breakdown AS (
+        SELECT * FROM woo_site_breakdown
+        UNION ALL
+        SELECT * FROM shopify_site_breakdown
       ),
       site_time_series AS (
         SELECT

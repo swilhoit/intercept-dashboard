@@ -75,16 +75,23 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=7, max_retries=3)
         'consumer_key': consumer_key,
         'consumer_secret': consumer_secret,
         'after': start_date,
+        'status': 'processing,completed,on-hold',  # All paid orders
         'per_page': 100,
         'page': 1
     }
 
+    # Headers to bypass Cloudflare/nginx blocking
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
+    }
+
     all_orders = []
-    
+
     for attempt in range(max_retries):
         try:
             while True:
-                response = requests.get(endpoint, params=params, timeout=60)
+                response = requests.get(endpoint, params=params, headers=headers, timeout=60)
                 response.raise_for_status()  # Raises HTTPError for bad responses (4xx or 5xx)
                 
                 orders = response.json()

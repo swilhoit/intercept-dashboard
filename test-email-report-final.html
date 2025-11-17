@@ -1,0 +1,260 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; line-height: 1.4; color: #333; max-width: 800px; margin: 0 auto; padding: 15px; background: #f8f8f8; }
+            .container { background: white; border-radius: 4px; overflow: hidden; }
+            .header { background: #667eea; color: white; padding: 20px; border-bottom: 3px solid #5568d3; }
+            .header h1 { margin: 0; font-size: 22px; }
+            .header p { margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; }
+            .content { padding: 20px; }
+            .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+            .col-full { grid-column: 1 / -1; }
+            .metric { background: #f8f9fa; padding: 12px; border-left: 3px solid #667eea; }
+            .metric h3 { margin: 0 0 5px 0; font-size: 11px; color: #666; text-transform: uppercase; }
+            .metric .val { font-size: 24px; font-weight: bold; color: #333; }
+            .metric .sub { font-size: 12px; color: #888; margin-top: 3px; }
+            .section-title { font-size: 14px; font-weight: bold; margin: 20px 0 10px 0; color: #667eea; text-transform: uppercase; border-bottom: 2px solid #667eea; padding-bottom: 5px; }
+            .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+            .table th { background: #667eea; color: white; padding: 8px; text-align: left; font-size: 11px; }
+            .table td { padding: 8px; border-bottom: 1px solid #f0f0f0; }
+            .table tr:last-child td { border-bottom: none; }
+            .green { color: #28a745; }
+            .red { color: #dc3545; }
+            .footer { text-align: center; padding: 15px; color: #999; font-size: 11px; border-top: 1px solid #f0f0f0; margin-top: 20px; }
+            @media only screen and (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>⚠️ Sales Report</h1>
+                <p>Sunday, November 02, 2025</p>
+            </div>
+
+            <div class="content">
+                <!-- Yesterday's Performance -->
+                <div class="section-title">Yesterday</div>
+                <div class="row">
+                    <div class="metric">
+                        <h3>Total Revenue</h3>
+                        <div class="val">$1,788</div>
+                        <div class="sub">13 orders</div>
+                    </div>
+                    <div class="metric">
+                        <h3>Avg Order Value</h3>
+                        <div class="val">$138</div>
+                        <div class="sub">Per order</div>
+                    </div>
+                </div>
+
+                <!-- Weekly Tracking -->
+                <div class="section-title">Last 7 Days (Oct 27 - Nov 02)</div>
+                <div class="row">
+                    <div class="metric">
+                        <h3>Last 7 Days</h3>
+                        <div class="val">$31,517</div>
+                        <div class="sub">7 days</div>
+                    </div>
+                    <div class="metric">
+                        <h3>Previous 7 Days</h3>
+                        <div class="val">$19,276</div>
+                        <div class="sub"><span class='green'>+64%</span> change</div>
+                    </div>
+                </div>
+
+                <!-- Channel Breakdown (Week) -->
+                <div class="row">
+                    <div class="metric">
+                        <h3>🛒 Amazon (7d)</h3>
+                        <div class="val">$13,015</div>
+                    </div>
+                    <div class="metric">
+                        <h3>🏪 WooCommerce (7d)</h3>
+                        <div class="val">$12,377</div>
+                    </div>
+                </div>
+
+                <!-- Monthly Tracking -->
+                <div class="section-title">November (Month-to-Date)</div>
+                <div class="row">
+                    <div class="metric">
+                        <h3>This Month</h3>
+                        <div class="val">$4,392</div>
+                        <div class="sub">2 days tracked</div>
+                    </div>
+                    <div class="metric">
+                        <h3>vs October</h3>
+                        <div class="val">$91,870</div>
+                        <div class="sub"><span class='red'>-95%</span> change</div>
+                    </div>
+                </div>
+
+                <!-- Channel Breakdown (Month) -->
+                <div class="row">
+                    <div class="metric">
+                        <h3>🛒 Amazon (Month)</h3>
+                        <div class="val">$0</div>
+                    </div>
+                    <div class="metric">
+                        <h3>🏪 WooCommerce (Month)</h3>
+                        <div class="val">$4,392</div>
+                    </div>
+                </div>
+
+                <!-- Top Products Yesterday -->
+                
+                <div class="section-title">Top Products Yesterday</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Channel</th>
+                            <th style="text-align: right;">Qty</th>
+                            <th style="text-align: right;">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    
+                        <tr>
+                            <td>EZ Door Steel</td>
+                            <td>WooCommerce</td>
+                            <td style="text-align: right;">1</td>
+                            <td style="text-align: right;">$745</td>
+                        </tr>
+        
+                        <tr>
+                            <td>The EZ Door For Superior Fireplaces - CF4360, CHD4...</td>
+                            <td>WooCommerce</td>
+                            <td style="text-align: right;">1</td>
+                            <td style="text-align: right;">$549</td>
+                        </tr>
+        
+                        <tr>
+                            <td>EZ Door for Marco Fireplaces - B36CF (792774), B36...</td>
+                            <td>WooCommerce</td>
+                            <td style="text-align: right;">1</td>
+                            <td style="text-align: right;">$469</td>
+                        </tr>
+        
+                        <tr>
+                            <td>Heatilator Replacement Glass Fireplace Doors (Blac...</td>
+                            <td>Amazon</td>
+                            <td style="text-align: right;">1</td>
+                            <td style="text-align: right;">$269</td>
+                        </tr>
+        
+                        <tr>
+                            <td>Brick-Anew 18" Paint Roller Kit with Extension Pol...</td>
+                            <td>Amazon</td>
+                            <td style="text-align: right;">2</td>
+                            <td style="text-align: right;">$88</td>
+                        </tr>
+        
+                    </tbody>
+                </table>
+    
+
+                <!-- Top Products Last 7 Days -->
+                
+                <div class="section-title">Top Products Last 7 Days</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Channel</th>
+                            <th style="text-align: right;">Qty</th>
+                            <th style="text-align: right;">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    
+                        <tr>
+                            <td>Superior-Lennox Prefab Fireplace Door | Frame Incl...</td>
+                            <td>Amazon</td>
+                            <td style="text-align: right;">2</td>
+                            <td style="text-align: right;">$1,956</td>
+                        </tr>
+        
+                        <tr>
+                            <td>The EZ Door Steel for Lennox Fireplaces</td>
+                            <td>WooCommerce</td>
+                            <td style="text-align: right;">2</td>
+                            <td style="text-align: right;">$1,500</td>
+                        </tr>
+        
+                        <tr>
+                            <td>Majestic Prefab Fireplace Door | Frame Included | ...</td>
+                            <td>Amazon</td>
+                            <td style="text-align: right;">3</td>
+                            <td style="text-align: right;">$1,467</td>
+                        </tr>
+        
+                        <tr>
+                            <td>Foldable Beach Picnic Table - 3.5 ft/Low Height Wo...</td>
+                            <td>Amazon</td>
+                            <td style="text-align: right;">6</td>
+                            <td style="text-align: right;">$1,392</td>
+                        </tr>
+        
+                        <tr>
+                            <td>Heatilator Replacement Glass Fireplace Doors (Blac...</td>
+                            <td>Amazon</td>
+                            <td style="text-align: right;">4</td>
+                            <td style="text-align: right;">$1,345</td>
+                        </tr>
+        
+                    </tbody>
+                </table>
+    
+
+                <!-- Data Freshness -->
+                <div class="section-title">Data Freshness</div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>Last Updated</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    
+                        <tr>
+                            <td>🛒 Amazon</td>
+                            <td>2025-11-02</td>
+                            <td class="green">✅</td>
+                        </tr>
+        
+                        <tr>
+                            <td>🏪 WooCommerce</td>
+                            <td>2025-11-02</td>
+                            <td class="green">✅</td>
+                        </tr>
+        
+                        <tr>
+                            <td>🛍️ Shopify</td>
+                            <td>2025-10-28</td>
+                            <td class="red">⚠️ 6d old</td>
+                        </tr>
+        
+                        <tr>
+                            <td>📊 Master</td>
+                            <td>2025-11-02</td>
+                            <td class="green">✅</td>
+                        </tr>
+        
+                    </tbody>
+                </table>
+
+                <div class="footer">
+                    <p>🤖 Intercept Sales Dashboard • 2025-11-03 09:48</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    

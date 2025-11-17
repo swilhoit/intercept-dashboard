@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const groupBy = searchParams.get('groupBy') || 'day'; // day, week, month
 
-    // Build date filtering
+    // Build date filtering - use DATE() to compare dates properly
     let dateFilter = '';
     if (startDate && endDate) {
-      dateFilter = `AND return_date >= TIMESTAMP('${startDate}') AND return_date <= TIMESTAMP('${endDate}')`;
+      dateFilter = `AND DATE(return_date) >= '${startDate}' AND DATE(return_date) <= '${endDate}'`;
     }
 
     // Build date formatting based on groupBy
@@ -78,18 +78,42 @@ export async function GET(request: NextRequest) {
           SUM(refund_amount) as total_refunds,
           ROUND(AVG(refund_amount), 2) as avg_refund
         FROM \`intercept-sales-2508061117.amazon_seller.returns\`
-        WHERE return_date IS NOT NULL 
-          AND return_reason IS NOT NULL 
+        WHERE return_date IS NOT NULL
+          AND return_reason IS NOT NULL
           AND return_reason != '' ${dateFilter}
         GROUP BY return_reason
         ORDER BY count DESC
         LIMIT 10
+      ),
+      returns_by_category AS (
+        SELECT
+          CASE
+            WHEN LOWER(product_name) LIKE '%fireplace%' OR LOWER(product_name) LIKE '%hearth%' THEN 'Fireplaces & Hearth'
+            WHEN LOWER(product_name) LIKE '%paint%' OR LOWER(product_name) LIKE '%coating%' THEN 'Paint & Coatings'
+            WHEN LOWER(product_name) LIKE '%door%' OR LOWER(product_name) LIKE '%glass%' THEN 'Doors & Glass'
+            WHEN LOWER(product_name) LIKE '%burner%' OR LOWER(product_name) LIKE '%pilot%' THEN 'Burners & Components'
+            WHEN LOWER(product_name) LIKE '%remote%' OR LOWER(product_name) LIKE '%control%' OR LOWER(product_name) LIKE '%thermostat%' THEN 'Controls & Remotes'
+            WHEN LOWER(product_name) LIKE '%valve%' OR LOWER(product_name) LIKE '%regulator%' THEN 'Valves & Regulators'
+            WHEN LOWER(product_name) LIKE '%kit%' OR LOWER(product_name) LIKE '%set%' THEN 'Kits & Sets'
+            WHEN LOWER(product_name) LIKE '%log%' OR LOWER(product_name) LIKE '%media%' THEN 'Logs & Media'
+            ELSE 'Other Parts & Accessories'
+          END as category,
+          COUNT(*) as return_count,
+          SUM(return_quantity) as units_returned,
+          SUM(refund_amount) as total_refunds,
+          ROUND(AVG(refund_amount), 2) as avg_refund
+        FROM \`intercept-sales-2508061117.amazon_seller.returns\`
+        WHERE return_date IS NOT NULL
+          AND product_name IS NOT NULL ${dateFilter}
+        GROUP BY category
+        ORDER BY return_count DESC
       )
       SELECT
         (SELECT TO_JSON_STRING(s) FROM returns_summary s) as summary,
         (SELECT TO_JSON_STRING(ARRAY_AGG(d ORDER BY date DESC)) FROM returns_by_date d) as time_series,
         (SELECT TO_JSON_STRING(ARRAY_AGG(p ORDER BY return_count DESC)) FROM top_returned_products p) as top_products,
-        (SELECT TO_JSON_STRING(ARRAY_AGG(r ORDER BY count DESC)) FROM return_reasons r) as reasons
+        (SELECT TO_JSON_STRING(ARRAY_AGG(r ORDER BY count DESC)) FROM return_reasons r) as reasons,
+        (SELECT TO_JSON_STRING(ARRAY_AGG(c ORDER BY return_count DESC)) FROM returns_by_category c) as categories
     `;
 
     const cacheKey = `amazon-returns-${startDate || 'all'}-${endDate || 'all'}-${groupBy}`;
@@ -107,6 +131,7 @@ export async function GET(request: NextRequest) {
       timeSeries: JSON.parse(resultRow.time_series || '[]'),
       topProducts: JSON.parse(resultRow.top_products || '[]'),
       reasons: JSON.parse(resultRow.reasons || '[]'),
+      categories: JSON.parse(resultRow.categories || '[]'),
     };
 
     return new Response(JSON.stringify(response), {

@@ -52,9 +52,9 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
 
   const formatCurrencyAxis = (value: number) => {
     if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}k`
+      return `$${(value / 1000).toFixed(1)}k`
     }
-    return `$${Math.round(value)}`
+    return formatCurrency(value, 0)
   }
 
   const formatNumber = (value: number) => {
@@ -347,8 +347,8 @@ export function CombinedAdvertisingDashboard({ dateRange }: CombinedAdvertisingD
                   <BarChart data={platformComparison}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="platform" />
-                    <YAxis tickFormatter={formatCurrency} />
-                    <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                    <YAxis tickFormatter={formatCurrencyAxis} />
+                    <Tooltip formatter={(value: any) => formatCurrency(value, 2)} />
                     <Bar dataKey="spend" fill="#8884d8" />
                   </BarChart>
                 </ResponsiveContainer>

@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const site = searchParams.get('site'); // Get site parameter for filtering
+    const aggregation = searchParams.get('aggregation') || 'daily'; // Handle aggregation parameter
     
     // Define category keywords matching the categories endpoint
     const categories = {
@@ -91,54 +93,111 @@ export async function GET(request: NextRequest) {
       GROUP BY Product_Name, category
     `;
     
-    // Query for WooCommerce products with categories
-    let wooQuery = `
-      SELECT 
-        product_name,
-        ${caseStatement} as category,
-        'WooCommerce' as channel,
-        SUM(total_revenue) as total_sales,
-        SUM(total_quantity_sold) as quantity
-      FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
-      WHERE product_name IS NOT NULL
-    `;
+    // Query for WooCommerce products with categories (conditionally include sites based on filter)
+    let wooQuery = '';
     
-    if (startDate && endDate) {
-      wooQuery += ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
+    // Build WooCommerce query based on site filter
+    if (!site || site === 'all' || !['brickanew', 'heatilator', 'superior', 'majestic', 'waterwise'].includes(site)) {
+      // Query all WooCommerce sites
+      wooQuery = `
+        WITH all_woo_sites AS (
+          SELECT product_name, total_revenue, total_quantity_sold, order_date
+          FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\`
+          WHERE product_name IS NOT NULL
+          ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
+          UNION ALL
+
+          SELECT product_name, total_revenue, total_quantity_sold, order_date
+          FROM \`intercept-sales-2508061117.woocommerce.heatilator_daily_product_sales\`
+          WHERE product_name IS NOT NULL
+          ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
+          UNION ALL
+
+          SELECT product_name, total_revenue, total_quantity_sold, order_date
+          FROM \`intercept-sales-2508061117.woocommerce.superior_daily_product_sales\`
+          WHERE product_name IS NOT NULL
+          ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
+          UNION ALL
+
+          SELECT product_name, total_revenue, total_quantity_sold, order_date
+          FROM \`intercept-sales-2508061117.woocommerce.majestic_daily_product_sales\`
+          WHERE product_name IS NOT NULL
+          ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
+          UNION ALL
+
+          SELECT product_name, total_revenue, total_quantity_sold, order_date
+          FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
+          WHERE product_name IS NOT NULL
+          ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+        )
+        SELECT 
+          product_name,
+          ${caseStatement} as category,
+          'WooCommerce' as channel,
+          SUM(total_revenue) as total_sales,
+          SUM(total_quantity_sold) as quantity
+        FROM all_woo_sites
+        GROUP BY product_name, category
+      `;
+    } else if (site && site !== 'waterwise') {
+      // Query specific WooCommerce site
+      wooQuery = `
+        SELECT 
+          product_name,
+          ${caseStatement} as category,
+          'WooCommerce' as channel,
+          SUM(total_revenue) as total_sales,
+          SUM(total_quantity_sold) as quantity
+        FROM \`intercept-sales-2508061117.woocommerce.${site}_daily_product_sales\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+        GROUP BY product_name, category
+      `;
     }
-    
-    wooQuery += `
-      GROUP BY product_name, category
-    `;
 
-    // Query for Shopify products with categories
-    let shopifyQuery = `
-      SELECT
-        product_name,
-        ${caseStatement} as category,
-        'Shopify' as channel,
-        SUM(total_revenue) as total_sales,
-        SUM(total_quantity_sold) as quantity
-      FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
-      WHERE product_name IS NOT NULL
-    `;
-
-    if (startDate && endDate) {
-      shopifyQuery += ` AND order_date >= '${startDate}' AND order_date <= '${endDate}'`;
+    // Query for Shopify products with categories (only if no site filter or site is waterwise or all)
+    let shopifyQuery = '';
+    if (!site || site === 'all' || site === 'waterwise') {
+      shopifyQuery = `
+        SELECT
+          product_name,
+          ${caseStatement} as category,
+          'Shopify' as channel,
+          SUM(total_revenue) as total_sales,
+          SUM(total_quantity_sold) as quantity
+        FROM \`intercept-sales-2508061117.shopify.waterwise_daily_product_sales_clean\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+        GROUP BY product_name, category
+      `;
     }
 
-    shopifyQuery += `
-      GROUP BY product_name, category
-    `;
+    // Combine queries - only include non-empty parts
+    const queries = [];
+    if (!site || site === 'all') {
+      // Include all channels
+      queries.push(amazonQuery);
+      if (wooQuery) queries.push(wooQuery);
+      if (shopifyQuery) queries.push(shopifyQuery);
+    } else if (['brickanew', 'heatilator', 'superior', 'majestic'].includes(site)) {
+      // WooCommerce site only
+      if (wooQuery) queries.push(wooQuery);
+    } else if (site === 'waterwise') {
+      // Shopify site only
+      if (shopifyQuery) queries.push(shopifyQuery);
+    }
 
-    // Combine queries
+    if (queries.length === 0) {
+      return NextResponse.json({ products: [] });
+    }
+
     const finalQuery = `
       WITH all_products AS (
-        ${amazonQuery}
-        UNION ALL
-        ${wooQuery}
-        UNION ALL
-        ${shopifyQuery}
+        ${queries.join('\n        UNION ALL\n        ')}
       )
       SELECT * FROM all_products
       ORDER BY total_sales DESC
@@ -149,5 +208,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ products: rows });
   } catch (error) {
+    console.error('Category products API error:', error);
     return handleApiError(error);
-  }}
+  }
+}

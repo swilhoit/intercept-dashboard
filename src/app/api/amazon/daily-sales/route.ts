@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
       ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
       GROUP BY order_date
       ORDER BY order_date DESC
-      LIMIT 100
     `;
 
     const cacheKey = `amazon-daily-sales-${startDate || 'default'}-${endDate || 'default'}`;

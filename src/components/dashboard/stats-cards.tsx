@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowUpIcon, ArrowDownIcon, DollarSign, TrendingUp, MousePointerClick, ShoppingCart, TrendingDown, Target } from "lucide-react"
+import { formatCurrency, formatNumber, formatPercentageChange as formatPctChange } from "@/lib/utils"
 
 interface StatsCardsProps {
   totalRevenue: number
@@ -21,19 +22,6 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highestDay, totalAdSpend, tacos, organicClicks, percentageChanges, hasComparison }: StatsCardsProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value || 0)
-  }
-
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-US').format(value || 0)
-  }
-
   const formatPercentageChange = (change: number) => {
     const sign = change > 0 ? '+' : ''
     return `${sign}${change.toFixed(1)}%`
@@ -59,7 +47,7 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(totalRevenue, 0)}</div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               Period sales revenue
@@ -80,7 +68,7 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
           <TrendingDown className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(totalAdSpend || 0)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(totalAdSpend || 0, 0)}</div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               Total ad spend
@@ -114,7 +102,7 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(avgDailySales)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(avgDailySales, 2)}</div>
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               Average per day
@@ -156,7 +144,7 @@ export function StatsCards({ totalRevenue, avgDailySales, daysWithSales, highest
           <ShoppingCart className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{formatCurrency(highestDay)}</div>
+          <div className="text-2xl font-bold">{formatCurrency(highestDay, 0)}</div>
           <p className="text-xs text-muted-foreground">
             Highest single day
           </p>

@@ -71,21 +71,54 @@ http://localhost:3002
 - **Channel Performance**: Progress bars showing revenue contribution by channel
 - **Detailed Analysis**: Comprehensive charts for deeper insights
 
+### Amazon Returns Tab
+- **Returns Summary**: Track total returns, refund amounts, and return rates
+- **Time Series Analysis**: Monitor return trends over time
+- **Top Returned Products**: Identify products with highest return rates
+- **Return Reasons**: Analyze why customers are returning products
+- **Days to Return**: Average time between order and return
+- **Financial Impact**: Calculate true profitability after returns
+
+See [AMAZON_RETURNS_SETUP.md](AMAZON_RETURNS_SETUP.md) for detailed setup instructions.
+
 ## API Endpoints
 
 The dashboard uses the following API routes:
 
+### Sales
 - `GET /api/sales/daily` - Fetch daily sales data with optional date range filtering
 - `GET /api/sales/summary` - Get aggregated sales summary statistics
 - `GET /api/sales/products` - Retrieve product-level sales data
 - `GET /api/sales/monthly` - Fetch monthly sales summaries
+- `GET /api/sales/categories` - Category-level sales analysis
+
+### Amazon
+- `GET /api/amazon/daily-sales` - Amazon daily sales data
+- `GET /api/amazon/products` - Amazon product performance
+- `GET /api/amazon/returns` - Amazon returns and refunds data
+
+### Advertising
+- `GET /api/amazon/ads-report` - Amazon advertising metrics
+- `GET /api/google/ads` - Google Ads performance data
 
 ## BigQuery Tables Used
 
+### Master Tables
 - `intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES` - Daily sales totals
 - `intercept-sales-2508061117.MASTER.MONTHLY_SALES_SUMMARY` - Monthly aggregates
-- `intercept-sales-2508061117.amazon.orders_jan_2025_present` - Amazon order details
-- `intercept-sales-2508061117.woocommerce.orders` - WooCommerce order details
+- `intercept-sales-2508061117.MASTER.TOTAL_PRODUCTS_DAILY_DETAILED_SALES` - Product-level details
+
+### Amazon
+- `intercept-sales-2508061117.amazon.orders_jan_2025_present` - Amazon order details (historical)
+- `intercept-sales-2508061117.amazon_seller.amazon_orders_2025` - Amazon orders (current)
+- `intercept-sales-2508061117.amazon_seller.returns` - Amazon returns and refunds
+
+### WooCommerce
+- `intercept-sales-2508061117.woocommerce.*` - WooCommerce stores (BrickAnew, Heatilator, etc.)
+
+### Advertising
+- `intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced` - Amazon Ads data
+- `intercept-sales-2508061117.google_ads.*` - Google Ads campaigns
 
 ## Customization
 

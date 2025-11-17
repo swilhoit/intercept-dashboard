@@ -12,10 +12,11 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     
     let query = `
-      SELECT 
+      SELECT
         FORMAT_DATE('%Y-%m-%d', date) as date,
         COALESCE(amazon_sales, 0) as amazon_sales,
         COALESCE(woocommerce_sales, 0) as woocommerce_sales,
+        COALESCE(shopify_sales, 0) as shopify_sales,
         COALESCE(total_sales, 0) as total_sales
       FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
     `;

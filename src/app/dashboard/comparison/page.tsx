@@ -1,22 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { ProductComparison } from "@/components/dashboard/product-comparison"
 import { useDashboard } from "../dashboard-context"
+import { useCachedFetch } from "@/hooks/use-cached-fetch"
+import { DashboardSkeleton } from "@/components/dashboard/dashboard-skeleton"
 
 export default function ComparisonPage() {
   const { dateRange, selectedChannel } = useDashboard()
-  const [data, setData] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange, selectedChannel])
-
-  const fetchData = async () => {
-    setLoading(true)
-    
+  // Build API URL
+  const apiUrl = useMemo(() => {
     const params = new URLSearchParams()
     if (dateRange?.from) {
       params.append("startDate", dateRange.from.toISOString().split("T")[0])
@@ -27,23 +21,15 @@ export default function ComparisonPage() {
     if (selectedChannel !== "all") {
       params.append("channel", selectedChannel)
     }
+    return `/api/sales/products?${params.toString()}`
+  }, [dateRange, selectedChannel])
 
-    try {
-      const response = await fetch(`/api/sales/products?${params}`)
-      const result = await response.json()
-      setData(Array.isArray(result) ? result : [])
-    } catch (error) {
-      console.error("Error fetching products data:", error)
-      setData([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data, loading } = useCachedFetch<any[]>(apiUrl, { ttl: 120000 })
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
+    return <DashboardSkeleton />
   }
 
-  return <ProductComparison data={data} dateRange={dateRange} />
+  return <ProductComparison data={data || []} dateRange={dateRange} />
 }
 

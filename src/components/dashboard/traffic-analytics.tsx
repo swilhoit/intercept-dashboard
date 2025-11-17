@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { safePercentage, formatPercentage } from "@/lib/utils"
 
 interface TrafficAnalyticsProps {
   dateRange?: DateRange
@@ -300,7 +301,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
                     <CardTitle className="text-sm flex items-center justify-between">
                       <span>{site.name}</span>
                       <Badge variant="outline" className="text-xs">
-                        {((site.total_sessions / data.summary?.total_sessions) * 100).toFixed(1)}%
+                        {formatPercentage(safePercentage(site.total_sessions, data.summary?.total_sessions))}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
@@ -536,7 +537,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={(entry) => `${((entry.sessions / displayMetrics?.total_sessions) * 100).toFixed(1)}%`}
+                      label={(entry) => formatPercentage(safePercentage(entry.sessions, displayMetrics?.total_sessions))}
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="sessions"
@@ -731,7 +732,7 @@ export function TrafficAnalytics({ dateRange }: TrafficAnalyticsProps) {
           <CardContent>
             <div className="space-y-2">
               {data.geography.slice(0, 10).map((country: any) => {
-                const percentage = (country.sessions / displayMetrics?.total_sessions) * 100
+                const percentage = safePercentage(country.sessions, displayMetrics?.total_sessions)
                 return (
                   <div key={country.country} className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-1">

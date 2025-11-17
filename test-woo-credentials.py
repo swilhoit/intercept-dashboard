@@ -6,7 +6,7 @@ import json
 # Test each WooCommerce site's API access - UPDATED with .env.woocommerce credentials
 SITES = {
     'brickanew': {
-        'base_url': 'https://brickanew.com',
+        'base_url': 'https://brick-anew.com',
         'consumer_key': 'ck_917c430be2a325d3ee74d809ca184726130d2fc2',
         'consumer_secret': 'cs_261e146b6578faf1c644e6bf1c3da9a5042abf86'
     },

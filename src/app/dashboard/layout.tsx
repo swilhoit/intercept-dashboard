@@ -55,7 +55,12 @@ function DashboardLayoutContent({
     const titles: { [key: string]: string } = {
       overview: "Sales Dashboard - Overview",
       "site-amazon": "Amazon Store",
-      "site-woocommerce": "WooCommerce Store", 
+      "site-woocommerce": "All Websites",
+      "site-brickanew": "BrickAnew",
+      "site-heatilator": "Heatilator",
+      "site-superior": "Superior",
+      "site-majestic": "Majestic",
+      "site-waterwise": "Waterwise",
       products: "Product Performance",
       categories: "Category Analysis",
       breakdown: "Product Breakdown",
@@ -63,7 +68,8 @@ function DashboardLayoutContent({
       advertising: "Advertising Dashboard",
       traffic: "Traffic Analytics",
       "search-console": "Search Console Analytics",
-      analytics: "Analytics & Metrics"
+      analytics: "Analytics & Metrics",
+      "amazon-returns": "Amazon Returns"
     }
     const currentPath = pathname.split('/').pop() || 'overview'
     return titles[currentPath] || "Sales Dashboard"

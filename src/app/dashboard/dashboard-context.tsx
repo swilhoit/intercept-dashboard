@@ -15,8 +15,9 @@ interface DashboardContextType {
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
+  // Default to Last 7 Days (6 days ago + today = 7 days total)
   const [dateRange, setDateRangeState] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 7),
+    from: subDays(new Date(), 6),
     to: new Date(),
   })
   const [selectedChannel, setSelectedChannelState] = useState<string>("all")

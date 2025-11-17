@@ -46,21 +46,20 @@ export default function SiteAmazonPage() {
       const validProducts = Array.isArray(products) ? products : []
       const validCategoriesData = categoriesData?.products || []
 
-      // Process category data - include all channels so Amazon component can filter
-      const allCategoriesGrouped = validCategoriesData
+      // Process category data - filter for Amazon only and group by category
+      const amazonCategoriesGrouped = validCategoriesData
+        .filter((product: any) => product.channel === 'Amazon')
         .reduce((acc: any, product: any) => {
           const category = product.category || 'Other'
-          const channel = product.channel || 'Unknown'
-          const key = `${category}-${channel}`
-          if (!acc[key]) {
-            acc[key] = { name: category, revenue: 0, quantity: 0, channel: channel }
+          if (!acc[category]) {
+            acc[category] = { name: category, revenue: 0, quantity: 0, channel: 'Amazon' }
           }
-          acc[key].revenue += product.total_sales || 0
-          acc[key].quantity += product.quantity || 0
+          acc[category].revenue += product.total_sales || 0
+          acc[category].quantity += product.quantity || 0
           return acc
         }, {})
 
-      const categoryArray = Object.values(allCategoriesGrouped)
+      const categoryArray = Object.values(amazonCategoriesGrouped)
 
       // Transform data to match expected format
       const amazonSiteData = {

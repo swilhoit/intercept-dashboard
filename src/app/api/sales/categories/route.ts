@@ -176,6 +176,20 @@ export async function GET(request: NextRequest) {
           WHERE product_name IS NOT NULL
           ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
 
+          UNION ALL
+
+          SELECT
+            order_date as category_date,
+            ${caseStatement} as category,
+            product_name,
+            CAST(product_id AS STRING) as product_id,
+            total_revenue as sales,
+            total_quantity_sold as quantity,
+            'WooCommerce' as channel
+          FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
+          WHERE product_name IS NOT NULL
+          ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
         )
       ),
       categorized_shopify AS (
@@ -305,6 +319,17 @@ export async function GET(request: NextRequest) {
         WHERE product_name IS NOT NULL
         ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
 
+        UNION ALL
+
+        SELECT
+          ${caseStatement} as category,
+          product_id,
+          total_revenue,
+          total_quantity_sold
+        FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
       ),
       categorized_woocommerce AS (
         SELECT
@@ -422,6 +447,16 @@ export async function GET(request: NextRequest) {
         WHERE product_name IS NOT NULL
         ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
 
+        UNION ALL
+
+        SELECT
+          order_date as category_date,
+          ${caseStatement} as category,
+          total_revenue as sales
+        FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
       ),
       categorized_woocommerce AS (
         SELECT
@@ -527,6 +562,15 @@ export async function GET(request: NextRequest) {
           ${caseStatement} as category,
           CAST(product_id AS STRING) as product_id
         FROM \`intercept-sales-2508061117.woocommerce.majestic_daily_product_sales\`
+        WHERE product_name IS NOT NULL
+        ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+
+        UNION ALL
+
+        SELECT
+          ${caseStatement} as category,
+          CAST(product_id AS STRING) as product_id
+        FROM \`intercept-sales-2508061117.woocommerce.waterwise_daily_product_sales\`
         WHERE product_name IS NOT NULL
         ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
 

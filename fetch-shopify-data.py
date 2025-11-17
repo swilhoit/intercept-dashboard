@@ -133,8 +133,8 @@ def insert_waterwise_data():
     
     print(f"🛍️  Adding {len(sample_orders)} WaterWise product entries...")
     
-    # Insert into WaterWise table
-    table_ref = client.dataset('woocommerce').table('waterwise_daily_product_sales')
+    # Insert into WaterWise table (shopify dataset, _clean table used by API)
+    table_ref = client.dataset('shopify').table('waterwise_daily_product_sales_clean')
     
     try:
         errors = client.insert_rows_json(table_ref, sample_orders)
@@ -163,9 +163,9 @@ def update_master_table(daily_totals):
             USING (SELECT DATE('{order_date}') as date, {total_sales} as shopify_sales) S
             ON T.date = S.date
             WHEN MATCHED THEN
-              UPDATE SET 
-                shopify_sales = COALESCE(T.shopify_sales, 0) + S.shopify_sales,
-                total_sales = COALESCE(T.amazon_sales, 0) + COALESCE(T.woocommerce_sales, 0) + COALESCE(T.shopify_sales, 0) + S.shopify_sales
+              UPDATE SET
+                shopify_sales = S.shopify_sales,
+                total_sales = COALESCE(T.amazon_sales, 0) + COALESCE(T.woocommerce_sales, 0) + S.shopify_sales
             WHEN NOT MATCHED THEN
               INSERT (date, shopify_sales, amazon_sales, woocommerce_sales, total_sales)
               VALUES (S.date, S.shopify_sales, 0, 0, S.shopify_sales)

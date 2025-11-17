@@ -34,11 +34,12 @@ export async function GET(request: NextRequest) {
     }
     
     let query = `
-      SELECT 
+      SELECT
         ${dateFormat} as period,
         ${aggregation === 'daily' ? 'date' : dateGroupBy} as date,
         SUM(amazon_sales) as amazon_sales,
         SUM(woocommerce_sales) as woocommerce_sales,
+        SUM(shopify_sales) as shopify_sales,
         SUM(total_sales) as total_sales,
         COUNT(*) as days_in_period
       FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
@@ -61,6 +62,7 @@ export async function GET(request: NextRequest) {
       date: row.date || row.period,
       amazon_sales: row.amazon_sales || 0,
       woocommerce_sales: row.woocommerce_sales || 0,
+      shopify_sales: row.shopify_sales || 0,
       total_sales: row.total_sales || 0
     }));
     

@@ -4,6 +4,8 @@ import { Bar, BarChart, Line, LineChart, ResponsiveContainer, XAxis, YAxis, Cart
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { ArrowUpIcon, ArrowDownIcon, TrendingUp, Package } from "lucide-react"
+import { formatCurrency, formatNumber } from "@/lib/utils"
 
 interface ProductComparisonProps {
   data: any[]
@@ -11,13 +13,8 @@ interface ProductComparisonProps {
 }
 
 export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value || 0)
+  const formatCurrencyLocal = (value: number) => {
+    return formatCurrency(value, 0)
   }
 
   // Process data for top products comparison
@@ -81,8 +78,80 @@ export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
     avgOrderValue: metrics.totalRevenue / Math.max(metrics.transactions, 1)
   }))
 
+  // Calculate overall comparison stats
+  const comparisonStats = {
+    amazonRevenue: channelMetrics['Amazon']?.totalRevenue || 0,
+    woocommerceRevenue: channelMetrics['WooCommerce']?.totalRevenue || 0,
+    amazonProducts: channelMetrics['Amazon']?.productCount.size || 0,
+    woocommerceProducts: channelMetrics['WooCommerce']?.productCount.size || 0,
+    totalRevenue: (channelMetrics['Amazon']?.totalRevenue || 0) + (channelMetrics['WooCommerce']?.totalRevenue || 0),
+    amazonDominance: channelMetrics['Amazon']?.totalRevenue > channelMetrics['WooCommerce']?.totalRevenue
+  }
+
   return (
     <div className="space-y-4">
+      {/* Quick Comparison Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Amazon Revenue</CardTitle>
+            <div className="h-4 w-4 rounded-full bg-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(comparisonStats.amazonRevenue, 0)}</div>
+            <p className="text-xs text-muted-foreground">
+              {comparisonStats.amazonProducts} {comparisonStats.amazonProducts === 1 ? 'product' : 'products'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">WooCommerce Revenue</CardTitle>
+            <div className="h-4 w-4 rounded-full bg-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(comparisonStats.woocommerceRevenue, 0)}</div>
+            <p className="text-xs text-muted-foreground">
+              {comparisonStats.woocommerceProducts} {comparisonStats.woocommerceProducts === 1 ? 'product' : 'products'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revenue Split</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {comparisonStats.totalRevenue > 0 
+                ? `${((comparisonStats.amazonRevenue / comparisonStats.totalRevenue) * 100).toFixed(0)}% / ${((comparisonStats.woocommerceRevenue / comparisonStats.totalRevenue) * 100).toFixed(0)}%`
+                : '0% / 0%'
+              }
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Amazon / WooCommerce
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Leading Channel</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {comparisonStats.amazonDominance ? 'Amazon' : 'WooCommerce'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              By revenue volume
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Product Performance Comparison</CardTitle>
@@ -110,8 +179,8 @@ export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
                     interval={0}
                     tick={{ fontSize: 11 }}
                   />
-                  <YAxis tickFormatter={formatCurrency} />
-                  <Tooltip formatter={(value: any) => formatCurrency(value)} />
+                  <YAxis tickFormatter={formatCurrencyLocal} />
+                  <Tooltip formatter={(value: any) => formatCurrencyLocal(value)} />
                   <Legend />
                   <Bar dataKey="amazon_sales" name="Amazon" fill="#FF9500" />
                   <Bar dataKey="woocommerce_sales" name="WooCommerce" fill="#007AFF" />
@@ -152,14 +221,14 @@ export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
                     interval={0}
                     tick={{ fontSize: 11 }}
                   />
-                  <YAxis yAxisId="left" tickFormatter={formatCurrency} />
+                  <YAxis yAxisId="left" tickFormatter={formatCurrencyLocal} />
                   <YAxis yAxisId="right" orientation="right" />
                   <Tooltip 
                     formatter={(value: any, name: string) => {
                       if (name.includes('Quantity')) {
                         return value
                       }
-                      return formatCurrency(value)
+                      return formatCurrencyLocal(value)
                     }}
                   />
                   <Legend />
@@ -198,10 +267,10 @@ export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
                         {channel.channel}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
-                        {channel.products} products
+                        {channel.products} {channel.products === 1 ? 'product' : 'products'}
                       </span>
                     </div>
-                    <span className="font-semibold">{formatCurrency(channel.revenue)}</span>
+                    <span className="font-semibold">{formatCurrencyLocal(channel.revenue)}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -210,7 +279,7 @@ export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Avg Order:</span>
-                      <span className="ml-2 font-medium">{formatCurrency(channel.avgOrderValue)}</span>
+                      <span className="ml-2 font-medium">{formatCurrencyLocal(channel.avgOrderValue)}</span>
                     </div>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2">
@@ -248,7 +317,7 @@ export function ProductComparison({ data, dateRange }: ProductComparisonProps) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold">{formatCurrency(product.total_sales)}</div>
+                    <div className="font-semibold">{formatCurrencyLocal(product.total_sales)}</div>
                     <div className="flex gap-1">
                       {product.amazon_sales > 0 && (
                         <Badge className="bg-orange-500 text-white text-xs" variant="secondary">A</Badge>

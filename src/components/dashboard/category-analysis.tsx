@@ -478,7 +478,7 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                 .slice(0, 20)
                 .map((product: any, index: number) => (
                   <TableRow key={index}>
-                    <TableCell>
+                    <TableCell title={product.product_name} className="cursor-help">
                       <div className="flex items-center gap-2 max-w-[300px]">
                         <Package className="h-4 w-4 text-muted-foreground" />
                         <span className="truncate">{product.product_name}</span>
@@ -594,58 +594,68 @@ export function CategoryAnalysis({ dateRange }: CategoryAnalysisProps) {
                 </Button>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={adsData.dates?.map((date: string) => {
-                const dataPoint: any = { date: formatDate(date) }
-                Object.values(adsData.categories || {}).forEach((cat: any) => {
-                  const dayData = cat.data?.find((d: any) => d.date === date)
-                  if (dayData) {
-                    if (adMetricView === 'tacos') {
-                      dataPoint[cat.name] = dayData.tacos
-                    } else {
-                      dataPoint[cat.name] = dayData.adSpend
+            {adsData?.dates && Array.isArray(adsData.dates) && adsData.dates.length > 0 && 
+             adsData?.categories && Object.keys(adsData.categories).length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={adsData.dates.map((date: string) => {
+                  const dataPoint: any = { date: formatDate(date) }
+                  Object.values(adsData.categories || {}).forEach((cat: any) => {
+                    const dayData = cat.data?.find((d: any) => d.date === date)
+                    if (dayData) {
+                      if (adMetricView === 'tacos') {
+                        dataPoint[cat.name] = dayData.tacos || 0
+                      } else {
+                        dataPoint[cat.name] = dayData.adSpend || 0
+                      }
                     }
-                  }
-                })
-                return dataPoint
-              })}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis 
-                  dataKey="date" 
-                  className="text-xs"
-                  tick={{ fill: 'currentColor' }}
-                  angle={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? -45 : 0}
-                  textAnchor={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? "end" : "middle"}
-                  height={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? 80 : 40}
-                />
-                <YAxis 
-                  className="text-xs"
-                  tick={{ fill: 'currentColor' }}
-                  tickFormatter={adMetricView === 'tacos' ? (value) => `${value.toFixed(1)}%` : formatCurrency}
-                />
-                <Tooltip 
-                  formatter={(value: any) => 
-                    adMetricView === 'tacos' ? `${value.toFixed(2)}%` : formatCurrency(value)
-                  }
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '6px'
-                  }}
-                />
-                <Legend />
-                {Object.values(adsData.categories || {}).map((cat: any) => (
-                  <Line 
-                    key={cat.name}
-                    type="monotone" 
-                    dataKey={cat.name}
-                    stroke={getCategoryColor(cat.name)}
-                    strokeWidth={2}
-                    dot={aggregation !== "daily" || (adsData.dates?.length || 0) <= 30}
+                  })
+                  return dataPoint
+                })}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="date" 
+                    className="text-xs"
+                    tick={{ fill: 'currentColor' }}
+                    angle={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? -45 : 0}
+                    textAnchor={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? "end" : "middle"}
+                    height={aggregation === "daily" && (adsData.dates?.length || 0) > 20 ? 80 : 40}
                   />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+                  <YAxis 
+                    className="text-xs"
+                    tick={{ fill: 'currentColor' }}
+                    tickFormatter={adMetricView === 'tacos' ? (value) => `${Number(value || 0).toFixed(1)}%` : formatCurrency}
+                  />
+                  <Tooltip 
+                    formatter={(value: any) => 
+                      adMetricView === 'tacos' ? `${Number(value || 0).toFixed(2)}%` : formatCurrency(value)
+                    }
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '6px'
+                    }}
+                  />
+                  <Legend />
+                  {Object.values(adsData.categories || {}).map((cat: any) => (
+                    <Line 
+                      key={cat.name}
+                      type="monotone" 
+                      dataKey={cat.name}
+                      stroke={getCategoryColor(cat.name)}
+                      strokeWidth={2}
+                      dot={aggregation !== "daily" || (adsData.dates?.length || 0) <= 30}
+                    />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[350px] flex items-center justify-center border rounded-lg bg-muted/30">
+                <div className="text-center text-muted-foreground">
+                  <p>No advertising data available for this period</p>
+                  <p className="text-xs mt-1">Ad metrics will appear when there is ad spend data</p>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

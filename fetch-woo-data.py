@@ -7,30 +7,30 @@ from datetime import datetime, date, timedelta
 import time
 import os
 
-# WooCommerce site configurations
+# WooCommerce site configurations - load from environment variables
 WOOCOMMERCE_SITES = {
     'brickanew': {
-        'base_url': 'https://brickanew.com',  # Need to determine actual URLs
-        'consumer_key': 'existing_key',  # Already integrated
-        'consumer_secret': 'existing_secret',  # Need to get this
+        'base_url': os.getenv('BRICKANEW_URL', 'https://brick-anew.com'),
+        'consumer_key': os.getenv('BRICKANEW_CONSUMER_KEY', 'ck_917c430be2a325d3ee74d809ca184726130d2fc2'),
+        'consumer_secret': os.getenv('BRICKANEW_CONSUMER_SECRET', 'cs_261e146b6578faf1c644e6bf1c3da9a5042abf86'),
         'data_file': '/tmp/woo_recent_brickanew.json'
     },
     'heatilator': {
-        'base_url': 'https://heatilatorfireplacedoors.com',
-        'consumer_key': 'ck_b7954d336fa5cbdc4981bb0dcdb3219b7af8cc90',
-        'consumer_secret': 'cs_need_to_get_this_from_admin',  # Need the secret
+        'base_url': os.getenv('HEATILATOR_URL', 'https://heatilatorfireplacedoors.com'),
+        'consumer_key': os.getenv('HEATILATOR_CONSUMER_KEY', 'ck_662b9b92b3ad56d4e6a8104368081f7de3fecd4e'),
+        'consumer_secret': os.getenv('HEATILATOR_CONSUMER_SECRET', 'cs_b94be3803bacbf508eb774b1e414e3ed9cd21a85'),
         'data_file': '/tmp/woo_recent_heatilator.json'
     },
     'superior': {
-        'base_url': 'https://superiorfireplacedoors.com',
-        'consumer_key': 'ck_fa744f3de5885bbc8e0520e8bee27a8db36b8eff',
-        'consumer_secret': 'cs_need_to_get_this_from_admin',  # Need the secret
+        'base_url': os.getenv('SUPERIOR_URL', 'https://superiorfireplacedoors.com'),
+        'consumer_key': os.getenv('SUPERIOR_CONSUMER_KEY', 'ck_4e6e36da2bc12181bdfef39125fa3074630078b9'),
+        'consumer_secret': os.getenv('SUPERIOR_CONSUMER_SECRET', 'cs_802ba938ebacf7e9af0f931403f554a134352ac1'),
         'data_file': '/tmp/woo_recent_superior.json'
     },
     'majestic': {
-        'base_url': 'https://majesticfireplacedoors.com',
-        'consumer_key': 'ck_24fc09cea9514ee80496cdecefad84526c957662',
-        'consumer_secret': 'cs_0571e9b8db8a232c2d8ad343ad112b4652f13a1a',
+        'base_url': os.getenv('MAJESTIC_URL', 'https://majesticfireplacedoors.com'),
+        'consumer_key': os.getenv('MAJESTIC_CONSUMER_KEY', 'ck_24fc09cea9514ee80496cdecefad84526c957662'),
+        'consumer_secret': os.getenv('MAJESTIC_CONSUMER_SECRET', 'cs_0571e9b8db8a232c2d8ad343ad112b4652f13a1a'),
         'data_file': '/tmp/woo_recent_majestic.json'
     }
 }
@@ -60,7 +60,7 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=30):
     params = {
         'after': start_date.isoformat() + 'T00:00:00',
         'before': end_date.isoformat() + 'T23:59:59',
-        'status': 'completed',  # Only completed orders
+        'status': 'processing,completed,on-hold',  # All paid orders
         'per_page': 100,
         'page': 1
     }
@@ -70,10 +70,16 @@ def fetch_woocommerce_orders(site_name, site_config, days_back=30):
     
     while True:
         params['page'] = page
-        
+
+        # Add headers to avoid being blocked by Cloudflare/nginx
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json'
+        }
+
         try:
             print(f"  📄 Fetching page {page}...")
-            response = requests.get(url, auth=auth, params=params, timeout=30)
+            response = requests.get(url, auth=auth, params=params, headers=headers, timeout=30)
             
             if response.status_code == 401:
                 print(f"❌ Authentication failed for {site_name}")

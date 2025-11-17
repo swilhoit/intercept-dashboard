@@ -16,7 +16,7 @@ PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-25080611
 SHOPIFY_CONFIG = {
     'shop_domain': os.environ.get('SHOPIFY_SHOP_DOMAIN', 'waterwisegroup.myshopify.com'),
     'access_token': os.environ.get('SHOPIFY_ACCESS_TOKEN', ''),
-    'table': 'waterwise_daily_product_sales'
+    'table': 'waterwise_daily_product_sales_clean'  # Write directly to clean table
 }
 
 def fetch_shopify_orders(days_back=7):

@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PackageX, TrendingDown, AlertTriangle } from "lucide-react"
 import { formatCurrency, formatNumber } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
-import Link from "next/link"
 
 interface ReturnsImpactCardProps {
   totalRevenue: number
@@ -38,9 +37,24 @@ export function ReturnsImpactCard({
     )
   }
 
+  // Handle case where returns data might not be available yet
+  const hasReturnsData = totalRefunds > 0 || totalReturns > 0
   const netRevenue = totalRevenue - totalRefunds
   const returnImpactPercent = totalRevenue > 0 ? (totalRefunds / totalRevenue) * 100 : 0
   const needsAttention = returnImpactPercent > 10 // Alert if returns > 10% of revenue
+
+  // Debug logging
+  if (typeof window !== 'undefined') {
+    console.log('Returns Impact Card Data:', {
+      totalRevenue,
+      totalRefunds,
+      totalReturns,
+      affectedOrders,
+      hasReturnsData,
+      netRevenue,
+      returnImpactPercent
+    })
+  }
 
   return (
     <Card className={needsAttention ? "border-orange-300" : ""}>
@@ -59,18 +73,29 @@ export function ReturnsImpactCard({
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Net Revenue */}
-        <div>
-          <div className="flex items-baseline justify-between mb-1">
-            <span className="text-xs text-muted-foreground">Net Revenue</span>
-            <span className="text-sm text-muted-foreground">
-              {formatCurrency(totalRevenue)} - {formatCurrency(totalRefunds)}
-            </span>
+        {!hasReturnsData ? (
+          /* No Returns Data Yet */
+          <div className="text-center py-4">
+            <PackageX className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+            <p className="text-sm text-muted-foreground mb-2">No returns data yet</p>
+            <p className="text-xs text-muted-foreground">
+              Sync returns data to see impact analysis
+            </p>
           </div>
-          <div className="text-2xl font-bold text-green-600">
-            {formatCurrency(netRevenue)}
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* Net Revenue */}
+            <div>
+              <div className="flex items-baseline justify-between mb-1">
+                <span className="text-xs text-muted-foreground">Net Revenue</span>
+                <span className="text-sm text-muted-foreground">
+                  {formatCurrency(totalRevenue)} - {formatCurrency(totalRefunds)}
+                </span>
+              </div>
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(netRevenue)}
+              </div>
+            </div>
 
         {/* Returns Breakdown */}
         <div className="space-y-3 pt-2 border-t">
@@ -117,14 +142,8 @@ export function ReturnsImpactCard({
             )}
           </div>
         </div>
-
-        {/* View Details Link */}
-        <Link 
-          href="/dashboard/amazon-returns"
-          className="block w-full text-center text-xs text-blue-600 hover:text-blue-800 hover:underline pt-2 border-t"
-        >
-          View detailed returns analysis →
-        </Link>
+          </>
+        )}
       </CardContent>
     </Card>
   )
