@@ -5,9 +5,11 @@ import { StatsCards } from "@/components/dashboard/stats-cards"
 import { SalesChartWithToggle } from "@/components/dashboard/sales-chart-with-toggle"
 import { CategoryBreakdown } from "@/components/dashboard/category-breakdown"
 import { ProductTable } from "@/components/dashboard/product-table"
+import { ReturnsImpactCard } from "@/components/dashboard/returns-impact-card"
 import { useDashboard } from "../dashboard-context"
 import { validateSummaryData } from "@/lib/data-validation"
 import { useCachedFetchMultiple } from "@/hooks/use-cached-fetch"
+import { formatCurrency, formatNumber } from "@/lib/utils"
 
 export default function OverviewPage() {
   const { dateRange, selectedChannel } = useDashboard()
@@ -33,6 +35,7 @@ export default function OverviewPage() {
       { url: `/api/ads/total-spend?${paramString}`, critical: true, ttl: 60000 },
       { url: `/api/amazon/daily-sales?${paramString}`, critical: true, ttl: 60000 },
       { url: `/api/sites/woocommerce?${paramString}`, critical: true, ttl: 60000 },
+      { url: `/api/amazon/returns/summary?${paramString}`, critical: false, ttl: 60000 },
 
       // Secondary data (charts/tables) - loads in background
       { url: `/api/sales/products?${paramString}`, critical: false, ttl: 120000 },
@@ -47,8 +50,9 @@ export default function OverviewPage() {
   const adSpendData = data[apiUrls[1].url] || { metrics: {} }
   const amazonDailyData = data[apiUrls[2].url] || []
   const sitesData = data[apiUrls[3].url] || { siteBreakdown: [] }
-  const productsData = data[apiUrls[4].url] || []
-  const categoriesData = data[apiUrls[5].url] || { categories: {} }
+  const returnsData = data[apiUrls[4].url] || { total_refund_amount: 0, total_returns: 0, affected_orders: 0 }
+  const productsData = data[apiUrls[5].url] || []
+  const categoriesData = data[apiUrls[6].url] || { categories: {} }
 
   // Calculate accurate totals
   const currentPeriod = summaryData.current_period || {}
@@ -64,6 +68,8 @@ export default function OverviewPage() {
     : 0
 
   const accurateTotalRevenue = accurateAmazonRevenue + siteBreakdownTotal
+  const totalRefunds = returnsData.total_refund_amount || 0
+  const netRevenue = accurateTotalRevenue - totalRefunds
 
   const summary = summaryData.error
     ? validateSummaryData({})
@@ -71,6 +77,8 @@ export default function OverviewPage() {
         ...validatedData,
         amazon_revenue: accurateAmazonRevenue,
         total_revenue: accurateTotalRevenue,
+        net_revenue: netRevenue,
+        total_refunds: totalRefunds,
         percentage_changes: summaryData.percentage_changes,
         has_comparison: summaryData.has_comparison,
       } as any)
@@ -160,8 +168,16 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        <div className="bg-white rounded-lg border shadow-sm p-6">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+        <ReturnsImpactCard
+          totalRevenue={accurateAmazonRevenue}
+          totalRefunds={totalRefunds}
+          totalReturns={returnsData.total_returns || 0}
+          affectedOrders={returnsData.affected_orders || 0}
+          loading={loading}
+        />
+        
+        <div className="bg-white rounded-lg border p-6">
           <h3 className="text-lg font-semibold mb-4">Site & Channel Breakdown</h3>
           <div className="space-y-3">
             {siteBreakdown.map((site) => (
@@ -198,7 +214,7 @@ export default function OverviewPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border shadow-sm p-6">
+        <div className="bg-white rounded-lg border p-6">
           <h3 className="text-lg font-semibold mb-4">Performance Summary</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -210,7 +226,7 @@ export default function OverviewPage() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Avg Daily Sales</span>
               <span className="text-sm font-mono">
-                ${(summary.avg_daily_sales || 0).toLocaleString()}
+                {formatCurrency(summary.avg_daily_sales || 0, 2)}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -220,9 +236,32 @@ export default function OverviewPage() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Total Ad Spend</span>
               <span className="text-sm font-mono">
-                ${(adSpendInfo.metrics?.totalAdSpend || 0).toLocaleString()}
+                {formatCurrency(adSpendInfo.metrics?.totalAdSpend || 0, 2)}
               </span>
             </div>
+            {totalRefunds > 0 && (
+              <>
+                <div className="border-t pt-2 mt-2"></div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Gross Revenue</span>
+                  <span className="text-sm font-mono">
+                    {formatCurrency(accurateTotalRevenue, 2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-red-600">Returns/Refunds</span>
+                  <span className="text-sm font-mono text-red-600">
+                    -{formatCurrency(totalRefunds, 2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center font-semibold">
+                  <span className="text-sm text-green-600">Net Revenue</span>
+                  <span className="text-sm font-mono text-green-600">
+                    {formatCurrency(netRevenue, 2)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

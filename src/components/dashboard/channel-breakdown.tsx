@@ -57,7 +57,7 @@ export function ChannelBreakdown({
     const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0'
 
     return (
-      <div className="bg-background border border-border p-2 rounded-md shadow-sm">
+      <div className="bg-background border border-border p-2 rounded-md">
         <p className="font-medium">{data.name || 'Unknown'}</p>
         <p className="text-sm text-muted-foreground">
           {formatCurrency(value)} ({percentage}%)
