@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
-import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -55,18 +54,26 @@ export async function GET(request: NextRequest) {
         ROUND(AVG(revenue), 2) as avg_order_value
       FROM combined_amazon
       WHERE order_date IS NOT NULL
-      ${startDate && endDate ? `AND order_date >= '${startDate}' AND order_date <= '${endDate}'` : ''}
+      ${startDate && endDate ? `AND order_date >= @startDate AND order_date <= @endDate` : ''}
       GROUP BY order_date
       ORDER BY order_date DESC
     `;
 
-    const cacheKey = `amazon-daily-sales-${startDate || 'default'}-${endDate || 'default'}`;
+    const params = startDate && endDate ? { startDate, endDate } : undefined;
     
-    return await cachedResponse(
-      cacheKey,
-      query,
-      CACHE_STRATEGIES.REALTIME
+    const rows = await cachedQuery(
+      query, 
+      params,
+      ['amazon-daily-sales'],
+      300 // 5 minutes
     );
+    
+    return new Response(JSON.stringify(rows), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      }
+    });
   } catch (error) {
     return handleApiError(error);
   }

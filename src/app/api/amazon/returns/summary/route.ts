@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
-import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -32,13 +31,12 @@ export async function GET(request: NextRequest) {
       WHERE return_date IS NOT NULL ${dateFilter}
     `;
 
-    const cacheKey = `amazon-returns-summary-${startDate || 'all'}-${endDate || 'all'}`;
-
-    const data = await cachedResponse(
-      cacheKey,
+    const data = await cachedQuery<any>(
       query,
-      CACHE_STRATEGIES.STANDARD
-    ).then(res => res.json());
+      undefined,
+      ['amazon-returns-summary'],
+      300
+    );
 
     const summary = data[0] || {
       total_returns: 0,
@@ -52,11 +50,13 @@ export async function GET(request: NextRequest) {
     };
 
     return new Response(JSON.stringify(summary), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      },
     });
 
   } catch (error) {
     return handleApiError(error);
   }
 }
-

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -48,13 +48,19 @@ export async function GET(request: NextRequest) {
       LIMIT 100
     `;
     
-    const cacheKey = `amazon-ads-report-${startDate || 'all'}-${endDate || 'all'}`;
-
-    return await cachedResponse(
-      cacheKey,
+    const rows = await cachedQuery(
       query,
-      CACHE_STRATEGIES.ANALYTICS
+      undefined,
+      ['amazon-ads'],
+      600
     );
+
+    return new Response(JSON.stringify(rows), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200'
+      },
+    });
 
   } catch (error) {
     return handleApiError(error);

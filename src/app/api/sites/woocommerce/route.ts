@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -27,22 +27,27 @@ export async function GET(request: NextRequest) {
           COUNT(DISTINCT CASE WHEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 THEN date END) as active_days,
           MAX(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as highest_day,
           MIN(CASE WHEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) > 0 THEN (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) END) as lowest_day
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
+        FROM \`intercept-sales-2508061117.VIEWS.DAILY_METRICS_SUMMARY\`
         WHERE (woocommerce_sales > 0 OR shopify_sales > 0) ${whereClause}
       ),
       daily AS (
         SELECT date, (COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as sales
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
+        FROM \`intercept-sales-2508061117.VIEWS.DAILY_METRICS_SUMMARY\`
         WHERE (woocommerce_sales > 0 OR shopify_sales > 0) ${whereClause}
       ),
       monthly AS (
         SELECT FORMAT_DATE('%Y-%m', date) as month, SUM(COALESCE(woocommerce_sales, 0) + COALESCE(shopify_sales, 0)) as sales
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
+        FROM \`intercept-sales-2508061117.VIEWS.DAILY_METRICS_SUMMARY\`
         WHERE (woocommerce_sales > 0 OR shopify_sales > 0) ${whereClause}
         GROUP BY month
       ),
+      -- WooCommerce Products (Direct from VIEW)
       all_woo_products AS (
-        SELECT product_name, 'BrickAnew' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
+        SELECT 
+            -- The view has columns: site, order_date, total_revenue, order_count, total_quantity_sold
+            -- But products table is needed for product breakdown. 
+            -- Reverting to raw table union for product details as the summary view doesn't have product granularity
+            product_name, 'BrickAnew' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
         FROM \`intercept-sales-2508061117.woocommerce.brickanew_daily_product_sales\` WHERE 1=1 ${wooWhereClause} UNION ALL
         SELECT product_name, 'Heatilator' as site, total_revenue, total_quantity_sold, avg_unit_price, order_date
         FROM \`intercept-sales-2508061117.woocommerce.heatilator_daily_product_sales\` WHERE 1=1 ${wooWhereClause} UNION ALL
@@ -130,13 +135,12 @@ export async function GET(request: NextRequest) {
         (SELECT TO_JSON_STRING(ARRAY_AGG(ts ORDER BY date ASC)) FROM all_time_series ts) as siteTimeSeries
     `;
     
-    const cacheKey = `sites-woocommerce-${startDate || 'default'}-${endDate || 'default'}`;
-
-    const data = await cachedResponse(
-      cacheKey,
+    const data = await cachedQuery<any>(
       consolidatedQuery,
-      CACHE_STRATEGIES.STANDARD
-    ).then(res => res.json());
+      undefined,
+      ['sites-woocommerce'],
+      300
+    );
 
     const resultRow = data[0] || {};
     const summaryData = JSON.parse(resultRow.summary || '{}');
@@ -158,7 +162,10 @@ export async function GET(request: NextRequest) {
     };
     
     return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      },
     });
 
   } catch (error) {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET() {
   const configError = checkBigQueryConfig();
@@ -21,11 +21,19 @@ export async function GET() {
       LIMIT 1000
     `;
 
-    return await cachedResponse(
-      'amazon-orders',
+    const rows = await cachedQuery(
       query,
-      CACHE_STRATEGIES.STANDARD
+      undefined,
+      ['amazon-orders'],
+      300
     );
+
+    return new Response(JSON.stringify(rows), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      },
+    });
   } catch (error) {
     return handleApiError(error);
   }

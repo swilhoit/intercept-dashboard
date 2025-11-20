@@ -49,3 +49,9 @@ package-cloud-function.json
 # Development files with sensitive data
 debug-sheets.ts
 __pycache__/
+
+# Data Archive
+data_archive/
+*.csv
+*.xlsx
+cookies.txt

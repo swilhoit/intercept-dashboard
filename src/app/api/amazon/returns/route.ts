@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
-import { bigquery } from '@/lib/bigquery';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -13,7 +12,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const groupBy = searchParams.get('groupBy') || 'day'; // day, week, month
 
-    // Build date filtering - use DATE() to compare dates properly
+    // Build date filtering
     let dateFilter = '';
     if (startDate && endDate) {
       dateFilter = `AND DATE(return_date) >= '${startDate}' AND DATE(return_date) <= '${endDate}'`;
@@ -116,13 +115,12 @@ export async function GET(request: NextRequest) {
         (SELECT TO_JSON_STRING(ARRAY_AGG(c ORDER BY return_count DESC)) FROM returns_by_category c) as categories
     `;
 
-    const cacheKey = `amazon-returns-${startDate || 'all'}-${endDate || 'all'}-${groupBy}`;
-
-    const data = await cachedResponse(
-      cacheKey,
+    const data = await cachedQuery<any>(
       query,
-      CACHE_STRATEGIES.STANDARD
-    ).then(res => res.json());
+      undefined,
+      ['amazon-returns'],
+      300
+    );
 
     const resultRow = data[0] || {};
 
@@ -135,11 +133,13 @@ export async function GET(request: NextRequest) {
     };
 
     return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      },
     });
 
   } catch (error) {
     return handleApiError(error);
   }
 }
-

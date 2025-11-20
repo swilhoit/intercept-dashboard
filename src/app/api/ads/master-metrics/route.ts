@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -64,14 +64,12 @@ export async function GET(request: NextRequest) {
         (SELECT TO_JSON_STRING(ARRAY_AGG(d ORDER BY date ASC)) FROM daily_data d) AS daily
     `;
 
-    // Use a unique cache key based on the date range
-    const cacheKey = `ads-master-metrics-${startDate || 'default'}-${endDate || 'default'}`;
-
-    const data = await cachedResponse(
-      cacheKey,
+    const data = await cachedQuery<any>(
       consolidatedQuery,
-      CACHE_STRATEGIES.STANDARD
-    ).then(res => res.json());
+      undefined,
+      ['ads-master-metrics'],
+      300
+    );
 
     const resultRow = data[0] || { summary: '{}', daily: '[]' };
 
@@ -108,12 +106,11 @@ export async function GET(request: NextRequest) {
       channels: channelComparison,
     };
     
-    // We can't use our standard response wrapper here because we're returning the raw response
-    // from cachedResponse which already includes the headers. But we need to return the transformed data.
-    // So, we construct a new response with the final data, but we can't easily re-add cache headers here
-    // without duplicating logic. This suggests a potential improvement for the cachedResponse helper later.
     return new Response(JSON.stringify(finalResponse), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      },
     });
 
   } catch (error) {

@@ -1,4 +1,4 @@
-import { ExcelSyncService } from './src/lib/excel-sync';
+import { ExcelSyncService } from '../src/lib/excel-sync';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });

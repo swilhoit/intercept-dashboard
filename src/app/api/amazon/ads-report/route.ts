@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -165,13 +165,12 @@ export async function GET(request: NextRequest) {
         ${includeTimeSeries ? '(SELECT TO_JSON_STRING(ARRAY_AGG(t ORDER BY date)) FROM time_series t) AS timeSeries' : '"[]" AS timeSeries'}
     `;
 
-    const cacheKey = `amazon-ads-report-${startDate || 'default'}-${endDate || 'default'}-${groupBy}-${includeTimeSeries}`;
-
-    const data = await cachedResponse(
-      cacheKey,
+    const data = await cachedQuery<any>(
       consolidatedQuery,
-      CACHE_STRATEGIES.ANALYTICS
-    ).then(res => res.json());
+      undefined,
+      ['amazon-ads-report'],
+      600 // 10 minutes
+    );
 
     const resultRow = data[0] || {
       summary: '{}',
@@ -195,7 +194,10 @@ export async function GET(request: NextRequest) {
     };
 
     return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200'
+      },
     });
 
   } catch (error) {

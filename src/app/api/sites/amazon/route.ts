@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { checkBigQueryConfig, handleApiError } from '@/lib/api-helpers';
-import { cachedResponse, CACHE_STRATEGIES } from '@/lib/api-response';
+import { cachedQuery } from '@/lib/bigquery';
 
 export async function GET(request: NextRequest) {
   const configError = checkBigQueryConfig();
@@ -25,31 +25,31 @@ export async function GET(request: NextRequest) {
           COUNT(DISTINCT CASE WHEN amazon_sales > 0 THEN date END) as active_days,
           MAX(amazon_sales) as highest_day,
           MIN(CASE WHEN amazon_sales > 0 THEN amazon_sales END) as lowest_day
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
+        FROM \`intercept-sales-2508061117.VIEWS.DAILY_METRICS_SUMMARY\`
         WHERE amazon_sales > 0 ${whereClause}
       ),
       daily AS (
         SELECT date, amazon_sales as sales
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
+        FROM \`intercept-sales-2508061117.VIEWS.DAILY_METRICS_SUMMARY\`
         WHERE amazon_sales > 0 ${whereClause}
       ),
       monthly AS (
         SELECT FORMAT_DATE('%Y-%m', date) as month, SUM(amazon_sales) as sales
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_DAILY_SALES\`
+        FROM \`intercept-sales-2508061117.VIEWS.DAILY_METRICS_SUMMARY\`
         WHERE amazon_sales > 0 ${whereClause}
         GROUP BY month
       ),
       products AS (
-        SELECT product_name, SUM(revenue) as revenue, SUM(quantity_sold) as quantity
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_PRODUCTS_DAILY_DETAILED_SALES\`
-        WHERE channel = 'Amazon' ${whereClause.replace('date', 'order_date')}
+        SELECT product_name, SUM(revenue) as revenue, SUM(quantity) as quantity
+        FROM \`intercept-sales-2508061117.VIEWS.ALL_AMAZON_SALES\`
+        WHERE 1=1 ${whereClause.replace('date', 'order_date')}
         GROUP BY product_name
       ),
       categories AS (
-        SELECT category as name, SUM(revenue) as revenue, SUM(quantity_sold) as quantity, COUNT(DISTINCT product_name) as product_count
-        FROM \`intercept-sales-2508061117.MASTER.TOTAL_PRODUCTS_DAILY_DETAILED_SALES\`
-        WHERE channel = 'Amazon' ${whereClause.replace('date', 'order_date')}
-        GROUP BY category
+        -- Approximate category logic for Amazon products if not available in source
+        SELECT 'Amazon Products' as name, SUM(revenue) as revenue, SUM(quantity) as quantity, COUNT(DISTINCT product_name) as product_count
+        FROM \`intercept-sales-2508061117.VIEWS.ALL_AMAZON_SALES\`
+        WHERE 1=1 ${whereClause.replace('date', 'order_date')}
       )
       SELECT
         (SELECT TO_JSON_STRING(s) FROM summary s) as summary,
@@ -59,13 +59,12 @@ export async function GET(request: NextRequest) {
         (SELECT TO_JSON_STRING(ARRAY_AGG(c ORDER BY revenue DESC LIMIT 10)) FROM categories c) as categories
     `;
 
-    const cacheKey = `sites-amazon-${startDate || 'default'}-${endDate || 'default'}`;
-
-    const data = await cachedResponse(
-      cacheKey,
+    const data = await cachedQuery<any>(
       consolidatedQuery,
-      CACHE_STRATEGIES.STANDARD
-    ).then(res => res.json());
+      undefined,
+      ['sites-amazon'],
+      300
+    );
 
     const resultRow = data[0] || {};
     const summaryData = JSON.parse(resultRow.summary || '{}');
@@ -85,7 +84,10 @@ export async function GET(request: NextRequest) {
     };
     
     return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      },
     });
     
   } catch (error) {
