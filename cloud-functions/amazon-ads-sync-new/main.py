@@ -261,6 +261,8 @@ def update_master_ads_table():
         query = f"""
         CREATE OR REPLACE TABLE `{PROJECT_ID}.MASTER.TOTAL_DAILY_ADS` AS
         WITH amazon_daily AS (
+          -- Use ONLY conversions_orders as the authoritative source to avoid double-counting
+          -- The other tables (keywords, daily_keywords) contain overlapping data
           SELECT
             CAST(date AS DATE) as date,
             SUM(cost) as amazon_ads_spend,
@@ -268,20 +270,8 @@ def update_master_ads_table():
             SUM(impressions) as amazon_ads_impressions,
             SUM(COALESCE(conversions_1d_total, 0)) as amazon_ads_conversions,
             COUNT(DISTINCT campaign_id) as amazon_campaigns
-          FROM (
-            SELECT date, cost, clicks, impressions, conversions_1d_total, campaign_id
-            FROM `{PROJECT_ID}.amazon_ads_sharepoint.conversions_orders`
-            WHERE date IS NOT NULL
-            UNION ALL
-            SELECT date, cost, clicks, impressions, conversions_1d_total, campaign_id
-            FROM `{PROJECT_ID}.amazon_ads_sharepoint.daily_keywords`
-            WHERE date IS NOT NULL
-            UNION ALL
-            SELECT CAST(date AS DATETIME) as date, cost, clicks, impressions, conversions_1d_total, campaign_id
-            FROM `{PROJECT_ID}.amazon_ads_sharepoint.keywords`
-            WHERE date IS NOT NULL
-          )
-          WHERE clicks > 0 OR impressions > 0 OR cost > 0
+          FROM `{PROJECT_ID}.amazon_ads_sharepoint.conversions_orders`
+          WHERE date IS NOT NULL
           GROUP BY CAST(date AS DATE)
         )
         SELECT

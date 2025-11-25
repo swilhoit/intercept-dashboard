@@ -237,6 +237,8 @@ def update_amazon_ads():
     master_query = """
     CREATE OR REPLACE TABLE `intercept-sales-2508061117.MASTER.TOTAL_DAILY_ADS` AS
     WITH amazon_daily AS (
+      -- Use ONLY conversions_orders as the authoritative source to avoid double-counting
+      -- The other tables (keywords, daily_keywords) contain overlapping data
       SELECT
         CAST(date AS DATE) as date,
         SUM(cost) as amazon_ads_spend,
@@ -244,8 +246,8 @@ def update_amazon_ads():
         SUM(impressions) as amazon_ads_impressions,
         SUM(COALESCE(conversions_1d_total, 0)) as amazon_ads_conversions,
         COUNT(DISTINCT campaign_id) as amazon_campaigns
-      FROM `intercept-sales-2508061117.amazon_ads_sharepoint.keywords_enhanced`
-      WHERE date IS NOT NULL AND has_performance = TRUE
+      FROM `intercept-sales-2508061117.amazon_ads_sharepoint.conversions_orders`
+      WHERE date IS NOT NULL
       GROUP BY CAST(date AS DATE)
     )
     SELECT
