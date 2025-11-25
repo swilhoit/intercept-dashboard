@@ -253,6 +253,105 @@ def upload_to_bigquery(df, table_id):
         print(f"Error uploading to BigQuery: {e}")
         raise
 
+def update_keywords_enhanced():
+    """Rebuild keywords_enhanced table with latest data from all sources"""
+    try:
+        client = bigquery.Client(project=PROJECT_ID)
+
+        query = f"""
+        CREATE OR REPLACE TABLE `{PROJECT_ID}.amazon_ads_sharepoint.keywords_enhanced` AS
+        WITH unified_data AS (
+          SELECT
+            date,
+            campaign_id,
+            campaign_name,
+            campaign_status,
+            ad_group_id,
+            ad_group_name,
+            portfolio_name,
+            CAST(keyword_id AS STRING) as keyword_id,
+            keyword_text,
+            search_term,
+            match_type,
+            clicks,
+            cost,
+            impressions,
+            conversions_1d_total,
+            conversions_1d_sku,
+            'keywords' as data_source
+          FROM `{PROJECT_ID}.amazon_ads_sharepoint.keywords`
+          WHERE date IS NOT NULL
+
+          UNION ALL
+
+          SELECT
+            date,
+            campaign_id,
+            campaign_name,
+            campaign_status,
+            ad_group_id,
+            ad_group_name,
+            portfolio_name,
+            NULL as keyword_id,
+            NULL as keyword_text,
+            NULL as search_term,
+            NULL as match_type,
+            clicks,
+            cost,
+            impressions,
+            conversions_1d_total,
+            conversions_1d_sku,
+            'conversions_orders' as data_source
+          FROM `{PROJECT_ID}.amazon_ads_sharepoint.conversions_orders`
+          WHERE date IS NOT NULL
+
+          UNION ALL
+
+          SELECT
+            date,
+            campaign_id,
+            campaign_name,
+            campaign_status,
+            ad_group_id,
+            ad_group_name,
+            portfolio_name,
+            CAST(keyword_id AS STRING) as keyword_id,
+            keyword_text,
+            search_term,
+            match_type,
+            clicks,
+            cost,
+            impressions,
+            conversions_1d_total,
+            conversions_1d_sku,
+            'daily_keywords' as data_source
+          FROM `{PROJECT_ID}.amazon_ads_sharepoint.daily_keywords`
+          WHERE date IS NOT NULL
+        )
+        SELECT
+          *,
+          CASE WHEN cost > 0 AND clicks > 0 THEN cost / clicks ELSE NULL END as cpc,
+          CASE WHEN clicks > 0 AND impressions > 0 THEN (clicks / impressions) * 100 ELSE NULL END as ctr,
+          CASE WHEN conversions_1d_total > 0 AND clicks > 0 THEN (conversions_1d_total / clicks) * 100 ELSE NULL END as conversion_rate_1d_total,
+          CASE WHEN conversions_1d_sku > 0 AND clicks > 0 THEN (conversions_1d_sku / clicks) * 100 ELSE NULL END as conversion_rate_1d_sku,
+          keyword_text IS NOT NULL AND keyword_text != '' as has_keyword_data,
+          search_term IS NOT NULL AND search_term != '' as has_search_term,
+          (clicks > 0 OR impressions > 0 OR cost > 0) as has_performance,
+          EXTRACT(YEAR FROM date) as year,
+          EXTRACT(MONTH FROM date) as month,
+          EXTRACT(DAY FROM date) as day,
+          EXTRACT(DAYOFWEEK FROM date) - 1 as weekday
+        FROM unified_data
+        ORDER BY date DESC, cost DESC
+        """
+
+        client.query(query).result()
+        print("Updated keywords_enhanced table")
+        return True
+    except Exception as e:
+        print(f"Error updating keywords_enhanced table: {e}")
+        return False
+
 def update_master_ads_table():
     """Update MASTER.TOTAL_DAILY_ADS after syncing ads data"""
     try:
@@ -350,9 +449,13 @@ def amazon_ads_sync(request):
         success_count = sum(1 for r in results if r['success'])
         total_rows = sum(r.get('rows_processed', 0) for r in results if r['success'])
 
-        # Update MASTER ads table
+        # Update keywords_enhanced and MASTER ads table
+        keywords_updated = False
         master_updated = False
         if success_count > 0:
+            print("\nUpdating keywords_enhanced...")
+            keywords_updated = update_keywords_enhanced()
+
             print("\nUpdating MASTER.TOTAL_DAILY_ADS...")
             master_updated = update_master_ads_table()
 
@@ -362,6 +465,7 @@ def amazon_ads_sync(request):
             'files_processed': len(results),
             'successful': success_count,
             'total_rows': total_rows,
+            'keywords_updated': keywords_updated,
             'master_updated': master_updated,
             'results': results
         }
