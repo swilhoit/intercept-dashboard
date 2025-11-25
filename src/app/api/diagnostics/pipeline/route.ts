@@ -112,6 +112,14 @@ export async function GET(request: NextRequest) {
       3
     );
 
+    // ⭐ NEW: Check keywords_enhanced (derived table)
+    result.sources.amazonAdsKeywordsEnhanced = await checkTable(
+      'amazon_ads_sharepoint.keywords_enhanced',
+      'Amazon Ads - Keywords Enhanced (Derived)',
+      'date',
+      2  // Should be current since it's derived from source tables
+    );
+
     // Check GA4 Attribution Sources
     result.sources.ga4BrickAnew = await checkTable(
       'brick_anew_ga4.attribution_channel_performance',
@@ -475,7 +483,7 @@ async function performConsistencyChecks(result: PipelineCheck) {
     });
 
     // Marketing Data Consistency Checks
-    // Check Amazon Ads spend consistency
+    // ⭐ UPDATED: Check Amazon Ads spend consistency (use only conversions_orders)
     const masterAdsQuery = `
       SELECT
         SUM(total_spend) as total_spend,
@@ -487,21 +495,14 @@ async function performConsistencyChecks(result: PipelineCheck) {
     const [masterAdsRows] = await bigquery.query(masterAdsQuery);
     const masterSpend = parseFloat(masterAdsRows[0]?.total_spend || 0);
 
-    // Amazon Ads uses BOTH conversions_orders AND daily_keywords
+    // ⭐ UPDATED: Use ONLY conversions_orders as authoritative source (no UNION)
     const sourceAdsQuery = `
       SELECT
         SUM(cost) as total_spend,
         SUM(impressions) as total_impressions,
         SUM(clicks) as total_clicks
-      FROM (
-        SELECT cost, impressions, clicks
-        FROM \`${PROJECT_ID}.amazon_ads_sharepoint.conversions_orders\`
-        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-        UNION ALL
-        SELECT cost, impressions, clicks
-        FROM \`${PROJECT_ID}.amazon_ads_sharepoint.daily_keywords\`
-        WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
-      )
+      FROM \`${PROJECT_ID}.amazon_ads_sharepoint.conversions_orders\`
+      WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
     `;
     const [sourceAdsRows] = await bigquery.query(sourceAdsQuery);
     const sourceSpend = parseFloat(sourceAdsRows[0]?.total_spend || 0);
@@ -514,9 +515,55 @@ async function performConsistencyChecks(result: PipelineCheck) {
       passed: spendDiffPct < 5, // Allow 5% variance
       message: spendDiffPct < 5
         ? 'Amazon Ads spend matches between source and MASTER'
-        : `Amazon Ads spend variance: ${spendDiffPct.toFixed(1)}% (MASTER=$${masterSpend.toFixed(2)}, Source=$${sourceSpend.toFixed(2)})`,
+        : `⚠️ Amazon Ads spend variance: ${spendDiffPct.toFixed(1)}% (MASTER=$${masterSpend.toFixed(2)}, Source=$${sourceSpend.toFixed(2)})`,
       expected: sourceSpend,
       actual: masterSpend
+    });
+
+    // ⭐ NEW: Check for double-counting (anomaly detection)
+    if (spendDiffPct > 50) {
+      checks.push({
+        name: 'Amazon Ads Double-Counting Detection',
+        passed: false,
+        message: `🚨 CRITICAL: Possible double-counting detected! MASTER is ${(masterSpend/sourceSpend).toFixed(1)}x the source data`,
+        expected: 'Ratio ~1.0x',
+        actual: `${(masterSpend/sourceSpend).toFixed(1)}x`
+      });
+    }
+
+    // ⭐ NEW: Check keywords_enhanced staleness vs source tables
+    const keywordsStaleQuery = `
+      WITH source_max AS (
+          SELECT MAX(date) as max_date
+          FROM (
+              SELECT MAX(date) as date FROM \`${PROJECT_ID}.amazon_ads_sharepoint.conversions_orders\`
+              UNION ALL
+              SELECT MAX(date) as date FROM \`${PROJECT_ID}.amazon_ads_sharepoint.keywords\`
+              UNION ALL
+              SELECT MAX(date) as date FROM \`${PROJECT_ID}.amazon_ads_sharepoint.daily_keywords\`
+          )
+      ),
+      enhanced_max AS (
+          SELECT MAX(date) as max_date
+          FROM \`${PROJECT_ID}.amazon_ads_sharepoint.keywords_enhanced\`
+      )
+      SELECT
+          s.max_date as source_max,
+          e.max_date as enhanced_max,
+          DATE_DIFF(s.max_date, e.max_date, DAY) as days_behind
+      FROM source_max s, enhanced_max e
+    `;
+    const [keywordsStaleRows] = await bigquery.query(keywordsStaleQuery);
+    const daysBehind = parseInt(keywordsStaleRows[0]?.days_behind || 0);
+
+    checks.push({
+      name: 'Keywords Enhanced Freshness',
+      passed: daysBehind <= 1,
+      message: daysBehind <= 1
+        ? 'keywords_enhanced is up to date with source tables'
+        : `⚠️ keywords_enhanced is ${daysBehind} days behind source tables`,
+      expected: '≤1 day behind',
+      actual: `${daysBehind} days behind`
     });
 
     // GA4 Data Quality Check
