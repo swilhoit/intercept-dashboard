@@ -13,13 +13,14 @@ import functions_framework
 from typing import Dict, List, Any
 
 PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-2508061117')
-DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL')
+DISCORD_BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
+DISCORD_CHANNEL_ID = os.environ.get('DISCORD_CHANNEL_ID', '1442965069909725367')
 
 def send_discord_notification(result: Dict[str, Any]):
-    """Send diagnostics results to Discord"""
+    """Send diagnostics results to Discord using Bot API"""
 
-    if not DISCORD_WEBHOOK_URL:
-        print("⚠️  Discord webhook URL not configured, skipping notification")
+    if not DISCORD_BOT_TOKEN:
+        print("⚠️  Discord bot token not configured, skipping notification")
         return
 
     try:
@@ -135,15 +136,19 @@ def send_discord_notification(result: Dict[str, Any]):
             'text': 'Sales Dashboard Pipeline | Intercept Sales'
         }
 
-        # Send to Discord
+        # Send to Discord using Bot API
+        url = f'https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages'
+        headers = {
+            'Authorization': f'Bot {DISCORD_BOT_TOKEN}',
+            'Content-Type': 'application/json'
+        }
         payload = {
-            'embeds': [embed],
-            'username': 'Pipeline Monitor'
+            'embeds': [embed]
         }
 
-        response = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
 
-        if response.status_code == 204:
+        if response.status_code == 200:
             print("✅ Discord notification sent successfully")
         else:
             print(f"⚠️  Discord notification failed: {response.status_code} - {response.text}")
