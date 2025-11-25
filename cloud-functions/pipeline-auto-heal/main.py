@@ -6,12 +6,150 @@ Diagnoses and automatically fixes common data pipeline issues
 
 import os
 import json
+import requests
 from google.cloud import bigquery
 from datetime import datetime, timedelta, date
 import functions_framework
 from typing import Dict, List, Any
 
 PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT_ID', 'intercept-sales-2508061117')
+DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL')
+
+def send_discord_notification(result: Dict[str, Any]):
+    """Send diagnostics results to Discord"""
+
+    if not DISCORD_WEBHOOK_URL:
+        print("⚠️  Discord webhook URL not configured, skipping notification")
+        return
+
+    try:
+        # Determine color based on status
+        color_map = {
+            'healthy': 0x00FF00,      # Green
+            'healed': 0xFFAA00,       # Orange (issues fixed)
+            'issues_detected': 0xFF0000,  # Red
+            'error': 0xFF0000,        # Red
+            'fatal_error': 0x8B0000   # Dark red
+        }
+        color = color_map.get(result.get('status', 'error'), 0xFF0000)
+
+        # Build status emoji
+        status_emoji_map = {
+            'healthy': '✅',
+            'healed': '🔧',
+            'issues_detected': '⚠️',
+            'error': '❌',
+            'fatal_error': '🚨'
+        }
+        status_emoji = status_emoji_map.get(result.get('status', 'error'), '❓')
+
+        # Build embed
+        embed = {
+            'title': f'{status_emoji} Pipeline Diagnostics Report',
+            'color': color,
+            'timestamp': result.get('timestamp', datetime.now().isoformat()),
+            'fields': []
+        }
+
+        # Status field
+        status_text = result.get('status', 'unknown').replace('_', ' ').title()
+        embed['fields'].append({
+            'name': 'Status',
+            'value': f'**{status_text}**',
+            'inline': True
+        })
+
+        # Summary field
+        issues_count = result.get('issues_found', 0)
+        fixes_count = result.get('fixes_applied', 0)
+        errors_count = result.get('errors', 0)
+
+        summary_lines = [
+            f'🔍 Issues Found: **{issues_count}**',
+            f'🔧 Fixes Applied: **{fixes_count}**',
+            f'❌ Errors: **{errors_count}**'
+        ]
+        embed['fields'].append({
+            'name': 'Summary',
+            'value': '\n'.join(summary_lines),
+            'inline': True
+        })
+
+        # Issues details (if any)
+        if issues_count > 0:
+            issues = result.get('issues', [])
+            issue_lines = []
+            for issue in issues[:5]:  # Limit to 5 issues
+                severity_emoji = {
+                    'critical': '🚨',
+                    'high': '⚠️',
+                    'medium': '⚡',
+                    'low': 'ℹ️'
+                }
+                emoji = severity_emoji.get(issue.get('severity', 'medium'), 'ℹ️')
+                msg = issue.get('message', 'Unknown issue')
+                issue_lines.append(f'{emoji} {msg}')
+
+            if len(issues) > 5:
+                issue_lines.append(f'... and {len(issues) - 5} more issues')
+
+            embed['fields'].append({
+                'name': 'Issues Detected',
+                'value': '\n'.join(issue_lines) if issue_lines else 'None',
+                'inline': False
+            })
+
+        # Fixes details (if any)
+        if fixes_count > 0:
+            fixes = result.get('fixes', [])
+            fix_lines = []
+            for fix in fixes[:5]:  # Limit to 5 fixes
+                action = fix.get('action', 'unknown').replace('_', ' ').title()
+                msg = fix.get('message', 'Fix applied')
+                fix_lines.append(f'✅ {action}: {msg}')
+
+            if len(fixes) > 5:
+                fix_lines.append(f'... and {len(fixes) - 5} more fixes')
+
+            embed['fields'].append({
+                'name': 'Auto-Healing Actions',
+                'value': '\n'.join(fix_lines) if fix_lines else 'None',
+                'inline': False
+            })
+
+        # Errors (if any)
+        if errors_count > 0:
+            error_details = result.get('error_details', [])
+            error_lines = [f'❌ {err}' for err in error_details[:3]]
+            if len(error_details) > 3:
+                error_lines.append(f'... and {len(error_details) - 3} more errors')
+
+            embed['fields'].append({
+                'name': 'Errors',
+                'value': '\n'.join(error_lines) if error_lines else 'See logs',
+                'inline': False
+            })
+
+        # Footer
+        embed['footer'] = {
+            'text': 'Sales Dashboard Pipeline | Intercept Sales'
+        }
+
+        # Send to Discord
+        payload = {
+            'embeds': [embed],
+            'username': 'Pipeline Monitor'
+        }
+
+        response = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+
+        if response.status_code == 204:
+            print("✅ Discord notification sent successfully")
+        else:
+            print(f"⚠️  Discord notification failed: {response.status_code} - {response.text}")
+
+    except Exception as e:
+        print(f"❌ Failed to send Discord notification: {str(e)}")
 
 class PipelineHealer:
     def __init__(self):
@@ -407,12 +545,24 @@ def pipeline_auto_heal(request):
         else:
             result['status'] = 'healthy'
 
+        # Send Discord notification
+        send_discord_notification(result)
+
         return result
 
     except Exception as e:
         print(f"❌ Fatal error: {str(e)}")
-        return {
+        error_result = {
             'status': 'fatal_error',
             'timestamp': datetime.now().isoformat(),
-            'error': str(e)
-        }, 500
+            'error': str(e),
+            'issues_found': 0,
+            'fixes_applied': 0,
+            'errors': 1,
+            'error_details': [str(e)]
+        }
+
+        # Send error notification to Discord
+        send_discord_notification(error_result)
+
+        return error_result, 500
